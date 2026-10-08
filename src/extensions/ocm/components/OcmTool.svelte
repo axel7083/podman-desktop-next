@@ -33,12 +33,16 @@ const rows: Row[] = $derived(
   }),
 );
 
+/**
+ * Cluster state → PD StatusIcon variant: in-progress states (installing, resuming,
+ * connecting) spin, hibernating is the grey outline, error is degraded, and only
+ * a Ready cluster is solid green.
+ */
 function status(c: Row): string {
-  if (c.state === 'installing' || c.state === 'resuming') return 'STARTING';
+  if (c.state === 'installing' || c.state === 'resuming') return 'UPDATING';
   if (c.state === 'error') return 'DEGRADED';
   if (c.state !== 'ready') return 'EXITED';
-  const conn = registry.getConnection(c.name);
-  return conn?.status === 'started' ? 'RUNNING' : conn?.status === 'starting' ? 'STARTING' : 'CREATED';
+  return registry.getConnection(c.name)?.status === 'starting' ? 'UPDATING' : 'RUNNING';
 }
 
 const STATE_LABEL: Record<string, string> = { ready: 'Ready', installing: 'Installing', hibernating: 'Hibernating', error: 'Error', resuming: 'Resuming' };
@@ -48,7 +52,7 @@ const columns = [
   new TableColumn<Row, NameCellData>('Name', {
     width: '2fr',
     renderer: NameCell,
-    renderMapping: (c): NameCellData => ({ title: c.name, sub: [c.display_name ?? '', STATE_LABEL[c.state] ?? c.state], href: registry.getConnection(c.name) ? `/c/${c.name}` : undefined }),
+    renderMapping: (c): NameCellData => ({ title: c.name, sub: [c.display_name, STATE_LABEL[c.state] ?? c.state].filter((x): x is string => !!x), href: registry.getConnection(c.name) ? `/c/${c.name}` : undefined }),
     comparator: (a, b): number => a.name.localeCompare(b.name),
   }),
   new TableColumn<Row, string>('Product', { width: '1.6fr', renderer: TableSimpleColumn, renderMapping: (c): string => productLabel(c) }),

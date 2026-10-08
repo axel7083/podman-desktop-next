@@ -41,9 +41,10 @@ $effect(() => {
 
 const SEVERITIES: Severity[] = ['critical', 'high', 'medium', 'low', 'info'];
 const SEV_CLASS: Record<Severity, string> = {
-  critical: 'bg-[var(--pd-status-terminated)] text-[var(--pd-status-contrast)]',
-  high: 'bg-[var(--pd-state-error)] text-[var(--pd-status-contrast)]',
-  medium: 'bg-[var(--pd-state-warning)] text-[var(--pd-status-contrast)]',
+  // one ramp in both themes (proposed tokens); critical carries the most weight
+  critical: 'bg-[var(--pd-severity-critical-bg)] text-[var(--pd-severity-critical-text)] font-bold',
+  high: 'bg-[var(--pd-severity-high-bg)] text-[var(--pd-severity-high-text)]',
+  medium: 'bg-[var(--pd-severity-medium-bg)] text-[var(--pd-severity-medium-text)]',
   low: 'bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]',
   info: 'bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]',
   success: 'bg-[var(--pd-state-success)] text-[var(--pd-status-contrast)]',

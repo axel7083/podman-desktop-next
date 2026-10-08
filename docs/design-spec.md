@@ -19,6 +19,8 @@ Binding rules for every screen. Source: mockup plan §5, PD renderer markup and
 | `--pd-nav-group-header` | `#a1a1aa` | `#5c5c5c` | Primary/secondary nav group labels (proposed) |
 | `--pd-nav-hint-bg` / `--pd-nav-hint-text` | `#36363d` / `#d4d4d8` | `#e4e4e4` / `#222222` | Hint chips (WSL, context, OCM) (proposed) |
 | `--pd-contribution-badge-bg` | `#27272a` | `#ffffff` | Extension badge backdrop (proposed) |
+| `--pd-severity-{critical,high,medium}-{bg,text}` | `#b91c1c`/white · `#f97316`/`#1c1917` · `#fbbf24`/`#1c1917` | same | One severity ramp for checker pills; low/info use `--pd-label-*` (proposed) |
+| `--pd-code-block-*`, `--pd-content-card-inset-surface` | see proposed-tokens.css | see proposed-tokens.css | Code/log and inset surfaces with light-theme contrast (proposed) |
 | `--pdn-mockup-bg` / `--pdn-mockup-text` | lime / near-black | same | Mockup pill (not product) |
 | `--pdn-inspect-outline` | lime | dark lime | Inspect overlay (not product) |
 
@@ -27,7 +29,7 @@ Binding rules for every screen. Source: mockup plan §5, PD renderer markup and
 Tailwind `--text-*` replaced by PD's scale (no line-height companions, like PD):
 xs 10 · sm 11 · **base 12** (body) · lg 14 · xl 16 · 2xl 18 · 3xl 20 · 4xl 24 · 5xl 30 · 6xl 36.
 System font stack. Page titles `text-xl font-bold`; card titles `text-lg font-semibold`;
-group labels 10px semibold uppercase with letter-spacing.
+nav group labels 11px semibold sentence case ("VMs & services").
 
 ## Anatomy
 

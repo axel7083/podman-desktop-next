@@ -141,9 +141,16 @@ function openTile(path: string): void {
   navigate(path);
 }
 
+// Contributed tiles follow core ones; zero-count contributed tiles sort last and render dimmed.
+const contributedTiles = $derived(
+  sections
+    .map(s => ({ id: s.id, label: s.label, icon: s.icon ?? s.ext.icon, count: s.counter?.(world, conn), path: `/c/${conn.id}/${s.id}`, ext: s.ext }))
+    .map(t => ({ ...t, dimmed: t.count === 0 }))
+    .sort((a, b) => Number(a.dimmed) - Number(b.dimmed)),
+);
 const tiles = $derived([
-  ...coreResourcesOf(conn).map(r => ({ id: r.id, label: r.label, icon: r.icon, count: count(r.id) as number | undefined, path: `/c/${conn.id}/${r.id}`, ext: undefined })),
-  ...sections.map(s => ({ id: s.id, label: s.label, icon: s.icon ?? s.ext.icon, count: s.counter?.(world, conn), path: `/c/${conn.id}/${s.id}`, ext: s.ext })),
+  ...coreResourcesOf(conn).map(r => ({ id: r.id, label: r.label, icon: r.icon, count: count(r.id) as number | undefined, path: `/c/${conn.id}/${r.id}`, ext: undefined, dimmed: false })),
+  ...contributedTiles,
 ]);
 </script>
 
@@ -196,6 +203,8 @@ const tiles = $derived([
           {#each tiles as t (t.id)}
             <button
               class="flex items-center gap-3 rounded-lg p-3 bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] text-left"
+              class:opacity-60={t.dimmed}
+              title={t.ext ? `${t.label} · from ${t.ext.displayName}` : undefined}
               onclick={openTile.bind(undefined, t.path)}>
               <span class="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--pd-content-card-inset-surface)] text-[var(--pd-content-card-icon)]">
                 <AppIcon icon={t.icon as never} size="18" />
@@ -204,7 +213,6 @@ const tiles = $derived([
                 <span class="text-xl font-semibold text-[var(--pd-content-card-header-text)] tabular-nums">{t.count ?? '–'}</span>
                 <span class="text-sm text-[var(--pd-content-card-text)] truncate">{t.label}</span>
               </span>
-              {#if t.ext && t.icon !== t.ext.icon}<span class="ml-auto self-start"><AppIcon icon={t.ext.icon} size="12px" title="From {t.ext.displayName}" /></span>{/if}
             </button>
           {/each}
         </div>
