@@ -34,15 +34,15 @@ const extension: MockExtension = {
         providerId: 'podman',
         providerName: 'Podman',
         engineType: 'podman',
-        hint: s.has('windows') ? 'WSL' : undefined,
-        hintTooltip: s.has('windows') ? 'Runs in WSL 2 distribution podman-machine-default' : undefined,
+        hint: (s.has('windows') || s.has('rhel')) ? 'WSL' : undefined,
+        hintTooltip: (s.has('windows') || s.has('rhel')) ? 'Runs in WSL 2 distribution podman-machine-default' : undefined,
         initialStatus: 'started',
-        endpoint: s.has('windows')
+        endpoint: (s.has('windows') || s.has('rhel'))
           ? 'npipe:////./pipe/podman-machine-default'
           : 'unix:///run/user/1000/podman/podman-machine-default-api.sock',
         version: '5.6.2',
         details: {
-          'VM type': s.has('windows') ? 'WSL' : 'applehv',
+          'VM type': (s.has('windows') || s.has('rhel')) ? 'WSL' : 'applehv',
           CPUs: '4',
           Memory: '4 GiB',
           Disk: '100 GiB',
