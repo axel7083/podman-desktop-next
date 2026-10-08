@@ -4,3 +4,4 @@ build
 loop/runs
 .DS_Store
 *.log
+.idea/
