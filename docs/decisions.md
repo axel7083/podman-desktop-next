@@ -23,3 +23,10 @@ Autonomous choices made while building the mockup. Revisit at checkpoints.
 | D15 | Monaco/xterm replaced by a read-only `<pre>` and a scripted fake terminal. | Static mockup, no heavy deps. |
 | D16 | `?welcome=off` suppresses the first-visit picker (journeys, shared links). | Deterministic screenshots. |
 | D17 | Factory wizard is a full FormPage at `/settings/create/<factory>` with inline progress; the task continues in the background if the user leaves. | PD's connection creation pattern. |
+
+## Wave: platform-automation-windows
+
+| # | Decision | Why |
+|---|---|---|
+| PA1 | **feat(shell)**: `MockExtension.packOf?: string[]` (PD `extensionPack`). `dependenciesOf` includes pack members, so enabling a pack enables its members; unknown ids (extensions owned by other waves, e.g. `redhat.rhdh-local`, `redhat.redhat-authentication`) are skipped. Extensions page shows an "Extension pack" badge and an "Includes" chip row. Files: `src/lib/ext/types.ts`, `src/lib/ext/registry.svelte.ts`, `src/lib/pages/Extensions.svelte`, `_template/index.ts`. | RHADS pack needs pack semantics; registry must tolerate deps implemented on other branches. |
+| PA2 | **feat(shell)**: generic `openDialog(component, props)` + `DialogHost` (`src/lib/dialog.svelte.ts`, `src/lib/shell/DialogHost.svelte`, layout). | Menus like "Export as Ansible…", "Sign & push", "Recreate on Podman" need a modal without leaving the page; ConfirmHost only does yes/no. |

@@ -423,6 +423,11 @@ export interface MockExtension extends ExtensionMeta {
   builtin?: boolean;
   /** extensionDependencies, e.g. most RH extensions → `redhat.redhat-authentication`. */
   dependsOn?: string[];
+  /**
+   * Extension pack (PD `extensionPack`): enabling the pack enables every
+   * member; the Extensions page shows it as a pack. Unknown ids are ignored.
+   */
+  packOf?: string[];
   /** Scenario presets that enable it. */
   tags: ScenarioId[];
   /** Appendix A items this extension demonstrates. */

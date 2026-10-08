@@ -8,6 +8,7 @@ import { registry } from '#lib/ext/registry.svelte.ts';
 import { appPath } from '#lib/nav.ts';
 import ConfirmHost from '#lib/shell/ConfirmHost.svelte';
 import CommandPalette from '#lib/shell/CommandPalette.svelte';
+import DialogHost from '#lib/shell/DialogHost.svelte';
 import PrimaryNav from '#lib/shell/PrimaryNav.svelte';
 import SecondaryNav from '#lib/shell/SecondaryNav.svelte';
 import SettingsNav from '#lib/shell/SettingsNav.svelte';
@@ -63,3 +64,4 @@ $effect(() => {
 <CommandPalette />
 <Welcome />
 <ConfirmHost />
+<DialogHost />
