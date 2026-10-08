@@ -86,8 +86,12 @@ enabled. Each names where it is implemented.
    is pinned on top; Extensions, Accounts and Settings are pinned at the bottom;
    everything in between scrolls and the selected row is scrolled into view after
    navigation. The scroll region starts strictly below the pinned Dashboard row
-   (a 1px divider appears once scrolled), and its 28px fade is a `mask-image` on
-   the scroller only, so nothing ever renders behind a pinned row.
+   (a 1px divider appears once scrolled), and its 28px bottom fade is a
+   `mask-image` on the scroller only, so nothing ever renders behind a pinned row.
+   Group headers (rail: group dividers) are sticky with an opaque background, so
+   rows never show without their group; revealing the selected row brings its
+   group start into view when it fits and scrolls past a group cut at the top
+   edge, so an orphaned "More (n)" / "⋯ n" row never sits under Dashboard.
 2. **Per-group caps** (`GROUP_CAP`): Engines 4, Kubernetes 4, VMs & services 3,
    Tools 4 (+ pinned items, which don't count). A group that overflows by one
    shows the item instead of "More (1)".
@@ -145,7 +149,14 @@ enabled. Each names where it is implemented.
     (its input sits exactly over it) instead of stacking a second search box.
     **Status-bar connections popover**: grouped by kind with collapsible headers
     and counts, 6 rows per group (running first) + "Show all n"; status is a dot
-    plus neutral text, start/stop is a labelled icon button.
+    plus neutral text, start/stop is a labelled icon button; hint chips keep
+    their authored case.
+    **Status bar** (`StatusBar.svelte`): a running task shows once, as its
+    progress toast plus the task counter (spinner + count, no per-task progress
+    item); the left aggregate stays stable ("26 of 34 running") with a spinner
+    while something starts or connects. At most 3 contributed status items show
+    inline; the rest collapse into a "⋯ n" button ("More status items") whose
+    popover lists them with their extension.
 12. **Settings nav** (220px): core sections first (never truncated),
     contributed sections after an "Extensions" divider, alphabetical, in their
     authored sentence case, each with its extension's icon and a title tooltip
