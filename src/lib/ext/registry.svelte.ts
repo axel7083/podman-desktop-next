@@ -41,10 +41,11 @@ export function meta(ext: MockExtension): ExtensionMeta {
   return { id: ext.id, displayName: ext.displayName, icon: ext.icon };
 }
 
-/** Transitive dependencies of an extension (excluding itself). */
+/** Transitive dependencies (incl. pack members) of an extension (excluding itself). Unknown ids are skipped. */
 export function dependenciesOf(id: string, seen = new Set<string>()): string[] {
-  for (const dep of byId.get(id)?.dependsOn ?? []) {
-    if (!seen.has(dep)) {
+  const ext = byId.get(id);
+  for (const dep of [...(ext?.dependsOn ?? []), ...(ext?.packOf ?? [])]) {
+    if (byId.has(dep) && !seen.has(dep)) {
       seen.add(dep);
       dependenciesOf(dep, seen);
     }

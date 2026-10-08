@@ -107,7 +107,8 @@ function scenarioNames(e: MockExtension): string {
         <div class="grow px-5 py-3">
           {#each installed as e (e.id)}
             {@const enabled = registry.isEnabled(e.id)}
-            {@const deps = dependenciesOf(e.id)}
+            {@const members = (e.packOf ?? []).filter(id => getExtension(id))}
+            {@const deps = dependenciesOf(e.id).filter(d => !members.includes(d))}
             {@const dependents = dependentsOf(e.id).filter(d => registry.isEnabled(d))}
             <div class="bg-[var(--pd-content-card-bg)] mb-5 rounded-md p-3 divide-x divide-[var(--pd-content-divider)] flex" role="region" aria-label={e.id}>
               <!-- left col -->
@@ -128,6 +129,9 @@ function scenarioNames(e: MockExtension): string {
                       <Tooltip right tip="Bundled extension">
                         <Badge class="text-[8px] text-[var(--pd-badge-text)]" color="bg-[var(--pd-badge-bundled-extension-bg)]" label="Bundled extension" />
                       </Tooltip>
+                    {/if}
+                    {#if e.packOf}
+                      <Badge class="text-[8px]" color="bg-[var(--pd-label-primary-bg)]" label="Extension pack" />
                     {/if}
                     {#if e.publisher === 'redhat'}
                       <Badge class="text-[8px]" color="bg-[var(--pd-badge-fuschia)]" label="Red Hat" />
@@ -154,6 +158,17 @@ function scenarioNames(e: MockExtension): string {
                       <span class="rounded-sm px-1.5 py-0.5 text-xs bg-[var(--pd-label-primary-bg)] text-[var(--pd-label-primary-text)]" title="Platform API item {p} (docs/integration-opportunities.md)">{p}</span>
                     {/each}
                   </div>
+                  {#if members.length}
+                    <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--pd-content-text)]" aria-label="Pack members">
+                      <span>Includes {members.length} extensions:</span>
+                      {#each members as m (m)}
+                        {@const me = getExtension(m)}
+                        <span class="flex items-center gap-1 rounded-sm px-1.5 py-0.5 bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]" class:opacity-60={!registry.isEnabled(m)}>
+                          <AppIcon icon={me?.icon} size="12px" />{me?.displayName ?? m}
+                        </span>
+                      {/each}
+                    </div>
+                  {/if}
                   {#if deps.length || dependents.length}
                     <div class="mt-2 text-sm text-[var(--pd-content-text)] space-y-0.5">
                       {#if deps.length}<div>Requires: <span class="text-[var(--pd-card-header-text)]">{names(deps)}</span></div>{/if}
@@ -184,6 +199,7 @@ function scenarioNames(e: MockExtension): string {
                 </div>
               </div>
               <p class="text-[var(--pd-content-text)] line-clamp-3 grow">{e.description}</p>
+              {#if e.packOf}<span class="text-sm text-[var(--pd-content-sub-header)]">Extension pack · {e.packOf.filter(id => getExtension(id)).length} extensions</span>{/if}
               <div class="flex items-center justify-between">
                 <span class="text-sm text-[var(--pd-content-sub-header)]">{scenarioNames(e)}</span>
                 <Button onclick={install.bind(undefined, e)} icon={faCloudDownload}>Install</Button>

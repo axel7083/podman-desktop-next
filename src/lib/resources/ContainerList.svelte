@@ -25,7 +25,7 @@ import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView, IconRef } from '#lib/ext/types.ts';
 import PodIcon from '#lib/images/PodIcon.svelte';
-import { containerActions, groupActions } from '#lib/resources/actions.ts';
+import { containerActions, groupActions, podActions } from '#lib/resources/actions.ts';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import StatusCell from '#lib/table/StatusCell.svelte';
@@ -173,7 +173,8 @@ const actionsColumn = new TableColumn<Row, ActionsCellData>('Actions', {
   overflow: true,
   renderMapping: (r): ActionsCellData => {
     if (!isGroup(r)) return containerActions(r);
-    const base = groupActions(r.containers, r.podId);
+    const pod = r.podId ? world.pods.find(p => p.id === r.podId) : undefined;
+    const base = pod ? podActions(pod, r.containers) : groupActions(r.containers, r.podId);
     const grouper = registry.groupers.find(g => g.ext.id === r.ext?.id && g.typeName === r.type);
     const extra = (grouper?.actions ?? []).map(a => ({
       title: a.label,

@@ -30,6 +30,7 @@ const extension: MockExtension = {
   icon: 'icons/podman-desktop.svg',
   // extensionDependencies: enabling this enables them; disabling them disables this.
   dependsOn: ['podman-desktop.podman'],
+  // Extension pack: `packOf: ['a.b', 'c.d']` enables the members with the pack.
   // Scenario presets that enable this extension.
   tags: [], // e.g. ['community', 'openshift']; empty = catalog only
   // Appendix A platform items this extension demonstrates.
