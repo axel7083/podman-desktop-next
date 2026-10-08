@@ -82,6 +82,16 @@ upstream project are used where they are a real logo; Red Hat logo otherwise):
 | `redhat.dependency-analytics.png` | `https://github.com/trustification.png` (Trustify, RHDA backend) |
 | `redhat.openscap-checker.png` | `https://github.com/OpenSCAP.png` |
 | `redhat.satellite.svg`, `redhat.edge-manager.svg`, `redhat.catalog-checker.svg`, `redhat.rhel-lifecycle-checker.svg` | `ext-redhat-account/icons/redhat-logo.svg` (fallback named in the dossiers; flightctl/catalog have no published logo) |
+Wave `ai` icons (downloaded, see the research dossiers; square crops made with ImageMagick):
+
+| File (`static/icons/`) | Source |
+|---|---|
+| `redhat.ai-inference-server.png` | https://raw.githubusercontent.com/vllm-project/vllm/main/docs/assets/logos/vllm-logo-only-light.png (resized 256px) |
+| `redhat.openshift-ai.png` | https://raw.githubusercontent.com/opendatahub-io/odh-dashboard/main/frontend/src/images/rhoai-logo.svg (hat cropped, rasterised) |
+| `redhat.maas.png` | https://raw.githubusercontent.com/openkaiden/kaiden/main/extensions/openshift-ai/icon_light.png (hat cropped) |
+| `podman-desktop.mcp.png` | https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/docs/logo/light.svg (mark cropped on white, rasterised) |
+| `redhat.kaiden-bridge.png` | https://raw.githubusercontent.com/openkaiden/artwork/refs/heads/main/icon-1024.png (resized 256px) |
+| `redhat.modelcar.png` | copy of `ext-ai-lab/packages/backend/icon.png` (no official ModelCar logo) |
 
 Other assets:
 
