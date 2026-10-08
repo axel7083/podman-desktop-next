@@ -251,6 +251,13 @@ export interface GrouperDef {
   /** Group type shown in the name: "bookinfo (compose)". */
   typeName: string;
   icon?: IconRef;
+  /**
+   * Display name of a group when the label value is an opaque key (e.g. a
+   * Testcontainers session UUID or a Quarkus process UUID). Defaults to the value.
+   */
+  groupName?: (value: string, containers: Container[]) => string;
+  /** Extra secondary-line items of the group row (e.g. `java · 2.0.5`). */
+  groupDetails?: (value: string, containers: Container[]) => string[];
   /** Group header actions. */
   actions?: { id: string; label: string; icon: IconDefinition; run: (group: string, containers: Container[]) => void }[];
 }
