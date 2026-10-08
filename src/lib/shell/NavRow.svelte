@@ -82,7 +82,7 @@ const tip = $derived(tooltip ?? label);
     </div>
   </a>
   {#if expanded && menu}
-    <div class="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/navrow:flex group-focus-within/navrow:flex">
+    <div class="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover/navrow:flex group-has-[:focus-visible]/navrow:flex">
       {@render menu()}
     </div>
   {/if}

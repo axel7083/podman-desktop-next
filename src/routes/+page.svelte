@@ -1,1 +1,5 @@
-<p class="p-5 text-lg">Dashboard</p>
+<script lang="ts">
+import Dashboard from '#lib/pages/Dashboard.svelte';
+</script>
+
+<Dashboard />

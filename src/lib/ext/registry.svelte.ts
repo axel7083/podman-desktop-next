@@ -124,7 +124,13 @@ class Registry {
         });
       }
     }
-    return result;
+    // stable order: Podman first (default engine), then by provider and name
+    return result.toSorted(
+      (a, b) =>
+        Number(a.providerId !== 'podman') - Number(b.providerId !== 'podman') ||
+        a.providerName.localeCompare(b.providerName) ||
+        a.name.localeCompare(b.name),
+    );
   });
 
   /** Connections of enabled extensions only. */

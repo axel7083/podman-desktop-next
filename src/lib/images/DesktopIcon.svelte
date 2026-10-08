@@ -1,5 +1,5 @@
 <script lang="ts">
-import logoImage from './logo.png';
+import logoImage from '#lib/images/logo.png';
 
 interface Props {
   size?: string;
