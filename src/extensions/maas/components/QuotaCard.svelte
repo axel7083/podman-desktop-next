@@ -10,7 +10,8 @@ const pct = $derived(usage ? Math.round((usage.used / usage.limit) * 100) : 0);
 
 {#if usage}
   <div class="flex flex-col gap-1 text-sm text-[var(--pd-content-card-text)]">
-    <div class="flex justify-between"><span>{usage.subscription} · granite-3-3-8b-instruct</span><span>{pct}%</span></div>
+    <div class="text-base text-[var(--pd-content-card-header-text)]">MaaS token quota</div>
+    <div>{usage.subscription} · granite-3-3-8b-instruct</div>
     <ProgressBar progress={pct} width="w-full" height="h-1.5" />
     <div class="text-xs">{usage.used.toLocaleString('en-US')} / {usage.limit.toLocaleString('en-US')} tokens this {usage.window}</div>
   </div>

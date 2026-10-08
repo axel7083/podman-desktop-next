@@ -29,7 +29,7 @@ function used(model: string): number {
         {@const pct = Math.round((used(s.model) / s.limit) * 100)}
         <Card title={s.model}>
           {#snippet actions()}<Chip label={s.name} tone="primary" />{#if s.costCenter}<Chip label={s.costCenter} />{/if}{/snippet}
-          <div class="flex justify-between text-xs mb-1"><span>{used(s.model).toLocaleString('en-US')} / {s.limit.toLocaleString('en-US')} tokens per {s.window}</span><span class:text-[var(--pd-state-error)]={pct >= 100} class:text-[var(--pd-state-warning)]={pct >= 80 && pct < 100}>{pct}%</span></div>
+          <div class="flex justify-between text-xs mb-1"><span>{used(s.model).toLocaleString('en-US')} / {s.limit.toLocaleString('en-US')} tokens per {s.window}</span></div>
           <ProgressBar progress={pct} width="w-full" height="h-2" />
         </Card>
       {/each}

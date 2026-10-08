@@ -7,9 +7,11 @@ interface Props {
   code: string;
   label?: string;
   maxHeight?: string;
+  /** Wrap long lines (dialogs). */
+  wrap?: boolean;
 }
 
-let { code, label = 'Code snippet', maxHeight = '22rem' }: Props = $props();
+let { code, label = 'Code snippet', maxHeight = '22rem', wrap = false }: Props = $props();
 let copied = $state(false);
 
 function copy(): void {
@@ -27,5 +29,5 @@ function copy(): void {
     onclick={copy}>
     <Icon icon={copied ? faCheck : faCopy} />
   </button>
-  <pre class="p-4 pr-14 overflow-auto text-xs leading-5 font-mono text-[var(--pd-terminal-foreground)] whitespace-pre" style:max-height={maxHeight} aria-label={label}>{code}</pre>
+  <pre class="p-4 pr-14 overflow-auto text-xs leading-5 font-mono text-[var(--pd-terminal-foreground)]" class:whitespace-pre={!wrap} class:whitespace-pre-wrap={wrap} class:break-all={wrap} style:max-height={maxHeight} aria-label={label}>{code}</pre>
 </div>

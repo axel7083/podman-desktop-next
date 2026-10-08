@@ -125,7 +125,7 @@ function render(text: string): string {
             <Dropdown class="mt-1" ariaLabel="Inference provider" value={pg.providerId} onChange={setProvider} options={all.map(p => ({ value: p.id, label: p.label }))} />
           </label>
           {#if provider}
-            <div class="flex items-center gap-2 text-xs text-[var(--pd-content-text)]"><AppIcon icon={provider.icon} size="16px" /> {provider.kind} · <span class="font-mono truncate">{provider.endpoint}</span></div>
+            <div class="flex items-center gap-2 text-xs text-[var(--pd-content-text)] min-w-0"><AppIcon icon={provider.icon} size="16px" class="shrink-0" /><span class="shrink-0">{provider.kind}</span><span class="font-mono truncate" title={provider.endpoint}>{provider.endpoint}</span></div>
           {/if}
           <label class="text-xs text-[var(--pd-content-text)]">Model
             <Dropdown class="mt-1" ariaLabel="Model" value={pg.model} onChange={setModel} options={(provider?.models ?? [pg.model]).map(m => ({ value: m, label: providerModelLabel(provider, m) }))} />
@@ -133,7 +133,7 @@ function render(text: string): string {
           {#if provider?.quota}
             {@const pct = Math.round((provider.quota.used / provider.quota.limit) * 100)}
             <div class="rounded-md bg-[var(--pd-content-card-bg)] p-3 text-xs text-[var(--pd-content-card-text)]" aria-label="Token quota">
-              <div class="flex justify-between mb-1"><span>Token quota · {provider.quota.subscription}</span><span class:text-[var(--pd-state-error)]={pct >= 100} class:text-[var(--pd-state-warning)]={pct >= 80 && pct < 100}>{pct}%</span></div>
+              <div class="mb-1" class:text-[var(--pd-state-error)]={pct >= 100} class:text-[var(--pd-state-warning)]={pct >= 80 && pct < 100}>Token quota · {provider.quota.subscription}</div>
               <ProgressBar progress={pct} width="w-full" height="h-1.5" />
               <div class="mt-1">{provider.quota.used.toLocaleString('en-US')} / {provider.quota.limit.toLocaleString('en-US')} tokens per {provider.quota.window}</div>
             </div>

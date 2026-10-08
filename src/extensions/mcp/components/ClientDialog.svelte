@@ -33,7 +33,7 @@ function apply(): void {
     <div class="flex flex-col gap-3 text-sm">
       <SubTabs tabs={CLIENTS.slice(0, 3).map(x => ({ id: x.id, label: x.label }))} current={client} onselect={select} label="Clients" />
       <p>Writes <span class="font-mono">{c?.file}</span>:</p>
-      <CodeBlock code={clientConfig(client, server)} label="Config diff" maxHeight="12rem" />
+      <CodeBlock wrap code={clientConfig(client, server)} label="Config diff" maxHeight="12rem" />
     </div>
   {/snippet}
   {#snippet buttons()}

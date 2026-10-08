@@ -42,7 +42,7 @@ function apply(): void {
         <label>Serving runtime <Dropdown class="mt-1" ariaLabel="Serving runtime" bind:value={runtime} options={[{ value: 'vllm-cuda-runtime', label: 'vLLM NVIDIA GPU (vllm-cuda-runtime)' }, { value: 'vllm-cpu-runtime', label: 'vLLM CPU (vllm-cpu-runtime)' }]} /></label>
       </div>
       <label>Accelerators (nvidia.com/gpu) <Input class="mt-1" aria-label="GPUs" type="number" bind:value={gpus} /></label>
-      <CodeBlock code={yaml} label="InferenceService YAML" maxHeight="14rem" />
+      <CodeBlock wrap code={yaml} label="InferenceService YAML" maxHeight="14rem" />
     </div>
   {/snippet}
   {#snippet buttons()}

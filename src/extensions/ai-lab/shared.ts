@@ -578,8 +578,8 @@ export function sendMessage(pgId: string, text: string): void {
     return;
   }
   const usage = p.quota ? maasUsage() : undefined;
-  // RAG prompts carry ~28k tokens of retrieved manual chunks
-  const promptTokens = 27_800 + Math.round(text.length / 4);
+  // RAG prompts carry ~31k tokens of retrieved manual chunks
+  const promptTokens = 30_800 + Math.round(text.length / 4);
   if (usage && usage.used >= usage.limit) {
     pg.messages.push({
       id: uid('msg'),

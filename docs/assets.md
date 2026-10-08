@@ -51,6 +51,17 @@ extension's `package.json`).
 | `podman-desktop.skills.png` | `podman-desktop/extensions/skills/builtin/skills.cdix/icon.png` |
 | `podman-desktop.svg` | `podman-desktop/buildResources/icon.svg` |
 
+Wave `ai` icons (downloaded, see the research dossiers; square crops made with ImageMagick):
+
+| File (`static/icons/`) | Source |
+|---|---|
+| `redhat.ai-inference-server.png` | https://raw.githubusercontent.com/vllm-project/vllm/main/docs/assets/logos/vllm-logo-only-light.png (resized 256px) |
+| `redhat.openshift-ai.png` | https://raw.githubusercontent.com/opendatahub-io/odh-dashboard/main/frontend/src/images/rhoai-logo.svg (hat cropped, rasterised) |
+| `redhat.maas.png` | https://raw.githubusercontent.com/openkaiden/kaiden/main/extensions/openshift-ai/icon_light.png (hat cropped) |
+| `podman-desktop.mcp.png` | https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/docs/logo/light.svg (mark cropped on white, rasterised) |
+| `redhat.kaiden-bridge.png` | https://raw.githubusercontent.com/openkaiden/artwork/refs/heads/main/icon-1024.png (resized 256px) |
+| `redhat.modelcar.png` | copy of `ext-ai-lab/packages/backend/icon.png` (no official ModelCar logo) |
+
 Other assets:
 
 | File | Source | Licence |

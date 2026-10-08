@@ -38,7 +38,7 @@ function build(): void {
       <label>Image name <Input class="mt-1" aria-label="Image name" bind:value={tag} /></label>
       <label>Base image <Dropdown class="mt-1" ariaLabel="Base image" bind:value={base} options={BASES} /></label>
       <Checkbox checked={artifact} onclick={toggleArtifact} title="Push as OCI artifact">Store as a Podman OCI artifact instead (podman artifact add, P7)</Checkbox>
-      <CodeBlock code={file} label="Containerfile" maxHeight="14rem" />
+      <CodeBlock wrap code={file} label="Containerfile" maxHeight="14rem" />
     </div>
   {/snippet}
   {#snippet buttons()}

@@ -101,7 +101,7 @@ const row = new TableRow<ApiKey>({});
       {#if created}
         <div class="flex flex-col gap-3 text-sm">
           <p>Copy the key now, it is shown only once.</p>
-          <CodeBlock code={created} label="API key" />
+          <CodeBlock wrap code={created} label="API key" />
           {#if storeSecret}<p>Stored as Podman secret <span class="font-mono">maas-api-key</span>; inject it with <span class="font-mono">--secret maas-api-key,type=env,target=OPENAI_API_KEY</span>.</p>{/if}
         </div>
       {:else}

@@ -49,7 +49,6 @@ const extension: MockExtension = {
       { id: 'kaiden-agents', label: 'Agents', icon, when: isGateway, component: Agents, order: 2 },
     ],
     groupers: [{ id: 'kaiden', label: GROUP_LABEL, typeName: 'Kaiden sandboxes', icon }],
-    columns: [{ id: 'kaiden-agent', title: 'Agent', target: 'container', value: (row): string | undefined => (row as Container).labels?.['ai.openkaiden.agent'] }],
     menus: [
       {
         id: 'kaiden-open',
