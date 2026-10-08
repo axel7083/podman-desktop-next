@@ -57,7 +57,7 @@ function openCve(c: SystemCve): void {
   <div class="h-full overflow-auto px-5 py-4 space-y-3 text-[var(--pd-content-card-text)]">
     <div class="flex items-center gap-3">
       <div class="grow">
-        <h2 class="text-lg font-semibold text-[var(--pd-content-header-text)]">{all.filter(c => c.status_name !== 'Resolved').length} CVEs affect {conn.name}</h2>
+        <h2 class="text-lg font-semibold text-[var(--pd-content-header)]">{all.filter(c => c.status_name !== 'Resolved').length} CVEs affect {conn.name}</h2>
         <div class="text-sm">Red Hat Lightspeed Vulnerability · host-based (installed RPMs), not container images</div>
       </div>
       <Checkbox checked={importantOnly} onclick={toggleFilter}>Important and Critical only</Checkbox>

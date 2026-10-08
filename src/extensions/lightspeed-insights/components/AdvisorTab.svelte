@@ -81,7 +81,7 @@ function console_(): void {
   <div class="h-full overflow-auto px-5 py-4 space-y-3 text-[var(--pd-content-card-text)]">
     <div class="flex items-center gap-3">
       <div class="grow">
-        <h2 class="text-lg font-semibold text-[var(--pd-content-header-text)]">{hits.length} recommendation{hits.length === 1 ? '' : 's'}</h2>
+        <h2 class="text-lg font-semibold text-[var(--pd-content-header)]">{hits.length} recommendation{hits.length === 1 ? '' : 's'}</h2>
         <div class="text-sm">Red Hat Lightspeed Advisor · last check-in {checking ? 'in progress…' : '12 minutes ago'}</div>
       </div>
       <Button type="secondary" icon={faArrowsRotate} inProgress={checking} onclick={recheck}>Re-check</Button>

@@ -397,7 +397,7 @@ const extension: MockExtension = {
       mkImage(pm, { name: 'quay.io/acme/orders-api', tag: '2.3', sizeMB: 412, ageD: 6, base: 'ubi9/python-311:9.5', labels: { ...acme, 'com.redhat.component': 'python-311-container', 'io.k8s.display-name': 'Python 3.11' }, packages: [{ name: 'glibc', version: '2.34-168.el9_6.14' }, { name: 'openssl-libs', version: '3.2.2-6.el9_5.1' }, { name: 'python3.11', version: '3.11.11-1.el9_5' }] }),
       mkImage(pm, { name: 'quay.io/acme/legacy-portal', tag: '1.9', sizeMB: 638, ageD: 210, base: 'ubi8/nodejs-18', labels: { vendor: 'ACME Corp', 'com.redhat.component': 'nodejs-18-container' } }),
       mkImage(pm, { name: 'quay.io/acme/rhel10-web', tag: '1.4', sizeMB: 1630, ageD: 1, base: 'rhel10/rhel-bootc:10.1', labels: { 'containers.bootc': '1', 'ostree.bootable': 'true', vendor: 'ACME Corp' } }),
-      mkImage(pm, { name: 'quay.io/acme/edge-kiosk', tag: '1.1', sizeMB: 1480, ageD: 2, base: 'rhel9/rhel-bootc:9.7', labels: { 'containers.bootc': '1', 'ostree.bootable': 'true', vendor: 'ACME Corp' } }),
+      mkImage(pm, { name: 'quay.io/acme/edge-kiosk', tag: '1.1', sizeMB: 1480, ageD: 2, base: 'rhel9/rhel-bootc:9.7', labels: { 'containers.bootc': '1', 'ostree.bootable': 'true', 'io.flightctl.agent': 'v1.3.1', vendor: 'ACME Corp' } }),
       mkImage(pm, { name: 'registry.access.redhat.com/ubi9/ubi-minimal', tag: '9.8', sizeMB: 103, ageD: 2, base: 'ubi9', labels: { vendor: 'Red Hat, Inc.', 'com.redhat.component': 'ubi9-minimal-container' } }),
     );
     world.containers.push(
