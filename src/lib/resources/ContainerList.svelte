@@ -76,6 +76,9 @@ const visible = $derived(
 );
 
 const rows: Row[] = $derived.by(() => {
+  // ui-svelte Table (legacy mode) only re-renders cells when `data` changes:
+  // depend on every state so lifecycle changes (incl. group children) show up.
+  for (const c of visible) void c.state;
   const groups = new Map<string, GroupRow>();
   const out: Row[] = [];
   for (const c of visible) {
