@@ -33,8 +33,10 @@ export async function launch({ baseUrl, run, scenario, theme }) {
     shots,
     /** Open an app path with the mockup params (fresh state per journey). */
     async open(appPath, params = {}) {
-      const url = new URL(appPath.replace(/^\//, ''), baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`);
-      const search = new URLSearchParams({ scenario, theme, chrome: 'off', welcome: 'off', ...params });
+      const [pathPart, query] = appPath.split('?');
+      const url = new URL(pathPart.replace(/^\//, ''), baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`);
+      // keep the path's own query (`/c/x?tab=advisor`)
+      const search = new URLSearchParams({ scenario, theme, chrome: 'off', welcome: 'off', ...Object.fromEntries(new URLSearchParams(query ?? '')), ...params });
       url.search = search.toString();
       await page.goto(url.toString());
       await page.waitForLoadState('networkidle');

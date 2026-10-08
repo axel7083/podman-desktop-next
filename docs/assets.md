@@ -70,6 +70,18 @@ Appdev wave icons (downloaded from the URLs verified in `docs/research/<id>.md`;
 | `podman-desktop.devcontainers.png` | https://raw.githubusercontent.com/devcontainers/devcontainers.github.io/gh-pages/img/devcontainers-logo.png |
 | `redhat.rhdh-local.png` | https://raw.githubusercontent.com/kadel/podman-desktop-extension-rhdh-local/main/packages/backend/icon.png |
 | `podman-desktop.debug-shell.png` | https://github.com/containers.png |
+Added by wave **rhel** (dossier icon URLs returned 404, so GitHub org avatars of the
+upstream project are used where they are a real logo; Red Hat logo otherwise):
+
+| File (`static/icons/`) | Source |
+|---|---|
+| `redhat.rhel-registration.png` | `ext-redhat-account/icon.png` |
+| `redhat.image-builder.png` | `https://github.com/osbuild.png` (osbuild / Image Builder project avatar) |
+| `redhat.lightspeed-insights.png` | `https://github.com/RedHatInsights.png` |
+| `redhat.security-data-checker.png` | `https://github.com/RedHatProductSecurity.png` |
+| `redhat.dependency-analytics.png` | `https://github.com/trustification.png` (Trustify, RHDA backend) |
+| `redhat.openscap-checker.png` | `https://github.com/OpenSCAP.png` |
+| `redhat.satellite.svg`, `redhat.edge-manager.svg`, `redhat.catalog-checker.svg`, `redhat.rhel-lifecycle-checker.svg` | `ext-redhat-account/icons/redhat-logo.svg` (fallback named in the dossiers; flightctl/catalog have no published logo) |
 
 Other assets:
 
