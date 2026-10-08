@@ -13,7 +13,7 @@ import SecretIcon from '#lib/images/SecretIcon.svelte';
 import VolumeIcon from '#lib/images/VolumeIcon.svelte';
 import { kubeActions, podActions, volumeActions } from '#lib/resources/actions.ts';
 import { cleanKube, kubeStatus, toYaml } from '#lib/resources/kube.ts';
-import { humanAge, humanSize, world } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo, humanSize, world } from '#lib/world.svelte.ts';
 
 const conn = $derived(registry.getConnection(page.params.conn ?? ''));
 const resource = $derived(page.params.resource ?? '');
@@ -55,7 +55,7 @@ const podContainers = $derived(pod ? world.containers.filter(c => pod.containerI
     actions={podActions(pod, podContainers, true)}
     logs={podContainers.flatMap(c => (c.logs ?? []).map(l => `${c.name} | ${l}`))}
     inspect={JSON.stringify({ Id: pod.id, Name: pod.name, State: pod.status, Containers: podContainers.map(c => ({ Id: c.id, Name: c.name, State: c.state })) }, undefined, 2)}
-    sections={[{ title: 'Details', rows: [['Name', pod.name], ['ID', pod.id], ['Status', pod.status], ['Created', `${humanAge(pod.created)} ago`], ['Containers', podContainers.map(c => c.name).join(', ')]] }]} />
+    sections={[{ title: 'Details', rows: [['Name', pod.name], ['ID', pod.id], ['Status', pod.status], ['Created', timeAgo(pod.created)], ['Containers', podContainers.map(c => c.name).join(', ')]] }]} />
 {:else if volume}
   <SimpleDetails
     title={volume.name.length > 40 ? volume.name.slice(0, 12) : volume.name}
@@ -69,7 +69,7 @@ const podContainers = $derived(pod ? world.containers.filter(c => pod.containerI
     ctx={{ target: 'volume', conn, resource: volume }}
     actions={volumeActions(volume, false, true)}
     inspect={JSON.stringify({ Name: volume.name, Driver: volume.driver ?? 'local', Mountpoint: volume.mountpoint, CreatedAt: new Date(volume.created).toISOString() }, undefined, 2)}
-    sections={[{ title: 'Details', rows: [['Name', volume.name], ['Driver', volume.driver ?? 'local'], ['Mount point', volume.mountpoint], ['Size', humanSize(volume.size)], ['Created', `${humanAge(volume.created)} ago`]] }]} />
+    sections={[{ title: 'Details', rows: [['Name', volume.name], ['Driver', volume.driver ?? 'local'], ['Mount point', volume.mountpoint], ['Size', humanSize(volume.size)], ['Created', timeAgo(volume.created)]] }]} />
 {:else if network}
   <SimpleDetails
     title={network.name}
@@ -81,7 +81,7 @@ const podContainers = $derived(pod ? world.containers.filter(c => pod.containerI
     {base}
     {tab}
     inspect={JSON.stringify({ name: network.name, id: network.id, driver: network.driver, subnets: network.subnet ? [{ subnet: network.subnet }] : [] }, undefined, 2)}
-    sections={[{ title: 'Details', rows: [['Name', network.name], ['ID', network.id], ['Driver', network.driver], ['Subnet', network.subnet], ['Created', `${humanAge(network.created)} ago`]] }]} />
+    sections={[{ title: 'Details', rows: [['Name', network.name], ['ID', network.id], ['Driver', network.driver], ['Subnet', network.subnet], ['Created', timeAgo(network.created)]] }]} />
 {:else if secret}
   <SimpleDetails
     title={secret.name}
@@ -92,7 +92,7 @@ const podContainers = $derived(pod ? world.containers.filter(c => pod.containerI
     listHref="/c/{conn.id}/secrets"
     {base}
     {tab}
-    sections={[{ title: 'Details', rows: [['Name', secret.name], ['ID', secret.id], ['Driver', secret.driver ?? 'file'], ['Created', `${humanAge(secret.created)} ago`]] }]} />
+    sections={[{ title: 'Details', rows: [['Name', secret.name], ['ID', secret.id], ['Driver', secret.driver ?? 'file'], ['Created', timeAgo(secret.created)]] }]} />
 {:else if kubeObj}
   <SimpleDetails
     title={kubeObj.metadata.name}

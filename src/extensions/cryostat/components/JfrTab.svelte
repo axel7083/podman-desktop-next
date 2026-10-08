@@ -5,11 +5,12 @@
  * archives and the automated analysis of the last archived recording.
  */
 import { faBoxArchive, faCircleDot, faFileLines, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import type { ResourceContext } from '#lib/ext/types.ts';
 import type { Container } from '#lib/world.svelte.ts';
-import { humanAge, humanSize } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo, humanSize } from '#lib/world.svelte.ts';
 
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
 
@@ -114,7 +115,7 @@ const recRows = $derived(
       rec: r,
       state: stateLabel(r),
       // mock clock: a recording that ran `elapsed` ms started at least that long ago
-      started: `${humanAge(Math.min(r.startTime, Date.now() - r.elapsed))} ago`,
+      started: timeAgo(Math.min(r.startTime, Date.now() - r.elapsed)),
     }),
   ),
 );
@@ -227,7 +228,7 @@ function archived(r: ActiveRecording): boolean {
             <tr class="border-t first:border-t-0 border-[var(--pd-content-divider)]">
               <td class="py-2 font-mono text-sm truncate max-w-0 w-full" title={a.name}>{a.name}</td>
               <td class="py-2 px-3 whitespace-nowrap tabular-nums">{humanSize(a.size)}</td>
-              <td class="py-2 px-3 whitespace-nowrap">{humanAge(a.archivedTime)} ago</td>
+              <td class="py-2 px-3 whitespace-nowrap">{timeAgo(a.archivedTime)}</td>
               <td class="py-2 text-right">
                 <span class="whitespace-nowrap inline-block"><Button type="secondary" icon={faFileLines} selected={analysed?.name === a.name} onclick={view.bind(undefined, a)} aria-label="View report of {a.name}">View report</Button></span>
               </td>

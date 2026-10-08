@@ -10,7 +10,7 @@ import { navigate } from '#lib/nav.ts';
 import { imageActions } from '#lib/resources/actions.ts';
 import DetailsTabs from '#lib/resources/DetailsTabs.svelte';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
-import { type ContainerImage, humanAge, humanSize, shortImage, world } from '#lib/world.svelte.ts';
+import { type ContainerImage, humanAge, timeAgo, humanSize, shortImage, world } from '#lib/world.svelte.ts';
 
 import CodeView from './CodeView.svelte';
 import SecurityTab from './SecurityTab.svelte';
@@ -49,7 +49,7 @@ const layers = $derived(
 );
 </script>
 
-<DetailsPage title={shortImage(image.name)} titleDetail={image.tag} subtitle={image.id.slice(0, 12)} breadcrumbLeftPart="Images" breadcrumbRightPart="Image Details" onclose={close} onbreadcrumbClick={close}>
+<DetailsPage title={shortImage(image.name)} titleDetail={image.tag} subtitle={image.id.slice(0, 12)} breadcrumbLeftPart="Images" breadcrumbRightPart="Image details" onclose={close} onbreadcrumbClick={close}>
   {#snippet iconSnippet()}
     <StatusIcon icon={ImageIcon} size={24} status={inUse ? 'USED' : 'UNUSED'} />
   {/snippet}
@@ -71,7 +71,7 @@ const layers = $derived(
               ['ID', image.id],
               ['Digest', image.digest],
               ['Size', humanSize(image.size)],
-              ['Created', `${humanAge(image.created)} ago`],
+              ['Created', timeAgo(image.created)],
               ['OS / Arch', `${image.os ?? 'linux'}/${image.arch ?? 'amd64'}`],
               ['Base', image.base],
             ],

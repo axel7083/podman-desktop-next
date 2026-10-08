@@ -6,6 +6,7 @@
 import { type ContainerImage, runTask, toast } from '#lib/world.svelte.ts';
 
 import { ACME_IMAGES, chain, conformaReport, DIGESTS, refOf, RHTAS, sbomPackageCount, shortRef, TPA_URL } from './supply-chain.ts';
+import { plural } from '#lib/util.ts';
 
 const TAS = 'redhat.trusted-artifact-signer';
 const TPA = 'redhat.trusted-profile-analyzer';
@@ -118,7 +119,7 @@ export function runConforma(image: ContainerImage): void {
     onDone: () => {
       const report = conformaReport(image);
       chain(image).conforma = { at: Date.now(), by: 'Podman Desktop (ec v0.8.71)', report };
-      toast({ type: report.success ? 'success' : 'warning', title: report.success ? 'Policy check passed' : `Policy check failed: ${report.violations.length} violation(s)`, body: shortRef(image) });
+      toast({ type: report.success ? 'success' : 'warning', title: report.success ? 'Policy check passed' : `Policy check failed: ${plural(report.violations.length, 'violation')}`, body: shortRef(image) });
     },
   });
 }

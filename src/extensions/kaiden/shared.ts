@@ -3,6 +3,7 @@ import { mkContainer } from '#lib/ext/helpers.ts';
 import { runTask, toast, uid, world } from '#lib/world.svelte.ts';
 
 import { ENGINE } from '../ai-lab/shared.ts';
+import { plural } from '#lib/util.ts';
 
 export const KAIDEN = 'redhat.kaiden-bridge';
 export const GROUP_LABEL = 'ai.openkaiden.sandbox';
@@ -41,7 +42,7 @@ function sandbox(w: Workspace, upM = 60): ReturnType<typeof mkContainer> {
     labels: { [GROUP_LABEL]: 'openshell', 'ai.openkaiden.workspace': w.name, 'ai.openkaiden.agent': w.agent },
     command: agent?.command,
     upM,
-    logs: ['sandbox phase Provisioning -> Ready', `inference.set provider=${w.provider} model=${w.model}`, `copying ${w.skills.length} skill(s) to ${agent?.skills}`],
+    logs: ['sandbox phase Provisioning -> Ready', `inference.set provider=${w.provider} model=${w.model}`, `copying ${plural(w.skills.length, 'skill')} to ${agent?.skills}`],
   });
 }
 
@@ -88,7 +89,7 @@ export function startWorkspace(o: StartOptions): void {
       { label: `Pulling ${agent?.baseImage}`, ms: 2200 },
       { label: 'Gateway ready on 127.0.0.1:41871', ms: 500 },
       { label: 'sandbox phase Provisioning → Ready', ms: 1800 },
-      { label: `Copying ${o.skills.length} skill(s) to ${agent?.skills}`, ms: 400 },
+      { label: `Copying ${plural(o.skills.length, 'skill')} to ${agent?.skills}`, ms: 400 },
       { label: `inference.set provider=${o.provider} model=${o.model}`, ms: 400 },
       ...(o.mcp.length ? [{ label: `Registering MCP servers: ${o.mcp.join(', ')}`, ms: 500 }] : []),
     ],

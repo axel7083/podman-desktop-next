@@ -1,4 +1,5 @@
 <script lang="ts">
+import { plural } from '#lib/util.ts';
 /** Service network section (P2): Skupper objects of this site, reusing the generic kube list. */
 import { faLink } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
@@ -22,7 +23,7 @@ function detail(o: KubeObject): string {
   const s = o.spec ?? {};
   switch (o.kind) {
     case 'Site':
-      return `${String(o.status?.platform)} · link access ${String(s.linkAccess)} · ${String(o.status?.sitesInNetwork)} site(s) in network`;
+      return `${String(o.status?.platform)} · link access ${String(s.linkAccess)} · ${plural(Number(o.status?.sitesInNetwork ?? 0), 'site')} in network`;
     case 'Link':
       return `→ ${String(o.status?.remoteSiteName)} · cost ${String(s.cost)}`;
     case 'Listener':

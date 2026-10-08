@@ -8,6 +8,7 @@ import { navigate } from '#lib/nav.ts';
 import { runTask, toast } from '#lib/world.svelte.ts';
 
 import { type ChartPackage, HELM_ID, type HelmRevision, helmTime, store } from './data.ts';
+import { plural } from '#lib/util.ts';
 
 function nextRevision(connId: string, name: string, namespace: string): number {
   return Math.max(0, ...store(connId).filter(r => r.name === name && r.namespace === namespace).map(r => r.revision)) + 1;
@@ -90,7 +91,7 @@ export function install(conn: ConnectionView, chart: ChartPackage, name: string,
       {
         label: `Pulling ${chart.name}-${chart.version}`,
         ms: 1200,
-        log: [`helm install ${name} ${source} --version ${chart.version} -n ${namespace} --create-namespace -f values.yaml`, `values.yaml: ${lines} line(s)`],
+        log: [`helm install ${name} ${source} --version ${chart.version} -n ${namespace} --create-namespace -f values.yaml`, `values.yaml: ${plural(lines, 'line')}`],
       },
       { label: `Creating resources in namespace ${namespace}`, ms: 1500, log: [`NAME: ${name}`, `NAMESPACE: ${namespace}`, 'STATUS: pending-install'] },
       { label: 'Waiting for pods to be ready', ms: 1800, log: ['STATUS: deployed', `REVISION: ${revision}`] },

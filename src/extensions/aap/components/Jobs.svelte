@@ -9,7 +9,7 @@ import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svel
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import type { ActionsCellData, NameCellData } from '#lib/table/types.ts';
-import { humanAge, toast } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo, toast } from '#lib/world.svelte.ts';
 
 import { AAP_URL, driveJob, elapsedLabel, type Job, launchTemplate, store } from '../data.ts';
 import JobOutput from './JobOutput.svelte';
@@ -60,7 +60,7 @@ const columns = [
     comparator: (a, b): number => b.id - a.id,
   }),
   new TableColumn<Job, string>('Launch type', { renderer: TableSimpleColumn, renderMapping: (j): string => j.launch_type }),
-  new TableColumn<Job, string>('Started', { renderer: TableSimpleColumn, renderMapping: (j): string => (j.started ? `${humanAge(j.started)} ago` : 'pending') }),
+  new TableColumn<Job, string>('Started', { renderer: TableSimpleColumn, renderMapping: (j): string => (j.started ? timeAgo(j.started) : 'pending') }),
   new TableColumn<Job, string>('Elapsed', { renderer: TableSimpleColumn, renderMapping: elapsedLabel }),
   new TableColumn<Job, string>('Node', { renderer: TableSimpleColumn, renderMapping: (j): string => j.execution_node }),
   new TableColumn<Job, ActionsCellData>('Actions', {
