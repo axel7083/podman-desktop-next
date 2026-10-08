@@ -120,6 +120,8 @@ export async function journey(t) {
   await page.waitForTimeout(900);
   await t.shot('j5-jfr-running');
   await page.getByRole('region', { name: 'Analysis report' }).waitFor({ timeout: 30000 });
+  await page.getByRole('region', { name: 'Analysis report' }).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(5500);
   await t.shot('j5-jfr-analysis');
   await t.open('/tools/cryostat');
   await t.shot('j5-cryostat-tool');
