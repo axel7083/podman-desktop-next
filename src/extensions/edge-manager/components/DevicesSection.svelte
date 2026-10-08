@@ -4,7 +4,6 @@ import { EmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
 import { faMicrochip } from '@fortawesome/free-solid-svg-icons';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { humanAge } from '#lib/world.svelte.ts';
 
 import { emStore } from '../data.ts';
 import StatusText from './StatusText.svelte';
@@ -16,6 +15,16 @@ interface Props {
 let { conn }: Props = $props();
 let searchTerm = $state('');
 const devices = $derived(emStore().devices.filter(d => (d.labels.alias ?? d.name).includes(searchTerm)));
+function seen(iso: string): string {
+  const s = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 48) return `${h} ${h === 1 ? 'hour' : 'hours'} ago`;
+  return `${Math.round(h / 24)} days ago`;
+}
+
 const COLS = 'grid grid-cols-[2fr_1fr_1fr_1fr_1.6fr_0.8fr] gap-3 items-center';
 </script>
 
@@ -35,7 +44,7 @@ const COLS = 'grid grid-cols-[2fr_1fr_1fr_1fr_1.6fr_0.8fr] gap-3 items-center';
           <StatusText value={d.updated} />
           <StatusText value={d.applications} />
           <span class="text-sm truncate">{d.osImage.replace('quay.io/', '')}</span>
-          <span class="text-sm">{humanAge(new Date(d.lastSeen).getTime())} ago</span>
+          <span class="text-sm">{seen(d.lastSeen)}</span>
         </div>
       {/each}
     </div>

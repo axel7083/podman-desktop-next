@@ -75,6 +75,11 @@ export async function journey(t) {
   await t.open('/c/rhel10-dev?tab=advisor', { speed: '5' });
   await page.getByRole('button', { name: 'Fix in terminal' }).waitFor();
   await t.shot('advisor-rhel10-dev');
+  await page.getByRole('button', { name: 'Explain with RHEL Lightspeed' }).first().click();
+  await page.getByRole('log', { name: 'Messages' }).waitFor();
+  await page.waitForTimeout(3500);
+  await t.shot('rhel-lightspeed-chat');
+  await t.open('/c/rhel10-dev?tab=advisor', { speed: '5' });
   await page.getByRole('button', { name: 'Fix in terminal' }).click();
   await page.getByText('Remediated · pending check-in').waitFor({ timeout: 10000 });
   await page.getByRole('button', { name: 'Re-check' }).click();
@@ -83,11 +88,6 @@ export async function journey(t) {
   await page.locator('a', { hasText: 'Vulnerabilities' }).first().click();
   await page.getByRole('table', { name: 'CVEs' }).waitFor();
   await t.shot('vulnerabilities-rhel10-dev');
-  await page.locator('a', { hasText: 'Advisor' }).first().click();
-  await page.getByRole('button', { name: 'Explain with RHEL Lightspeed' }).first().click();
-  await page.getByRole('log', { name: 'Messages' }).waitFor();
-  await page.waitForTimeout(3500);
-  await t.shot('rhel-lightspeed-chat');
   await t.open('/c/rhel9-db?tab=advisor', { speed: '5' });
   await page.getByRole('button', { name: 'Register rhel9-db' }).click();
   await page.getByRole('button', { name: 'Start and register' }).click();

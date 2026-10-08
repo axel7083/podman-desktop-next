@@ -78,7 +78,7 @@ function rollout(f: Fleet): void {
             <Button icon={faRocket} onclick={rollout.bind(undefined, f)} disabled={target[f.name] === f.osImage}>Roll out</Button>
           </div>
           <div class="flex gap-4 mt-2 text-sm">
-            <span>{members.length} devices</span>
+            <span>{members.length} {members.length === 1 ? 'device' : 'devices'}</span>
             <span>{members.filter(d => d.updated === 'UpToDate').length} up to date</span>
             <span>{members.filter(d => d.updated === 'Updating').length} updating</span>
             <span class={members.some(d => d.summary === 'Error') ? 'text-[var(--pd-state-error)]' : ''}>{members.filter(d => d.summary === 'Error').length} error</span>

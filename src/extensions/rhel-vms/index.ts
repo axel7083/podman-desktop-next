@@ -108,7 +108,6 @@ const extension: MockExtension = {
           hint: win ? 'WSL' : undefined,
           initialStatus: 'started',
           endpoint: 'ssh://core@localhost:50211',
-          version: '10.1',
           details: { ...rhelDetails('rhel-10.2', win ? 'wsl' : 'applehv', '4', '4 GiB', '100 GiB', 'rhel10.tar.gz'), OS: 'Red Hat Enterprise Linux release 10.1 (Coughlan)', 'Managed by': 'macadam 0.3.0' },
           capabilities: ['rhel', 'rhel:10.1', 'ssh'],
         },
@@ -121,7 +120,6 @@ const extension: MockExtension = {
           hint: win ? 'Hyper-V' : undefined,
           initialStatus: 'stopped',
           endpoint: 'ssh://core@localhost:50217',
-          version: '9.7',
           details: { ...rhelDetails('rhel-9.8', win ? 'hyperv' : 'applehv', '2', '8 GiB', '120 GiB', 'rhel9.tar.gz'), OS: 'Red Hat Enterprise Linux release 9.7 (Plow)', Lifecycle: 'RHEL 9.7 · Near retirement (2026-11-30)', 'Managed by': 'macadam 0.3.0' },
           capabilities: ['rhel', 'rhel:9.7', 'ssh'],
         },
@@ -333,7 +331,6 @@ const extension: MockExtension = {
             hint: v.provider === 'wsl' ? 'WSL' : v.provider === 'hyperv' ? 'Hyper-V' : undefined,
             initialStatus: 'started',
             endpoint: `ssh://core@localhost:${50220 + Math.floor(Math.random() * 60)}`,
-            version: local ? '10.2' : rel.version,
             details: { ...rhelDetails(local ? 'rhel-10.2' : str(v.image), str(v.provider), str(v.cpus), `${str(v.memory)} GiB`, `${str(v.disk)} GiB`, local ? str(v.path) : str(v.image).startsWith('rhel-10') ? 'rhel10.tar.gz' : 'rhel9.tar.gz'), 'Managed by': 'macadam 0.3.0' },
             capabilities: ['rhel', `rhel:${local ? '10.2' : rel.version}`, 'ssh'],
           };

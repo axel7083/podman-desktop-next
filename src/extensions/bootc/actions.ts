@@ -62,7 +62,6 @@ export function bootInVm(b: BootcBuildInfo, agent: boolean): void {
           hintTooltip: `Booted from ${b.image}:${b.tag}`,
           initialStatus: 'started',
           endpoint: 'ssh://core@localhost:50240',
-          version: b.image.includes('rhel10') ? '10.1' : '9.7',
           details: { Image: `${b.image}:${b.tag}`, Disk: `${b.folder}\\qcow2\\disk.qcow2`, 'Managed by': 'macadam 0.3.0' },
           capabilities: ['rhel', `rhel:${b.image.includes('rhel10') ? '10.1' : '9.7'}`, 'ssh', 'bootc', ...(agent ? ['flightctl-agent'] : [])],
         },

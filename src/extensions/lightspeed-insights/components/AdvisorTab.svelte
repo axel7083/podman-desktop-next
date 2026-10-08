@@ -22,6 +22,7 @@ const conn = $derived(ctx.conn);
 const hits = $derived(lsStore().advisor.filter(h => h.host === conn.id).toSorted((a, b) => b.total_risk - a.total_risk));
 const open = new SvelteSet<string>();
 let checking = $state(false);
+let checkedNow = $state(false);
 
 const RISK_CLASS = ['', 'bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]', 'bg-[var(--pd-state-warning)] text-[var(--pd-status-contrast)]', 'bg-[var(--pd-state-error)] text-[var(--pd-status-contrast)]', 'bg-[var(--pd-status-terminated)] text-[var(--pd-status-contrast)]'];
 
@@ -64,6 +65,7 @@ function recheck(): void {
     ],
     onDone: () => {
       checking = false;
+      checkedNow = true;
       const s = mutableStore();
       const resolved = s.advisor.filter(x => x.host === conn.id && x.state === 'remediated').length;
       s.advisor = s.advisor.filter(x => !(x.host === conn.id && x.state === 'remediated'));
@@ -82,7 +84,7 @@ function console_(): void {
     <div class="flex items-center gap-3">
       <div class="grow">
         <h2 class="text-lg font-semibold text-[var(--pd-content-header)]">{hits.length} recommendation{hits.length === 1 ? '' : 's'}</h2>
-        <div class="text-sm">Red Hat Lightspeed Advisor · last check-in {checking ? 'in progress…' : '12 minutes ago'}</div>
+        <div class="text-sm">Red Hat Lightspeed Advisor · last check-in {checking ? 'in progress…' : checkedNow ? 'just now' : '12 minutes ago'}</div>
       </div>
       <Button type="secondary" icon={faArrowsRotate} inProgress={checking} onclick={recheck}>Re-check</Button>
       <Button type="link" icon={faArrowUpRightFromSquare} onclick={console_}>Open in console</Button>

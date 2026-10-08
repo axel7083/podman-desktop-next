@@ -26,7 +26,9 @@ let scroller = $state<HTMLDivElement>();
 
 const list = $derived(((world.ext[RL_EXT] as { conversations?: Conversation[] } | undefined)?.conversations ?? CONVERSATIONS));
 const current = $derived(list.find(c => c.id === selected));
-const host = $derived(registry.activeConnections.find(c => c.capabilities?.includes('rhel') && c.status === 'started' && allRegistrations()[c.id]?.status === 'Current'));
+const registered = $derived(registry.activeConnections.filter(c => c.capabilities?.includes('rhel') && c.capabilities.includes('podman') && c.status === 'started' && allRegistrations()[c.id]?.status === 'Current'));
+/** Prefer the machine already running the assistant container. */
+const host = $derived(registered.find(c => world.containers.some(x => x.engineId === c.id && x.name === 'rhel-lightspeed-podman-desktop')) ?? registered[0]);
 
 onMount(() => {
   conversations();

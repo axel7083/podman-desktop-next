@@ -116,7 +116,7 @@ const STATUS_CLASS: Record<string, string> = { success: 'text-[var(--pd-status-r
               <Input id="bootc-user" value={user} oninput={onUser} />
             </div>
           </div>
-          <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-3 text-sm" aria-label="bootc container lint">
+          <div class="rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)] p-3 text-sm" aria-label="bootc container lint">
             <div class="font-semibold mb-1">bootc container lint · {shortImage(image.name)}:{image.tag}</div>
             {#each lintResults as r (r.name)}
               <div class={r.status === 'fail' ? 'text-[var(--pd-state-error)]' : r.status === 'warning' ? 'text-[var(--pd-state-warning)]' : 'text-[var(--pd-state-success)]'}>
@@ -145,14 +145,14 @@ const STATUS_CLASS: Record<string, string> = { success: 'text-[var(--pd-status-r
       {/if}
       {#each list as b (b.id)}
         <div class="flex items-center gap-4 rounded-lg bg-[var(--pd-content-card-bg)] px-4 py-3 min-h-12" aria-label="Disk image {b.id}">
-          <span class="w-24 flex items-center gap-1.5 text-sm capitalize {STATUS_CLASS[b.status] ?? ''}">
+          <span class="w-24 shrink-0 flex items-center gap-1.5 text-sm capitalize {STATUS_CLASS[b.status] ?? ''}">
             {#if b.status === 'running' || b.status === 'creating'}<Spinner size="0.9em" />{:else}<span class="w-2.5 h-2.5 rounded-full bg-current"></span>{/if}{b.status}
           </span>
           <div class="grow min-w-0">
             <div class="text-[var(--pd-table-body-text-highlight)]">{shortImage(b.image)}:{b.tag}</div>
             <div class="text-xs truncate">{b.type.join(', ')} · {b.arch} · {b.error ?? b.folder}</div>
           </div>
-          <span class="text-xs w-72 truncate" title={b.buildContainerId}>{b.buildContainerId.split('/').slice(-2).join('/')}</span>
+          <span class="text-xs w-72 shrink-0 truncate" title={b.buildContainerId}>{b.buildContainerId.split('/').slice(-2).join('/')}</span>
           {#if b.vm}
             <a class="text-[var(--pd-link)] text-sm" href={href(`/c/${b.vm}`)}>{b.vm}</a>
           {:else if b.status === 'success' && b.type.includes('qcow2')}

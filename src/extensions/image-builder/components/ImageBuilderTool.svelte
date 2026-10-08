@@ -36,7 +36,7 @@ onMount(() => {
 function ago(iso: string): string {
   const h = Math.round((Date.now() - new Date(iso).getTime()) / 3600000);
   if (h < 1) return 'just now';
-  if (h < 48) return `${h} hours ago`;
+  if (h < 48) return `${h} ${h === 1 ? 'hour' : 'hours'} ago`;
   return `${Math.round(h / 24)} days ago`;
 }
 
