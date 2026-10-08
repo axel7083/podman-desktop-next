@@ -16,6 +16,7 @@ const extension: MockExtension = {
   id: 'redhat.trusted-artifact-signer',
   displayName: 'Trusted Artifact Signer',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: "Keyless-sign images with your org's RHTAS (Fulcio + Rekor + TUF) on push, and show who signed what on every image.",
   version: '0.1.0',
   icon: 'icons/redhat.trusted-artifact-signer.png',

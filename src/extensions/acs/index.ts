@@ -12,6 +12,7 @@ const extension: MockExtension = {
   id: ACS_ID,
   displayName: 'Red Hat Advanced Cluster Security policy check',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: "Check images against your organization's ACS build-time policies before you push.",
   version: '0.1.0',
   icon: 'icons/redhat.acs-image-check.png',

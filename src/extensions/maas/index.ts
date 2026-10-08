@@ -37,6 +37,7 @@ const extension: MockExtension = {
   id: MAAS,
   displayName: 'Models-as-a-Service',
   publisher: 'redhat',
+  category: 'AI',
   description: "Connect to your company's OpenShift AI MaaS gateway, mint API keys, browse subscribed models and track token quota.",
   version: '0.2.0',
   icon,

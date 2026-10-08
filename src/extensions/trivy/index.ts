@@ -30,6 +30,7 @@ const extension: MockExtension = {
   id: 'podman-desktop.trivy',
   displayName: 'Trivy',
   publisher: 'podman-desktop',
+  category: 'Security & supply chain',
   description: 'Vulnerability, misconfiguration and secret scan of local images with a digest-pinned Trivy.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.trivy.png',

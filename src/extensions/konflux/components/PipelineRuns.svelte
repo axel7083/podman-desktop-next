@@ -65,7 +65,7 @@ const REASON_CLASS: Record<string, string> = {
 
 const TASK_CLASS: Record<TaskRun['status'], string> = {
   Succeeded: 'border-[var(--pd-state-success)]',
-  Failed: 'border-[var(--pd-state-error)] bg-[var(--pd-content-card-inset-bg)]',
+  Failed: 'border-[var(--pd-state-error)] bg-[var(--pd-content-card-inset-surface)]',
   Running: 'border-[var(--pd-state-info)]',
   Pending: 'border-[var(--pd-content-divider)] opacity-60',
   Skipped: 'border-[var(--pd-content-divider)] opacity-40',
@@ -118,7 +118,7 @@ const TASK_CLASS: Record<TaskRun['status'], string> = {
               {/if}
             </div>
             {#if logsOpen}
-              <pre class="rounded-md bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] p-3 text-xs font-mono overflow-auto" role="log" aria-label="Task logs">{SNYK_LOG.join('\n')}</pre>
+              <pre class="rounded-md bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)] text-[var(--pd-code-block-text)] p-3 text-xs font-mono overflow-auto" role="log" aria-label="Task logs">{SNYK_LOG.join('\n')}</pre>
             {/if}
           </section>
         {/if}

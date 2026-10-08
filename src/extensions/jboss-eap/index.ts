@@ -13,6 +13,7 @@ const extension: MockExtension = {
   id: EAP_EXT,
   displayName: 'JBoss EAP',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Scan a WAR with WildFly Glow, provision a trimmed JBoss EAP 8.1 image, and run and manage it locally.',
   version: '0.3.0',
   icon: 'icons/redhat.jboss-eap.png',

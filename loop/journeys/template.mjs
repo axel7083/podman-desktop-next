@@ -20,7 +20,13 @@ export async function journey(t) {
   await page.getByRole('button', { name: 'Install' }).first().click();
   await t.shot('addons');
 
-  await page.getByRole('link', { name: 'Example tool' }).first().click();
+  // TOOLS is capped (docs/ia.md scaling rules): the tool may sit in "More"
+  const toolLink = page.getByRole('link', { name: 'Example tool' }).first();
+  if (await toolLink.isVisible()) await toolLink.click();
+  else {
+    await page.getByRole('button', { name: 'More Tools' }).click();
+    await page.getByRole('menuitem', { name: 'Example tool' }).click();
+  }
   await t.shot('tool');
 
   await page.getByRole('link', { name: 'podman-machine-default' }).first().click();

@@ -196,7 +196,7 @@ const pills = $derived([
               </tr>
               {#if proofOpen === i}
                 <tr><td></td><td colspan="4" class="pb-2">
-                  <div role="region" class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-2 font-mono text-xs space-y-0.5" aria-label="Inclusion proof">
+                  <div role="region" class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-2 font-mono text-xs space-y-0.5" aria-label="Inclusion proof">
                     <div>GET {'{rekor}'}/api/v1/log/entries?logIndex={s.logIndex}</div>
                     <div>body: hashedrekord · bundle {s.bundleFormat ?? 'sigstore-bundle-v0.3'}</div>
                     <div>inclusionProof: treeSize 51203377 · rootHash 4f8c…a91e · {s.verified ? 'verified ✓' : 'signature does not match policy identity ✗'}</div>
@@ -257,7 +257,7 @@ const pills = $derived([
           <span class="text-sm text-[var(--pd-content-sub-header)] ml-auto">{policy.by} · {new Date(policy.at).toLocaleString()}</span>
         </div>
         {#each policy.report.violations as v (v.code)}
-          <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-2 text-sm">
+          <div class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-2 text-sm">
             <div class="text-[var(--pd-state-error)] font-semibold">{v.code}</div>
             <div>{v.msg}</div>
             {#if v.solution}<div class="text-[var(--pd-content-sub-header)]">Solution: {v.solution}</div>{/if}

@@ -14,6 +14,7 @@ const extension: MockExtension = {
   id: RL_EXT,
   displayName: 'RHEL Lightspeed',
   publisher: 'redhat',
+  category: 'RHEL & image mode',
   description: 'Get help from RHEL Lightspeed (command-line assistant) inside Podman Desktop.',
   version: '0.3.0',
   icon: 'icons/redhat.rhel-lightspeed.png',

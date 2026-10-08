@@ -86,6 +86,7 @@ const extension: MockExtension = {
   id: 'redhat.catalog-checker',
   displayName: 'Red Hat Ecosystem Catalog',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'Health grade, freshness and newer tags for Red Hat base images.',
   version: '0.1.0',
   icon: 'icons/redhat.catalog-checker.svg',

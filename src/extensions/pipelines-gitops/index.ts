@@ -73,6 +73,7 @@ const extension: MockExtension = {
   id: PG_ID,
   displayName: 'Pipelines & GitOps',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'See PipelineRuns and Argo CD application sync/health for the active cluster; rerun and sync from the desktop.',
   version: '0.2.0',
   icon: 'icons/redhat.openshift-pipelines-gitops.svg',

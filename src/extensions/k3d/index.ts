@@ -136,6 +136,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'k3d',
   publisher: 'podman-desktop',
+  category: 'Kubernetes & OpenShift',
   description: 'Lightweight k3s clusters in Podman containers, with a built-in load balancer and registry.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.k3d.png',
@@ -178,7 +179,7 @@ const extension: MockExtension = {
         },
       },
     ],
-    groupers: [{ id: 'k3d-cluster', label: 'k3d.cluster', typeName: 'k3d cluster', icon: 'icons/podman-desktop.k3d.png' }],
+    groupers: [{ id: 'k3d-cluster', label: 'k3d.cluster', typeName: 'k3d cluster', chip: 'k3d', icon: 'icons/podman-desktop.k3d.png' }],
     cliTools: [
       {
         id: 'k3d',

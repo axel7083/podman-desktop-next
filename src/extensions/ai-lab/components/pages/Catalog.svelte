@@ -5,7 +5,8 @@
  * Fit badges are computed against the local GPU (RTX 4090, 24 GB).
  */
 import { faBookOpen, faBoxArchive, faCloudArrowUp, faDownload, faMessage, faRocket, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Checkbox, Dropdown, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import { Dropdown, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';

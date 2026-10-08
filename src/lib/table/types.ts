@@ -11,6 +11,8 @@ export interface NameCellData {
   href?: string;
   /** Extension badges (e.g. P14 list decorations). */
   badges?: { label: string; ext: ExtensionMeta }[];
+  /** Group chip shown first on the second line (extension icon + short label). */
+  chip?: { label: string; icon?: IconRef; ext?: ExtensionMeta };
 }
 
 export interface StatusCellData {

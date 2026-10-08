@@ -5,6 +5,7 @@ const extension: MockExtension = {
   id: 'podman-desktop.registries',
   displayName: 'Registries',
   publisher: 'podman-desktop',
+  category: 'Containers & engines',
   description: 'Suggested container registries: Docker Hub, Red Hat Quay, GitHub and Google.',
   version: '1.29.0',
   icon: 'icons/podman-desktop.registries.png',

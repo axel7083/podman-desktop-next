@@ -26,7 +26,7 @@ function open(): void {
   {#each rows as r (r.label)}
     <div class="flex items-center gap-2">
       <span class="w-28 text-sm">{r.label}</span>
-      <div class="grow h-2 rounded-full bg-[var(--pd-content-card-inset-bg)] overflow-hidden">
+      <div class="grow h-2 rounded-full bg-[var(--pd-content-card-inset-surface)] overflow-hidden">
         <div class="h-full bg-[var(--pd-state-success)]" style:width="{images.length ? (r.n / images.length) * 100 : 0}%"></div>
       </div>
       <span class="w-10 text-right tabular-nums text-sm">{r.n}/{images.length}</span>

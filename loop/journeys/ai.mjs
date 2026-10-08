@@ -38,7 +38,13 @@ export async function journey(t) {
   await page.getByRole('button', { name: 'Send prompt' }).click();
   await page.waitForTimeout(2500);
   await t.shot('vllm-playground');
-  await page.getByRole('link', { name: 'vLLM @ localhost:8000' }).first().click();
+  // VMs & services is capped: the new service may sit under "More" (docs/ia.md scaling rules)
+  const vllm = page.getByRole('link', { name: 'vLLM @ localhost:8000' }).first();
+  if (await vllm.isVisible()) await vllm.click();
+  else {
+    await page.getByRole('button', { name: 'More VMs & services' }).click();
+    await page.getByRole('menuitem', { name: /vLLM @ localhost:8000/ }).click();
+  }
   await page.waitForTimeout(300);
   await t.shot('vllm-connection');
 

@@ -5,7 +5,8 @@
  * detection, port; then the task steps inline and "Open service details".
  */
 import { faCircleCheck, faCircleExclamation, faLocationArrow, faMicrochip, faPlus, faRocket } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, ErrorMessage, FormPage, Input, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, ErrorMessage, FormPage, Input, Spinner } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import { navigate } from '#lib/nav.ts';
@@ -78,7 +79,7 @@ function close(): void {
 }
 </script>
 
-<FormPage title="Creating Model service" breadcrumbLeftPart="Model Services" breadcrumbRightPart="Creating Model service" onclose={close} onbreadcrumbClick={close} inProgress={task?.status === 'in-progress'}>
+<FormPage title="Creating Model service" breadcrumbLeftPart="Model services" breadcrumbRightPart="Creating Model service" onclose={close} onbreadcrumbClick={close} inProgress={task?.status === 'in-progress'}>
   {#snippet icon()}<Icon icon={faPlus} size="1.5x" />{/snippet}
   {#snippet content()}
     <div class="flex flex-col w-full px-5 py-4 gap-3 overflow-auto">
@@ -110,7 +111,7 @@ function close(): void {
         <label class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">Inference backend
           <Dropdown class="mt-1 font-normal" ariaLabel="Inference backend" bind:value={backend} options={backendOptions} disabled={!!task} />
         </label>
-        <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-3 text-sm flex items-center gap-3">
+        <div class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-3 text-sm flex items-center gap-3">
           <Icon icon={faMicrochip} size="1.4x" class="text-[var(--pd-content-card-icon)]" />
           <div class="grow">
             <div class="text-[var(--pd-content-card-header-text)]">GPU detected: {GPU.model}, {GPU.vramGB} GB</div>

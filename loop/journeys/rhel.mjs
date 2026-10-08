@@ -34,7 +34,9 @@ export async function journey(t) {
   await t.shot('r4-rhel-10-engine');
   await page.getByRole('link', { name: 'Overview' }).first().click().catch(() => undefined);
   await page.waitForTimeout(500);
-  await page.getByRole('link', { name: 'Subscription' }).first().click();
+  // more than 3 extension tabs: Subscription sits under "More (n)" (docs/ia.md rule 3)
+  await page.getByRole('button', { name: 'More tabs' }).click();
+  await page.getByRole('menuitem', { name: /Subscription/ }).click();
   await page.getByRole('region', { name: 'Subscription status' }).waitFor();
   await t.shot('r4-rhel-10-subscription');
 
@@ -99,7 +101,7 @@ export async function journey(t) {
   await input.press('Enter');
   await t.shot('rhel9-db-terminal');
   await t.open('/settings/rhel-registration', { speed: '5' });
-  await page.getByRole('region', { name: 'Activation keys' }).waitFor();
+  await page.getByRole('region', { name: 'Registered systems' }).waitFor();
   await t.shot('settings-rhel-registration');
 
   /* ---- 5. bootc → edge device --------------------------------------- */

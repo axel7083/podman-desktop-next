@@ -14,6 +14,7 @@ const extension: MockExtension = {
   id: IB_EXT,
   displayName: 'Image Builder',
   publisher: 'redhat',
+  category: 'RHEL & image mode',
   description: 'Build RHEL images (WSL, qcow2, ISO, vhd, AMI, vSphere…) from blueprints on console.redhat.com and use them locally.',
   version: '0.1.0',
   icon: 'icons/redhat.image-builder.png',

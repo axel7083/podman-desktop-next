@@ -38,6 +38,7 @@ const extension: MockExtension = {
   id: 'redhat.rhel-lifecycle-checker',
   displayName: 'RHEL Lifecycle',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'Flags images and machines on retired or near-retirement RHEL releases and Application Streams.',
   version: '0.1.0',
   icon: 'icons/redhat.rhel-lifecycle-checker.svg',

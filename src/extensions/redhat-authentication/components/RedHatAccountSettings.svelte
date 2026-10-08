@@ -11,12 +11,14 @@ import Dialog from '#lib/components/Dialog.svelte';
 import ListItemButtonIcon from '#lib/components/ListItemButtonIcon.svelte';
 import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { navigate } from '#lib/nav.ts';
-import { extData, runTask, toast, world } from '#lib/world.svelte.ts';
+import { runTask, toast, world } from '#lib/world.svelte.ts';
 
-import { ACTIVATION_KEYS, type ActivationKey, REGISTRY_SERVICE_ACCOUNT, SESSION, SSO_PROVIDER_ID, SUBSCRIPTIONS } from '../data.ts';
+import { type ActivationKey, REGISTRY_SERVICE_ACCOUNT, SESSION, SSO_PROVIDER_ID } from '../data.ts';
+import { activationKeys, addActivationKey, removeActivationKey, subscriptions } from '../store.ts';
 
 const ID = 'redhat.redhat-authentication';
-const keys = extData<ActivationKey[]>(ID, 'activationKeys', structuredClone(ACTIVATION_KEYS));
+const keys = $derived(activationKeys());
+const subs = $derived(subscriptions());
 const signedIn = $derived(world.accounts[SSO_PROVIDER_ID] ?? true);
 
 let creating = $state(false);
@@ -46,14 +48,14 @@ function create(): void {
     name: `Create activation key ${key.name}`,
     ext: ID,
     steps: [{ label: 'POST https://console.redhat.com/api/rhsm/v2/activation_keys', ms: 900 }],
-    onDone: () => keys.push(key),
+    onDone: () => addActivationKey(key),
   });
 }
 
 function remove(k: ActivationKey): void {
   withConfirmation(
     () => {
-      keys.splice(keys.indexOf(k), 1);
+      removeActivationKey(k.name);
       toast({ type: 'success', title: `Activation key ${k.name} deleted` });
     },
     `delete activation key ${k.name}`,
@@ -96,7 +98,7 @@ function accounts(): void {
       <h2 class="grow font-semibold text-[var(--pd-invert-content-card-header-text)]">Activation keys</h2>
       <Button icon={faPlusCircle} disabled={!signedIn} onclick={openCreate}>Create activation key</Button>
     </div>
-    <p class="text-sm mb-2">Used to register Podman machines and RHEL VMs with <code>subscription-manager register --activationkey</code>.</p>
+    <p class="text-sm mb-2">Used to register Podman machines and RHEL VMs with <code>subscription-manager register --activationkey</code>. Registration status per system: Settings › RHEL registration.</p>
     <div class="grid grid-cols-[1.4fr_2fr_1.2fr_1fr_0.6fr_40px] px-2 py-1.5 text-xs uppercase font-semibold text-[var(--pd-table-header-text)] border-b border-[var(--pd-content-divider)]">
       <span>Name</span><span>Role</span><span>Usage</span><span>Service level</span><span>Release</span><span></span>
     </div>
@@ -111,7 +113,7 @@ function accounts(): void {
 
   <section class="bg-[var(--pd-invert-content-card-bg)] rounded-md p-4" aria-label="Subscriptions">
     <h2 class="font-semibold text-[var(--pd-invert-content-card-header-text)] mb-2">Subscriptions</h2>
-    {#each SUBSCRIPTIONS as s (s.sku)}
+    {#each subs as s (s.sku)}
       <div class="flex items-center gap-3 py-1.5 text-sm border-b last:border-b-0 border-[var(--pd-content-divider)]">
         <span class="w-20 font-mono">{s.sku}</span><span class="grow">{s.name}</span><span class="tabular-nums">{s.consumed} / {s.quantity} used</span><span class="w-36 text-right">{s.status} · {s.endDate}</span>
       </div>

@@ -16,6 +16,7 @@ const extension: MockExtension = {
   id: CLI_PACK_ID,
   displayName: 'OpenShift CLI Tools',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'Install, update and put on PATH the OpenShift command-line tools, matched to your clusters.',
   version: '0.4.0',
   icon: 'icons/redhat.openshift-cli-pack.svg',

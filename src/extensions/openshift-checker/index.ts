@@ -28,6 +28,7 @@ const extension: MockExtension = {
   id: 'redhat.openshift-checker',
   displayName: 'Red Hat OpenShift Checker',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: "Flags Containerfile directives that misbehave under OpenShift's restricted SCC (arbitrary UID, root group).",
   version: '0.2.0',
   icon: 'icons/redhat.openshift-checker.png',

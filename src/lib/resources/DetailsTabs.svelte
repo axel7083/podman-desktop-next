@@ -18,9 +18,15 @@ interface Props {
   current: string;
   core: { id: string; label: string }[];
   ext: Contributed<TabDef>[];
+  /** App path of a tab (default `${base}/${id}`); connections use `?tab=`. */
+  pathFor?: (id: string) => string;
 }
 
-let { base, current, core, ext }: Props = $props();
+let { base, current, core, ext, pathFor }: Props = $props();
+
+function tabPath(id: string): string {
+  return pathFor ? pathFor(id) : `${base}/${id}`;
+}
 
 const MAX_EXT = 3;
 const inline = $derived(ext.length > MAX_EXT ? ext.slice(0, MAX_EXT - 1) : ext);
@@ -40,19 +46,19 @@ function close(): void {
 
 function go(id: string): void {
   open = false;
-  navigate(`${base}/${id}`);
+  navigate(tabPath(id));
 }
 </script>
 
 {#each core as t (t.id)}
-  <Tab title={t.label} selected={current === t.id} url={href(`${base}/${t.id}`)} />
+  <Tab title={t.label} selected={current === t.id} url={href(tabPath(t.id))} />
 {/each}
 {#if ext.length}
   <div class="mx-2 my-1.5 border-l border-[var(--pd-content-divider)]" role="separator" aria-label="Extension tabs"></div>
   {#each inline as t (t.ext.id + t.id)}
     <Contribution ext={t.ext} kind="tab" api="P14">
-      <div class="flex items-center">
-        <Tab title={t.label} selected={current === t.id} url={href(`${base}/${t.id}`)} />
+      <div class="flex">
+        <Tab title={t.label} selected={current === t.id} url={href(tabPath(t.id))} />
       </div>
     </Contribution>
   {/each}

@@ -68,6 +68,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'Hummingbird',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'Catalog of minimal hardened images; detects local images with a hardened alternative and rebuilds them onto it.',
   version: '0.3.0',
   icon: 'icons/redhat.hummingbird.png',

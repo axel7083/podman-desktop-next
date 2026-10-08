@@ -56,6 +56,7 @@ const extension: MockExtension = {
   id: 'redhat.security-data-checker',
   displayName: 'Red Hat Security Data (VEX)',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: "Matches an image's RPM database against Red Hat's authoritative CVE/VEX data (Not affected, Fixed in RHSA-…).",
   version: '0.1.0',
   icon: 'icons/redhat.security-data-checker.png',

@@ -273,6 +273,11 @@ export interface GrouperDef {
   label: string;
   /** Group type shown in the name: "bookinfo (compose)". */
   typeName: string;
+  /**
+   * Short label of the group chip (icon + label on the row's second line),
+   * e.g. "Quarkus Dev Services", "Compose", "Kind". Defaults to `typeName`.
+   */
+  chip?: string;
   icon?: IconRef;
   /**
    * Display name of a group when the label value is an opaque key (e.g. a
@@ -456,10 +461,30 @@ export interface ExtensionMeta {
   displayName: string;
   /** `static/icons/<id>.png` (path without leading slash). */
   icon: string;
+  category?: ExtensionCategory;
 }
+
+/**
+ * Catalog category (PD catalog `categories`): groups the Extensions page,
+ * the TOOLS "More" popover and the dashboard card organizer at scale.
+ */
+export const EXTENSION_CATEGORIES = [
+  'Containers & engines',
+  'Kubernetes & OpenShift',
+  'RHEL & image mode',
+  'Application development',
+  'AI',
+  'Security & supply chain',
+  'Automation',
+  'Accounts',
+] as const;
+
+export type ExtensionCategory = (typeof EXTENSION_CATEGORIES)[number];
 
 export interface MockExtension extends ExtensionMeta {
   publisher: string;
+  /** Catalog category; drives grouping on the Extensions page and in nav overflow. */
+  category: ExtensionCategory;
   description: string;
   version: string;
   /** Pre-installed like PD built-ins; enabled in every scenario. */

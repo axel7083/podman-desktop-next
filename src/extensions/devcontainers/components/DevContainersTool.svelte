@@ -5,7 +5,8 @@
  * `devcontainer up` as a task. `?open=1` opens the wizard.
  */
 import { faArrowUpRightFromSquare, faBoxOpen, faFolderOpen, faPlay } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, Input, NavPage } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, Input, NavPage } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { page } from '$app/state';
 
 import { href, navigate } from '#lib/nav.ts';
@@ -114,7 +115,7 @@ function containerHref(p: Project): string | undefined {
                 </Checkbox>
               </div>
               {#if project}
-                <code class="block rounded-md px-2 py-1.5 text-sm font-mono bg-[var(--pd-content-card-inset-bg)] wrap-anywhere">{upCommand(project, removeExisting)}</code>
+                <code class="block rounded-md px-2 py-1.5 text-sm font-mono bg-[var(--pd-content-card-inset-surface)] wrap-anywhere">{upCommand(project, removeExisting)}</code>
               {/if}
               <div class="flex items-center gap-3">
                 <Button icon={faPlay} onclick={start} disabled={!project || running} inProgress={running}>Start dev container</Button>
@@ -159,7 +160,7 @@ function containerHref(p: Project): string | undefined {
             </div>
             <details class="min-w-0">
               <summary class="cursor-pointer text-sm text-[var(--pd-link)]">{p.configPath}</summary>
-              <pre class="mt-2 max-h-64 overflow-auto rounded-md p-2 text-xs font-mono bg-[var(--pd-content-card-inset-bg)]" aria-label="{p.name} devcontainer.json">{json(p)}</pre>
+              <pre class="mt-2 max-h-64 overflow-auto rounded-md p-2 text-xs font-mono bg-[var(--pd-content-card-inset-surface)]" aria-label="{p.name} devcontainer.json">{json(p)}</pre>
             </details>
           </div>
         </Card>

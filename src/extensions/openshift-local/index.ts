@@ -20,6 +20,7 @@ const extension: MockExtension = {
   id: CRC_ID,
   displayName: 'Red Hat OpenShift Local',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'Run a single-node OpenShift, MicroShift or OKD cluster in a local VM.',
   version: '2.5.0',
   icon: 'icons/redhat.openshift-local.png',

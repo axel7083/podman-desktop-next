@@ -14,6 +14,7 @@ const extension: MockExtension = {
   id: LS_EXT,
   displayName: 'Red Hat Lightspeed',
   publisher: 'redhat',
+  category: 'RHEL & image mode',
   description: 'Advisor recommendations and CVE exposure for your registered RHEL VMs and RHEL Podman machines.',
   version: '0.2.0',
   icon: 'icons/redhat.lightspeed-insights.png',

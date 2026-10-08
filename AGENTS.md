@@ -114,8 +114,10 @@ the P# and update the `_template`.
 ## Scaling rules (plan §4, docs/ia.md)
 
 1. Primary nav: connections grouped by kind (Engines, Kubernetes, VMs & services),
-   then Tools, then Extensions; Accounts + Settings pinned at the bottom. Groups
-   collapse, are capped (4) with "More (n)" overflow; users pin/hide items.
+   then Tools; Extensions + Accounts + Settings pinned at the bottom, the middle
+   scrolls. Groups collapse, are capped (running and selected items win the
+   slots) with "More (n)" overflow; users pin/hide items. Full list: docs/ia.md
+   "Scaling rules".
 2. Secondary nav: core resources, "Extensions" divider, `when`-matched sections with
    the extension icon.
 3. Tabs: core, divider, extension tabs; >3 → "More".

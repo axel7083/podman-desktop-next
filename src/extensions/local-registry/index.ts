@@ -30,6 +30,7 @@ const extension: MockExtension = {
   id: LR,
   displayName: 'Local registry',
   publisher: 'podman-desktop',
+  category: 'Containers & engines',
   description: 'One-click OCI registry (zot) on localhost:5000, wired into Podman and your local clusters.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.local-registry.png',

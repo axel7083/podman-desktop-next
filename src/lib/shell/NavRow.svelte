@@ -67,10 +67,10 @@ const tip = $derived(tooltip ?? label);
             {/if}
           </div>
           {#if expanded}
-            <span class="text-sm truncate ml-3 flex-1 min-w-0" class:font-medium={selected}>{label}</span>
-            {#if hint}
+            <span class="text-sm truncate ml-3 min-w-0 [flex:1_1_auto]" class:font-medium={selected}>{label}</span>
+            {#if hint && label.length + hint.length <= 22}
               <span
-                class="ml-1 shrink-0 rounded-sm px-1 text-[9px] leading-[14px] font-semibold uppercase bg-[var(--pd-nav-hint-bg)] text-[var(--pd-nav-hint-text)] group-hover/navrow:hidden"
+                class="ml-1 shrink-0 whitespace-nowrap rounded-sm px-1 text-[9px] leading-[14px] font-semibold uppercase bg-[var(--pd-nav-hint-bg)] text-[var(--pd-nav-hint-text)] group-hover/navrow:hidden"
                 title={hintTooltip ?? hint}>{hint}</span>
             {/if}
             {#if counter !== undefined}

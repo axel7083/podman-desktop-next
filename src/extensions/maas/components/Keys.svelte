@@ -1,7 +1,8 @@
 <script lang="ts">
 /** MaaS › API keys: create (shown once, optionally stored as a Podman secret), revoke. */
 import { faKey, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, Input, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, Input, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import Dialog from '#lib/components/Dialog.svelte';
 import { withConfirmation } from '#lib/confirm.svelte.ts';

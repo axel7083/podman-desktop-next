@@ -101,7 +101,7 @@ function createForPodman(): void {
       {/each}
     </tbody>
   </table>
-  <div class="flex items-center gap-2 text-sm rounded-md p-2 bg-[var(--pd-content-card-inset-bg)]" aria-label="Current context command">
+  <div class="flex items-center gap-2 text-sm rounded-md p-2 bg-[var(--pd-content-card-inset-surface)]" aria-label="Current context command">
     <Button type="link" icon={faTerminal} aria-label="docker CLI"></Button>
     <code class="font-mono text-xs">docker context use {current}</code>
   </div>

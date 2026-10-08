@@ -157,7 +157,7 @@ function duration(): string {
     </div>
     {#if showStdout || run.status === 'running'}
       <pre
-        class="max-h-80 overflow-auto rounded-lg p-3 text-xs font-mono leading-5 bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)]"
+        class="max-h-80 overflow-auto rounded-lg p-3 text-xs font-mono leading-5 bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)] text-[var(--pd-code-block-text)]"
         aria-label="Playbook stdout">{run.stdout.join('\n')}</pre>
     {/if}
   </section>

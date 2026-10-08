@@ -19,6 +19,7 @@ const extension: MockExtension = {
   id: SANDBOX_ID,
   displayName: 'Developer Sandbox',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'Free 30-day shared OpenShift cluster on Red Hat infrastructure, provisioned with your Red Hat account.',
   version: '1.4.0',
   icon: 'icons/redhat.redhat-sandbox.png',

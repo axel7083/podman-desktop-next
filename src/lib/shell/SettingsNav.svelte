@@ -42,10 +42,19 @@ const core = [
     {#each core as item (item.id)}
       <SettingsNavItem title={item.title} href={href(`/settings/${item.id}`)} icon={item.icon} selected={section === item.id} />
     {/each}
-    {#each registry.settings as s (s.ext.id + s.id)}
+    {#if registry.settings.length}
+      <div class="flex items-center gap-2 px-4 pt-4 pb-1.5" role="separator" aria-label="Extension settings">
+        <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">Extensions</span>
+        <span class="grow border-t border-[var(--pd-global-nav-bg-border)]"></span>
+      </div>
+    {/if}
+    <!-- contributed sections keep their authored sentence case (no ui-svelte capitalize) -->
+    <div class="[&_.capitalize]:normal-case">
+    {#each registry.settings.toSorted((a, b) => a.title.localeCompare(b.title)) as s (s.ext.id + s.id)}
       <Contribution ext={s.ext} kind="settings" api="P17">
         <SettingsNavItem title={s.title} href={href(`/settings/${s.id}`)} icon={PreferencesIcon} selected={section === s.id} />
       </Contribution>
     {/each}
+    </div>
   </div>
 </nav>

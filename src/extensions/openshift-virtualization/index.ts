@@ -93,6 +93,7 @@ const extension: MockExtension = {
   id: VIRT_ID,
   displayName: 'OpenShift Virtualization',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'List and control VMs on your OpenShift clusters; run a bootc image as a VM on the cluster.',
   version: '0.1.0',
   icon: 'icons/redhat.openshift-virtualization.png',

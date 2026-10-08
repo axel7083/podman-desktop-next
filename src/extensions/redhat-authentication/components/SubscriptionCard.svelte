@@ -2,7 +2,10 @@
 /** Dashboard card (P17): subscription usage of the signed-in organization. */
 import AppIcon from '#lib/components/AppIcon.svelte';
 
-import { SESSION, SUBSCRIPTIONS } from '../data.ts';
+import { SESSION } from '../data.ts';
+import { subscriptions } from '../store.ts';
+
+const subs = $derived(subscriptions());
 </script>
 
 <div class="flex flex-col gap-3">
@@ -13,10 +16,10 @@ import { SESSION, SUBSCRIPTIONS } from '../data.ts';
       <span class="text-sm text-[var(--pd-content-card-title)]">{SESSION.account.label} · org {SESSION.organizationId}</span>
     </div>
   </div>
-  {#each SUBSCRIPTIONS as s (s.sku)}
+  {#each subs as s (s.sku)}
     <div class="flex flex-col gap-1 text-sm text-[var(--pd-content-card-text)]">
       <div class="flex justify-between gap-2"><span class="truncate" title={s.name}>{s.name}</span><span class="shrink-0 tabular-nums">{s.consumed} of {s.quantity}</span></div>
-      <div class="h-1.5 rounded-full bg-[var(--pd-content-card-inset-bg)] overflow-hidden" role="progressbar" aria-label="{s.name} usage" aria-valuenow={s.consumed} aria-valuemax={s.quantity}>
+      <div class="h-1.5 rounded-full bg-[var(--pd-content-card-inset-surface)] overflow-hidden" role="progressbar" aria-label="{s.name} usage" aria-valuenow={s.consumed} aria-valuemax={s.quantity}>
         <div class="h-full bg-[var(--pd-status-running)]" style:width="{Math.round((s.consumed / s.quantity) * 100)}%"></div>
       </div>
       <span class="text-xs text-[var(--pd-content-card-title)]">{s.status} · renews {s.endDate}</span>

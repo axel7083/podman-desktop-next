@@ -57,6 +57,7 @@ const extension: MockExtension = {
   id: MTA_EXT,
   displayName: 'Migration Toolkit for Applications',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Analyze an application with kantra/MTA rulesets for a migration target, browse issues by effort, and apply Konveyor AI fixes.',
   version: '8.1.1',
   icon: 'icons/redhat.mta.svg',

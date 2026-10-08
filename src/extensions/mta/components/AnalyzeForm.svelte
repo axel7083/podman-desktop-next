@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Analyze wizard (`kantra analyze`): input, source, targets, mode, hybrid providers; live task log. */
 import { faCheck, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, FormPage, Input } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, FormPage, Input } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 

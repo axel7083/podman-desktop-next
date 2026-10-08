@@ -1,6 +1,7 @@
 <script lang="ts">
 /** "Sign & push" dialog (RHTAS): destination, keyless signing, SBOM attestation. */
-import { Button, Checkbox, CloseButton, Dropdown, Input, Modal } from '@podman-desktop/ui-svelte';
+import { Button, CloseButton, Dropdown, Input, Modal } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import type { ContainerImage } from '#lib/world.svelte.ts';
 
@@ -55,7 +56,7 @@ function submit(): void {
       <span class="ml-1">Sign after push with Trusted Artifact Signer</span>
     </Checkbox>
     {#if sign}
-      <div role="region" class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-3 text-sm space-y-1" aria-label="Signing identity">
+      <div role="region" class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-3 text-sm space-y-1" aria-label="Signing identity">
         <div>Keyless signing (cosign 3.1.3) – a browser window opens to sign in to <span class="font-mono">sso.acme-corp.com</span>.</div>
         <div class="grid grid-cols-[110px_1fr] gap-x-2">
           <span>Identity</span><span class="font-mono">{identity}</span>

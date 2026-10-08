@@ -19,6 +19,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'Podman',
   publisher: 'podman-desktop',
+  category: 'Containers & engines',
   description: 'Integration for Podman: machines, containers, pods, images, volumes and the podman CLI.',
   version: '1.29.0',
   icon: 'icons/podman-desktop.podman.png',

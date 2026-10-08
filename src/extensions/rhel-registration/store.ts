@@ -6,8 +6,14 @@
  */
 import { runTask, toast, world } from '#lib/world.svelte.ts';
 
+import { SESSION } from '../redhat-authentication/data.ts';
+import { activationKeys, addActivationKey, subscriptions } from '../redhat-authentication/store.ts';
+
+/** Activation keys and subscriptions are owned by the Red Hat account (dependency). */
+export { activationKeys, addActivationKey, subscriptions };
+
 export const REG_EXT = 'redhat.rhel-registration';
-export const ORG_ID = '19830412';
+export const ORG_ID = SESSION.organizationId;
 
 export interface Registration {
   status: 'Current' | 'Not registered' | 'Registering';
@@ -22,31 +28,10 @@ export interface Registration {
   environment?: string;
 }
 
-/** RHSM activation key (`/api/rhsm/v2/activation_keys`). */
-export interface ActivationKey {
-  id: string;
-  name: string;
-  role: string;
-  usage: string;
-  serviceLevel: string;
-  releaseVersion: string;
-  additionalRepositories: { repositoryLabel: string }[];
-}
-
-export interface Subscription {
-  sku: string;
-  name: string;
-  quantity: number;
-  consumed: number;
-  startDate: string;
-  endDate: string;
-  status: 'Active' | 'Expiring soon' | 'Expired';
-}
+export type { ActivationKey, Subscription } from '../redhat-authentication/store.ts';
 
 interface Store {
   registrations?: Record<string, Registration>;
-  activationKeys?: ActivationKey[];
-  subscriptions?: Subscription[];
 }
 
 function store(): Store {
@@ -58,14 +43,6 @@ export function registrationOf(connId: string): Registration | undefined {
   return store().registrations?.[connId];
 }
 
-export function activationKeys(): ActivationKey[] {
-  return store().activationKeys ?? [];
-}
-
-export function subscriptions(): Subscription[] {
-  return store().subscriptions ?? [];
-}
-
 export function allRegistrations(): Record<string, Registration> {
   return store().registrations ?? {};
 }
@@ -75,12 +52,6 @@ export function setRegistration(connId: string, r: Registration): void {
   world.ext[REG_EXT] ??= {};
   const s = world.ext[REG_EXT] as Store;
   s.registrations = { ...(s.registrations ?? {}), [connId]: r };
-}
-
-export function addActivationKey(key: ActivationKey): void {
-  world.ext[REG_EXT] ??= {};
-  const s = world.ext[REG_EXT] as Store;
-  s.activationKeys = [...(s.activationKeys ?? []), key];
 }
 
 /** Lines printed by `subscription-manager register`. */

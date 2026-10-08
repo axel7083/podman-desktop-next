@@ -69,6 +69,7 @@ const extension: MockExtension = {
   id: QUAY_ID,
   displayName: 'Red Hat Quay',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'Browse your Quay repositories, manage robot accounts and see Clair scan results before and after push.',
   version: '0.2.0',
   icon: 'icons/redhat.quay.png',

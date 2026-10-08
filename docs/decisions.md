@@ -106,3 +106,19 @@ Autonomous choices made while building the mockup. Revisit at checkpoints.
 | O11 | Developer Sandbox sign-up / phone verification and OpenShift Local preset switch are not mocked (connection exists at launch). | Time; supporting journeys only. |
 | O12 | The Red Hat account is generic (jdoe persona, org 18833012); RHEL wave extends it (e.g. Subscription tab). | Shared extension. |
 | O13 | Intermediate states driven by timers (VM Provisioning → Running, tasks) do not survive a reload (D13); the journey navigates in-app for those steps. | Static mockup. |
+## Polish: shell scaling pass
+
+| # | Decision | Why |
+|---|---|---|
+| P1 | Toasts keyed by `taskId`: the progress toast (spinner + "Show progress") is replaced in place by the outcome; max 2 visible; success/info 5 s, warning 8 s, error sticky. `RunTaskOptions.doneTitle` for better outcome copy. | Toast pile-up reported by ai, appdev, rhel waves. |
+| P2 | Primary nav: per-group caps, rank selected › one running item per engine type › running › rest, displayed in stable order; middle region scrolls with fade edges; Extensions moved into the pinned footer; More popover outside the masked scroller (mask-image clips fixed children), tools grouped by category. Supersedes D11; resolves PA10 (WSLC visible in windows). | Nav pushed the footer off-screen with Everything; selected overflow items grew the group. |
+| P3 | `MockExtension.category` (8 categories, `EXTENSION_CATEGORIES`) set on every extension. | Needed by the Extensions page, More popover and docs; PD's catalog has categories too. |
+| P4 | Sentence-case titles: CSS neutralises ui-svelte `h1.capitalize` (first letter only) and SettingsNavItem capitalize for contributed sections. | Titles must match nav labels without forking ui-svelte. |
+| P5 | `redhat.redhat-authentication` owns activation keys + subscriptions (`store.ts`); `redhat.rhel-registration` re-exports them, keeps registrations only, its card became "RHEL systems". Org id unified to 18833012. | Two extensions managed the same keys with different data. |
+| P6 | Enabled set = preset + `pdn.overrides.<key>` (on/off lists); `?scenario=` no longer resets user installs. Supersedes the "t.open resets extensions" caveat of the windows journey. | Re-opening a scenario lost installs. |
+| P7 | Reload settles transient states (connections starting/stopping/creating, containers STARTING/STOPPING/DELETING, add-ons installing) and marks running tasks "Interrupted by reload". Extends D13. | No spinner that never ends after reload. |
+| P8 | `#lib/components/Checkbox.svelte` replaces ui-svelte Checkbox everywhere: disabled keeps the checked/indeterminate glyph. | ui-svelte 1.29.1 draws every disabled box empty. |
+| P9 | Proposed tokens `--pd-content-card-inset-surface` and `--pd-code-block-bg/-border/-text` (both themes) replace `--pd-content-card-inset-bg` (= card colour in light) and `--pd-terminal-*` for snippets inside cards. | Inset tiles and code blocks had no contrast in light. |
+| P10 | Connection home has no breadcrumb/close; tabs reuse `DetailsTabs` (`pathFor` → `?tab=`) so >3 contributed tabs go to "More"; connections without core resources or sections get no secondary nav. | One consistent connection home. |
+| P11 | `GrouperDef.chip` + unified group row (title / chip + count + details); contributed container columns hidden when empty. | Truncated group titles and three different badge styles. |
+| P12 | Security tab: per-checker summary table, collapsible sections (>3 checkers: collapsed unless critical or actionable). | ~10 checkers on one image. |

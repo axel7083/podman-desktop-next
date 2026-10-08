@@ -59,6 +59,7 @@ const extension: MockExtension = {
   id: AMQ_EXT,
   displayName: 'Red Hat AMQ Broker',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Run a local AMQ Broker / ActiveMQ Artemis, inspect addresses and queues, and send or browse test messages for JMS apps.',
   version: '0.2.0',
   icon: 'icons/redhat.amq-broker.svg',

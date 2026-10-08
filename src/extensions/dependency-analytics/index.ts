@@ -30,6 +30,7 @@ const extension: MockExtension = {
   id: 'redhat.dependency-analytics',
   displayName: 'Red Hat Dependency Analytics',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'Application-dependency vulnerability report (npm, Maven, pip, Go) for images, with Red Hat trusted-content remediations.',
   version: '0.1.0',
   icon: 'icons/redhat.dependency-analytics.png',

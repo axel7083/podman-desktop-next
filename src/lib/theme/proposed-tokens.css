@@ -11,6 +11,12 @@
   --pdn-mockup-bg: #c4f82a;
   --pdn-mockup-text: #0f0f11;
   --pdn-inspect-outline: #c4f82a;
+  /* inset tiles / chips on a card (PD's inset-bg is #fff on a #fefefe card in light) */
+  --pd-content-card-inset-surface: #000;
+  /* code, YAML and log snippets inside cards and dialogs */
+  --pd-code-block-bg: #0f0f11;
+  --pd-code-block-border: #3f3f46;
+  --pd-code-block-text: #e4e4e7;
 }
 .light {
   --pd-nav-group-header: #5c5c5c;
@@ -20,4 +26,8 @@
   --pdn-mockup-bg: #c4f82a;
   --pdn-mockup-text: #0f0f11;
   --pdn-inspect-outline: #4d7c0f;
+  --pd-content-card-inset-surface: #eeeef0;
+  --pd-code-block-bg: #f4f4f5;
+  --pd-code-block-border: #d4d4d8;
+  --pd-code-block-text: #18181b;
 }

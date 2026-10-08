@@ -9,7 +9,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
-import { registry } from '#lib/ext/registry.svelte.ts';
+import { presetFor, registry } from '#lib/ext/registry.svelte.ts';
 import type { ScenarioId } from '#lib/ext/types.ts';
 import DesktopIcon from '#lib/images/DesktopIcon.svelte';
 import bgImage from '#lib/images/welcome-bg.png';
@@ -18,6 +18,8 @@ import { ALL_SCENARIO_IDS, SCENARIOS } from '#lib/scenarios.ts';
 import { ui } from '#lib/ui.svelte.ts';
 
 let selection = $state<ScenarioId[]>([]);
+const extCount = $derived(presetFor(selection).length);
+const isAll = $derived(selection.length === ALL_SCENARIO_IDS.length);
 
 $effect(() => {
   if (ui.welcomeOpen) selection = [...registry.scenarios];
@@ -28,7 +30,7 @@ function toggle(id: ScenarioId): void {
 }
 
 function everything(): void {
-  selection = [...ALL_SCENARIO_IDS];
+  selection = isAll ? ['community'] : [...ALL_SCENARIO_IDS];
 }
 
 function start(): void {
@@ -58,7 +60,7 @@ function skip(): void {
         Welcome to Podman Desktop v2.0.0-next (interactive mockup)
       </div>
       <div class="flex flex-row justify-center">
-        <div class="bg-[var(--pd-content-card-inset-bg)] px-4 pb-4 pt-2 rounded-sm max-w-[860px]">
+        <div class="bg-[var(--pd-content-card-inset-surface)] px-4 pb-4 pt-2 rounded-sm max-w-[860px]">
           <div class="flex justify-center text-sm text-[var(--pd-content-card-text)] pb-2">
             Who are you? Pick one or more scenarios – the matching extensions are enabled, exactly like installing them.
           </div>
@@ -77,7 +79,7 @@ function skip(): void {
                   <span class="font-semibold text-[var(--pd-content-card-header-text)]">{s.label}</span>
                 </div>
                 <span class="text-sm text-[var(--pd-content-card-text)]">{s.persona}</span>
-                <span class="text-xs text-[var(--pd-content-card-text)] opacity-75 line-clamp-3">{s.description}</span>
+                <span class="text-xs text-[var(--pd-content-card-text)] opacity-75 line-clamp-4">{s.description}</span>
                 {#if checked}
                   <span class="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] flex items-center justify-center">
                     <Icon icon={faCheck} size="xs" />
@@ -90,14 +92,16 @@ function skip(): void {
       </div>
       <div class="flex justify-center p-2 text-sm items-center text-[var(--pd-content-card-text)] gap-1">
         Switch any time from the lime <span class="rounded-full px-1.5 bg-[var(--pdn-mockup-bg)] text-[var(--pdn-mockup-text)] font-semibold">Mockup</span> pill, or
-        <Button type="link" padding="px-0" onclick={everything}>select everything</Button> for the scaling stress test.
+        <Button type="link" padding="px-0" onclick={everything}>{isAll ? 'clear the selection' : 'select everything'}</Button> for the scaling stress test.
       </div>
     </div>
 
     <div class="flex justify-end flex-none bg-[var(--pd-content-bg)] p-8">
       <div class="flex flex-row gap-2">
         <Button type="secondary" onclick={skip}>Skip</Button>
-        <Button disabled={selection.length === 0} onclick={start}>Start with {selection.length} scenario{selection.length === 1 ? '' : 's'}</Button>
+        <Button disabled={selection.length === 0} onclick={start}>
+          {isAll ? 'Start with everything' : `Start with ${selection.length} scenario${selection.length === 1 ? '' : 's'}`} · {extCount} extensions
+        </Button>
       </div>
     </div>
   </div>

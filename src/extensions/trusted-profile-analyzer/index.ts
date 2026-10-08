@@ -16,6 +16,7 @@ const extension: MockExtension = {
   id: 'redhat.trusted-profile-analyzer',
   displayName: 'Trusted Profile Analyzer',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: "Generate an SBOM for any local image, upload it to your organization's TPA and see vulnerabilities, VEX status and remediation per package URL.",
   version: '0.1.0',
   icon: 'icons/redhat.trusted-profile-analyzer.png',

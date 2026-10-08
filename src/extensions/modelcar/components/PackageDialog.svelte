@@ -1,6 +1,7 @@
 <script lang="ts">
 /** "Package as ModelCar": tag, base image and the generated Containerfile. */
-import { Button, Checkbox, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import Dialog from '#lib/components/Dialog.svelte';
 

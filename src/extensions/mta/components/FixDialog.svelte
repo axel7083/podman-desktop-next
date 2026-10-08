@@ -37,7 +37,7 @@ function accept(): void {
       <div class="space-y-3 w-[640px] max-w-full">
         <p class="text-sm">Konveyor AI · {fix.model} served by AI Lab (local inference) · {fix.files.length} files</p>
         <p>{fix.explanation}</p>
-        <pre class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-3 text-xs font-mono leading-5 overflow-auto" aria-label="Proposed diff">{#each fix.diff as line, i (i)}<div class={lineClass(line)}>{line}</div>{/each}</pre>
+        <pre class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-3 text-xs font-mono leading-5 overflow-auto" aria-label="Proposed diff">{#each fix.diff as line, i (i)}<div class={lineClass(line)}>{line}</div>{/each}</pre>
       </div>
     {/if}
   {/snippet}

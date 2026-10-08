@@ -5,7 +5,8 @@
  * server image, then the image runs as a container on podman-machine-default.
  */
 import { faArrowUpRightFromSquare, faCircleCheck, faFolderOpen, faHammer, faMagnifyingGlass, faPlay } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, FormPage, Input } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, FormPage, Input } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 import { tick } from 'svelte';

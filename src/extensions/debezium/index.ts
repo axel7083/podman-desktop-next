@@ -20,6 +20,7 @@ const extension: MockExtension = {
   id: DBZ_EXT,
   displayName: 'Debezium',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Stream row-level changes from local databases to Kafka: run Kafka Connect with Debezium, create and monitor connectors.',
   version: '0.2.0',
   icon: 'icons/redhat.debezium.png',

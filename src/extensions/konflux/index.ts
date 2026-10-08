@@ -23,6 +23,7 @@ const extension: MockExtension = {
   id: 'redhat.konflux',
   displayName: 'Konflux',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'See your Konflux applications, component builds, snapshots and releases next to the images you build locally.',
   version: '0.1.0',
   icon: 'icons/redhat.konflux.png',

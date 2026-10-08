@@ -28,8 +28,12 @@ import NavRow from './NavRow.svelte';
 const MIN_WIDTH = 50;
 const MAX_WIDTH = 240;
 const EXPANDED_THRESHOLD = 70;
-/** Items shown per group before overflowing into "More" (pinned items don't count). */
-const GROUP_CAP = 4;
+/**
+ * Visible slots per group before overflowing into "More" (pinned items don't
+ * count). Tuned so Everything fits 1280×800 with the footer visible and the
+ * windows scenario shows its three engine families (Podman, Docker, WSLC).
+ */
+const GROUP_CAP: Record<string, number> = { engines: 4, kubernetes: 4, vms: 3, tools: 4 };
 
 const expanded = $derived(ui.navWidth > EXPANDED_THRESHOLD);
 const path = $derived(appPath(page.url.pathname));
@@ -47,6 +51,9 @@ interface NavEntry {
   dimmed?: boolean;
   counter?: number;
   kind: 'connection' | 'tool';
+  /** Running / connected / busy: wins a visible slot over stopped items. */
+  active?: boolean;
+  provider?: string;
 }
 
 function connEntry(c: ConnectionView): NavEntry {
@@ -62,6 +69,8 @@ function connEntry(c: ConnectionView): NavEntry {
     ext: c.ext,
     dimmed: c.extensionDisabled || c.status === 'stopped',
     kind: 'connection',
+    active: !c.extensionDisabled && c.status !== 'stopped' && c.status !== 'unknown',
+    provider: c.engineType ?? c.providerId,
   };
 }
 
@@ -74,6 +83,7 @@ function toolEntry(t: Contributed<ToolDef>): NavEntry {
     ext: t.ext,
     counter: t.badge?.(world),
     kind: 'tool',
+    active: !!t.badge?.(world),
   };
 }
 
@@ -86,22 +96,85 @@ interface Group {
   createHref?: string;
 }
 
+/**
+ * Visible slots: selected > running/connected (or tools with a badge) >
+ * the rest, ties broken by the stable order (D10). Visible rows keep the
+ * stable order, so status changes never reshuffle what is on screen; the
+ * selected overflow item takes the last slot instead of growing the group.
+ */
 function split(id: string, label: string, entries: NavEntry[], createHref?: string): Group {
+  const cap = GROUP_CAP[id] ?? 4;
   const pinned = entries.filter(e => ui.pinned.includes(e.id));
-  const rest = entries.filter(e => !ui.pinned.includes(e.id));
-  const shown = rest.filter(e => !ui.hidden.includes(e.id));
-  const hidden = rest.filter(e => ui.hidden.includes(e.id));
-  const visible = [...pinned, ...shown.slice(0, GROUP_CAP)];
-  // keep the selected entry visible even when it would overflow
-  const overflow = [...shown.slice(GROUP_CAP), ...hidden].filter(e => {
-    if (isSelected(e)) {
-      visible.push(e);
-      return false;
+  const candidates = entries.filter(e => !ui.pinned.includes(e.id) && (!ui.hidden.includes(e.id) || isSelected(e)));
+  // one running item per provider first (Podman, Docker, WSLC… all stay reachable), then other running ones
+  const firstOfProvider = new Set<string>();
+  const seenProviders = new Set<string>();
+  for (const e of candidates) {
+    if (e.active && !seenProviders.has(e.provider ?? e.id)) {
+      seenProviders.add(e.provider ?? e.id);
+      firstOfProvider.add(e.id);
     }
-    return true;
-  });
+  }
+  const rank = (e: NavEntry): number => (isSelected(e) ? 0 : firstOfProvider.has(e.id) ? 1 : e.active ? 2 : 3);
+  const chosen = new Set(
+    candidates
+      .map((e, i) => ({ e, i }))
+      .toSorted((a, b) => rank(a.e) - rank(b.e) || a.i - b.i)
+      .slice(0, cap)
+      .map(x => x.e.id),
+  );
+  // a group that only overflows by one shows the item instead of "More (1)"
+  if (candidates.length === cap + 1 && !entries.some(e => ui.hidden.includes(e.id))) candidates.forEach(e => chosen.add(e.id));
+  const visible = [...pinned, ...entries.filter(e => chosen.has(e.id))];
+  const overflow = entries.filter(e => !visible.includes(e));
   return { id, label, entries, visible, overflow, createHref };
 }
+
+/** Overflow entries grouped by the contributing extension's category (TOOLS at scale). */
+function byCategory(entries: NavEntry[]): { category: string; entries: NavEntry[] }[] {
+  const map = new Map<string, NavEntry[]>();
+  for (const e of entries) {
+    const key = e.ext.category ?? 'Other';
+    map.set(key, [...(map.get(key) ?? []), e]);
+  }
+  return [...map.entries()].map(([category, list]) => ({ category, entries: list.toSorted((a, b) => a.label.localeCompare(b.label)) }));
+}
+
+/* Scroll region with fade edges ------------------------------------- */
+
+let scroller = $state<HTMLDivElement>();
+let fadeTop = $state(false);
+let fadeBottom = $state(false);
+
+function updateFade(): void {
+  if (!scroller) return;
+  fadeTop = scroller.scrollTop > 2;
+  fadeBottom = scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 2;
+}
+
+$effect(() => {
+  if (!scroller) return;
+  void groups.length;
+  void ui.collapsedGroups.length;
+  const observer = new ResizeObserver(updateFade);
+  observer.observe(scroller);
+  for (const child of scroller.children) observer.observe(child);
+  updateFade();
+  return (): void => observer.disconnect();
+});
+
+// keep the selected row in view after navigation (e.g. from the palette)
+$effect(() => {
+  void path;
+  if (!scroller) return;
+  requestAnimationFrame(() => scroller?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest' }));
+});
+
+const fadeMask = $derived(
+  fadeTop || fadeBottom
+    ? `linear-gradient(to bottom, ${fadeTop ? 'transparent 0, black 28px' : 'black 0'}, ${fadeBottom ? 'black calc(100% - 28px), transparent 100%' : 'black 100%'})`
+    : undefined,
+);
 
 const groups: Group[] = $derived.by(() => {
   const result: Group[] = [];
@@ -122,6 +195,7 @@ function isSelected(e: NavEntry): boolean {
 /* More / item menus ------------------------------------------------- */
 
 let moreOpen = $state<string | undefined>();
+const moreGroup = $derived(groups.find(g => g.id === moreOpen && g.overflow.length));
 let moreAnchor = $state<HTMLElement | undefined>();
 let itemMenuOpen = $state<string | undefined>();
 let itemMenuAnchor = $state<HTMLElement | undefined>();
@@ -204,7 +278,13 @@ function onResizeDblClick(): void {
     {#snippet icon()}<DashboardIcon size="24" />{/snippet}
   </NavRow>
 
-  <div class="flex-1 min-h-0 overflow-y-auto [scrollbar-width:none]" role="region" aria-label="Connections and tools">
+  <div
+    bind:this={scroller}
+    onscroll={updateFade}
+    class="flex-1 min-h-0 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:var(--pd-global-nav-bg-border)_transparent]"
+    style:mask-image={fadeMask}
+    role="region"
+    aria-label="Connections and tools">
     {#each groups as group (group.id)}
       {@const collapsed = ui.collapsedGroups.includes(group.id)}
       <div role="group" aria-label={group.label}>
@@ -266,37 +346,47 @@ function onResizeDblClick(): void {
               <span class="flex items-center justify-center w-6"><Icon icon={faEllipsis} /></span>
               {#if expanded}<span class="text-sm ml-3">More ({group.overflow.length})</span>{/if}
             </button>
-            <Popover open={moreOpen === group.id} anchor={moreAnchor} placement="right-start" onclose={closeMore} class="w-64 py-1">
-              <div class="px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">
-                More {group.label}
-              </div>
-              {#each group.overflow as entry (entry.id)}
-                <MenuItem title={entry.label} icon={entry.icon} onclick={goFromMore.bind(undefined, entry)}>
-                  {#snippet trailing()}
-                    {#if entry.dot}<span class="w-2 h-2 rounded-full {entry.dot}" title={entry.status}></span>{/if}
-                    {#if ui.hidden.includes(entry.id)}<span class="text-[9px] uppercase opacity-70">hidden</span>{/if}
-                  {/snippet}
-                </MenuItem>
-              {/each}
-            </Popover>
           {/if}
         {/if}
       </div>
     {/each}
-
-    <div class="mx-2.5 my-1.5 border-t border-[var(--pd-global-nav-bg-border)]" aria-hidden="true"></div>
-    <NavRow href="/extensions" label="Extensions" selected={path.startsWith('/extensions')} {expanded} counter={expanded ? registry.extensions.length : undefined}>
-      {#snippet icon()}<PuzzleIcon size="24" />{/snippet}
-    </NavRow>
+    <div class="h-2" aria-hidden="true"></div>
   </div>
 
+  <!-- footer never scrolls away: Extensions, Accounts, Settings -->
   <div class="flex-shrink-0 w-full border-t border-[var(--pd-global-nav-bg-border)]" aria-hidden="true"></div>
+  <NavRow href="/extensions" label="Extensions" selected={path.startsWith('/extensions')} {expanded} counter={expanded ? registry.extensions.length : undefined}>
+    {#snippet icon()}<PuzzleIcon size="24" />{/snippet}
+  </NavRow>
   <NavRow href="/accounts" label="Accounts" selected={path.startsWith('/accounts')} {expanded}>
     {#snippet icon()}<AccountIcon size="24" />{/snippet}
   </NavRow>
   <NavRow href="/settings/resources" label="Settings" selected={path.startsWith('/settings')} {expanded}>
     {#snippet icon()}<SettingsIcon size="24" />{/snippet}
   </NavRow>
+
+{#if moreGroup}
+  {@const group = moreGroup}
+<Popover open={true} anchor={moreAnchor} placement="right-start" onclose={closeMore} class="w-64 py-1">
+  <div class="px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">
+    More {group.label.toLowerCase()} ({group.overflow.length})
+  </div>
+  {#each group.id === 'tools' && group.overflow.length > 6 ? byCategory(group.overflow) : [{ category: '', entries: group.overflow }] as section (section.category)}
+    {#if section.category}
+      <div class="px-3 pt-2 pb-0.5 text-[10px] font-semibold text-[var(--pd-content-sub-header)]" role="presentation">{section.category}</div>
+    {/if}
+    {#each section.entries as entry (entry.id)}
+      <MenuItem dense title={entry.label} icon={entry.icon} onclick={goFromMore.bind(undefined, entry)}>
+        {#snippet trailing()}
+          {#if entry.counter !== undefined}<span class="text-xs text-[var(--pd-content-sub-header)]">{entry.counter}</span>{/if}
+          {#if entry.dot}<span class="w-2 h-2 rounded-full {entry.dot}" title={entry.status}></span>{/if}
+          {#if ui.hidden.includes(entry.id)}<span class="text-[9px] uppercase opacity-70">hidden</span>{/if}
+        {/snippet}
+      </MenuItem>
+    {/each}
+  {/each}
+</Popover>
+{/if}
 
   <Popover open={!!itemMenuOpen} anchor={itemMenuAnchor} placement="right-start" onclose={closeItemMenu} class="w-44">
     {#if itemMenuOpen}

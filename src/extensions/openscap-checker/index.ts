@@ -73,6 +73,7 @@ const extension: MockExtension = {
   id: 'redhat.openscap-checker',
   displayName: 'OpenSCAP Compliance',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'Scan container images against CIS, STIG, OSPP and PCI-DSS profiles from SCAP Security Guide.',
   version: '0.1.0',
   icon: 'icons/redhat.openscap-checker.png',

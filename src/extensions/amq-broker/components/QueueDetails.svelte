@@ -84,7 +84,7 @@ function pretty(body: string): string {
         {#if queue.messages.length === 0}
           <p>No messages in {queue.name}.</p>
         {:else}
-          <div class="rounded-md overflow-hidden bg-[var(--pd-content-card-inset-bg)]" role="table" aria-label="Messages">
+          <div class="rounded-md overflow-hidden bg-[var(--pd-content-card-inset-surface)]" role="table" aria-label="Messages">
             <div class="grid grid-cols-[110px_180px_1.2fr_120px_2fr] gap-2 px-3 py-2 text-xs uppercase text-[var(--pd-table-header-text)] font-semibold" role="row">
               <span>Message ID</span><span>Timestamp</span><span>Original address</span><span>Delivery count</span><span>Body</span>
             </div>

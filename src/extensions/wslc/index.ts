@@ -50,6 +50,7 @@ const extension: MockExtension = {
   id: WSLC_ID,
   displayName: 'WSL Containers',
   publisher: 'podman-desktop',
+  category: 'Containers & engines',
   description: 'See and manage the Linux containers you run with the built-in wslc engine of WSL, next to your Podman machines.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.wslc.png',

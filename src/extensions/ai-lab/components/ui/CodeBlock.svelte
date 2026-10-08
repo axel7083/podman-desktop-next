@@ -21,7 +21,7 @@ function copy(): void {
 }
 </script>
 
-<div class="relative rounded-md bg-[var(--pd-terminal-background)] border border-[var(--pd-content-card-border)]">
+<div class="relative rounded-md bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)]">
   <button
     class="absolute top-2 right-2 rounded-md border border-[var(--pd-button-secondary-border)] px-2 py-1 text-[var(--pd-terminal-foreground)] hover:bg-[var(--pd-link-hover-bg)]"
     title="Copy to clipboard"

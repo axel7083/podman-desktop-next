@@ -36,7 +36,7 @@ function start(): void {
     <div class="flex items-center gap-3 rounded-lg p-3 bg-[var(--pd-content-card-bg)] text-[var(--pd-content-card-text)] border-l-4 border-[var(--pd-state-warning)]" role="status" aria-label="container system status">
       <Icon icon={faTriangleExclamation} class="text-[var(--pd-state-warning)]" />
       <span class="grow">
-        The container system service is not running. Run <code class="px-1 rounded-sm bg-[var(--pd-content-card-inset-bg)]">container system start</code> or start it from here.
+        The container system service is not running. Run <code class="px-1 rounded-sm bg-[var(--pd-content-card-inset-surface)]">container system start</code> or start it from here.
       </span>
       <Button icon={faPlay} inProgress={status === 'starting'} onclick={start} aria-label="Start container system">Start</Button>
     </div>

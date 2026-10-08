@@ -141,11 +141,11 @@ function time(epochS: unknown): string {
             <div class="grid grid-cols-[1fr_2fr] gap-3">
               <div>
                 <p class="text-sm mb-1">Header</p>
-                <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto" aria-label="Token header">{json(token.header)}</pre>
+                <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto" aria-label="Token header">{json(token.header)}</pre>
               </div>
               <div>
                 <p class="text-sm mb-1">Payload</p>
-                <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto max-h-96" aria-label="Token payload">{json(token.payload)}</pre>
+                <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto max-h-96" aria-label="Token payload">{json(token.payload)}</pre>
               </div>
             </div>
           </Card>

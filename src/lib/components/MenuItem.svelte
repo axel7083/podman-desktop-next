@@ -13,15 +13,17 @@ interface Props {
   detail?: string;
   onclick: () => void;
   trailing?: Snippet;
+  /** 28px rows for long lists (nav overflow). */
+  dense?: boolean;
 }
 
-let { title, icon, enabled = true, detail, onclick, trailing }: Props = $props();
+let { title, icon, enabled = true, detail, onclick, trailing, dense = false }: Props = $props();
 </script>
 
 <button
   role="menuitem"
   disabled={!enabled}
-  class="w-full text-left p-2.5 flex items-center gap-2 whitespace-nowrap rounded-md {enabled
+  class="w-full text-left {dense ? 'px-2.5 py-1.5' : 'p-2.5'} flex items-center gap-2 whitespace-nowrap rounded-md {enabled
     ? 'hover:bg-[var(--pd-dropdown-item-hover-bg)] hover:text-[var(--pd-dropdown-item-hover-text)] text-[var(--pd-dropdown-item-text)]'
     : 'text-[var(--pd-dropdown-disabled-item-text)]'}"
   onclick={onclick}>

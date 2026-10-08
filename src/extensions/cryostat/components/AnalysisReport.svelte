@@ -68,7 +68,7 @@ function download(): void {
         <li class="grid grid-cols-[160px_1fr_40px_90px] items-center gap-3">
           <span class="font-medium text-[var(--pd-content-card-header-text)]">{r.rule}</span>
           <div class="flex flex-col gap-1 min-w-0">
-            <div class="h-1.5 rounded-full bg-[var(--pd-content-card-inset-bg)]">
+            <div class="h-1.5 rounded-full bg-[var(--pd-content-card-inset-surface)]">
               <div class="h-1.5 rounded-full {BAR[r.severity]}" style="width: {r.score}%"></div>
             </div>
             <span class="text-sm truncate" title={r.summary}>{r.summary}</span>
@@ -113,7 +113,7 @@ function download(): void {
             <td class="py-1.5 font-mono text-sm">{a.type}</td>
             <td class="py-1.5">
               <div class="flex items-center gap-2">
-                <div class="h-1.5 w-28 rounded-full bg-[var(--pd-content-card-inset-bg)]">
+                <div class="h-1.5 w-28 rounded-full bg-[var(--pd-content-card-inset-surface)]">
                   <div class="h-1.5 rounded-full bg-[var(--pd-button-primary-bg)]" style="width: {a.percent}%"></div>
                 </div>
                 <span class="tabular-nums">{a.percent}%</span>

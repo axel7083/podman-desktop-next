@@ -13,6 +13,7 @@ const extension: MockExtension = {
   id: 'podman-desktop.compose',
   displayName: 'Compose',
   publisher: 'podman-desktop',
+  category: 'Containers & engines',
   description: 'Install and update Compose; group Compose projects in the containers list.',
   version: '1.29.0',
   icon: 'icons/podman-desktop.compose.png',
@@ -24,7 +25,7 @@ const extension: MockExtension = {
       {
         id: 'compose',
         label: 'com.docker.compose.project',
-        typeName: 'compose',
+        typeName: 'compose', chip: 'Compose',
         icon: 'icons/podman-desktop.compose.png',
         actions: [
           {

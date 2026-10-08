@@ -1,6 +1,7 @@
 <script lang="ts">
 /** Install an MCP server from its registry `packages[]` (OCI container or npm process). */
-import { Button, Checkbox, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import Dialog from '#lib/components/Dialog.svelte';
 import { navigate } from '#lib/nav.ts';

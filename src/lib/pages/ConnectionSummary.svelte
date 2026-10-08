@@ -17,6 +17,7 @@ import { registry } from '#lib/ext/registry.svelte.ts';
 import type { AddonDef, ConnectionView, Contributed, ResourceContext } from '#lib/ext/types.ts';
 import { coreResourcesOf, href, KUBE_KINDS, navigate, startVerb, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
+import DetailsTabs from '#lib/resources/DetailsTabs.svelte';
 import { deleteConnection, restartConnection, runTask, startConnection, stopConnection, toast, world } from '#lib/world.svelte.ts';
 
 interface Props {
@@ -48,8 +49,8 @@ function count(id: string): number {
   return (world.kube[conn.id] ?? []).filter(o => kinds.includes(o.kind)).length;
 }
 
-function tabHref(id: string): string {
-  return href(`/c/${conn.id}${id === 'summary' ? '' : `?tab=${id}`}`);
+function tabPath(id: string): string {
+  return `/c/${conn.id}${id === 'summary' ? '' : `?tab=${id}`}`;
 }
 
 function start(): void {
@@ -75,8 +76,8 @@ function remove(): void {
   );
 }
 
-function close(): void {
-  navigate('/');
+function noop(): void {
+  // top-level page: Escape does not navigate away
 }
 
 function addonState(a: Contributed<AddonDef>): 'installed' | 'installing' | undefined {
@@ -146,7 +147,9 @@ const tiles = $derived([
 ]);
 </script>
 
-<DetailsPage title={conn.name} subtitle="{conn.providerName}{conn.version ? ` ${conn.version}` : ''} · {conn.endpoint}" breadcrumbLeftPart="Dashboard" breadcrumbRightPart={conn.name} onclose={close} onbreadcrumbClick={close}>
+<!-- Connection home: one header (identity + lifecycle), Summary + contributed tabs. No breadcrumb/close: it is a top-level destination reached from the primary nav. -->
+<div class="h-full w-full [&_[aria-label=Header]_button[aria-label=Close]]:hidden">
+<DetailsPage title={conn.name} subtitle="{conn.providerName}{conn.version ? ` ${conn.version}` : ''} · {conn.endpoint}" onclose={noop}>
   {#snippet iconSnippet()}
     <div class="relative">
       <AppIcon icon={conn.icon} size="32px" />
@@ -170,22 +173,12 @@ const tiles = $derived([
     {/if}
   {/snippet}
   {#snippet tabsSnippet()}
-    {@const core = [{ id: 'summary', label: 'Summary' }, ...(conn.kind === 'kubernetes' ? [{ id: 'addons', label: 'Add-ons' }] : [])]}
-    {#each core as t (t.id)}
-      <div class="pb-1 border-b-[3px] whitespace-nowrap {tab === t.id ? 'border-[var(--pd-tab-highlight)]' : 'border-transparent hover:border-[var(--pd-tab-hover)]'}">
-        <a href={tabHref(t.id)} class="px-4 py-2 no-underline {tab === t.id ? 'text-[var(--pd-tab-text-highlight)]' : 'text-[var(--pd-tab-text)]'}">{t.label}{t.id === 'addons' && addons.length ? ` (${addons.length})` : ''}</a>
-      </div>
-    {/each}
-    {#if extTabs.length}
-      <div class="mx-2 my-1.5 border-l border-[var(--pd-content-divider)]" role="separator"></div>
-      {#each extTabs as t (t.ext.id + t.id)}
-        <Contribution ext={t.ext} kind="tab" api="P14">
-          <div class="pb-1 border-b-[3px] whitespace-nowrap {tab === t.id ? 'border-[var(--pd-tab-highlight)]' : 'border-transparent hover:border-[var(--pd-tab-hover)]'}">
-            <a href={tabHref(t.id)} class="px-4 py-2 no-underline {tab === t.id ? 'text-[var(--pd-tab-text-highlight)]' : 'text-[var(--pd-tab-text)]'}">{t.label}</a>
-          </div>
-        </Contribution>
-      {/each}
-    {/if}
+    <DetailsTabs
+      base="/c/{conn.id}"
+      current={tab}
+      core={[{ id: 'summary', label: 'Summary' }, ...(conn.kind === 'kubernetes' ? [{ id: 'addons', label: addons.length ? `Add-ons (${addons.length})` : 'Add-ons' }] : [])]}
+      ext={extTabs}
+      pathFor={tabPath} />
   {/snippet}
   {#snippet contentSnippet()}
     {#if conn.extensionDisabled}
@@ -204,7 +197,7 @@ const tiles = $derived([
             <button
               class="flex items-center gap-3 rounded-lg p-3 bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] text-left"
               onclick={openTile.bind(undefined, t.path)}>
-              <span class="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--pd-content-card-inset-bg)] text-[var(--pd-content-card-icon)]">
+              <span class="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--pd-content-card-inset-surface)] text-[var(--pd-content-card-icon)]">
                 <AppIcon icon={t.icon as never} size="18" />
               </span>
               <span class="flex flex-col min-w-0">
@@ -286,3 +279,4 @@ const tiles = $derived([
     {/if}
   {/snippet}
 </DetailsPage>
+</div>

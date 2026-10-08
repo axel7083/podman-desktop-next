@@ -22,6 +22,7 @@ const extension: MockExtension = {
   id: DEBUG_EXT,
   displayName: 'Debug shell',
   publisher: 'podman-desktop',
+  category: 'Application development',
   description: 'Open a shell with real tools inside any container — even distroless or scratch — without changing the image.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.debug-shell.png',
@@ -52,7 +53,7 @@ const extension: MockExtension = {
       {
         id: 'debug-target',
         label: DEBUG_LABEL,
-        typeName: 'debug',
+        typeName: 'debug', chip: 'Debug shell',
         groupName: (value, containers): string =>
           `debug ${findContainer(value)?.name ?? containers[0]?.labels['io.podman-desktop.debug-target.name'] ?? value.slice(0, 12)}`,
         groupDetails: (_value, containers): string[] => [...new Set(containers.map(c => c.image.split('/').pop() ?? c.image))],

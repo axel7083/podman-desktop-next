@@ -44,8 +44,9 @@ Source: mockup plan §4. Each rule is tested with the *Everything* scenario.
      VMS & SERVICES (`vm`, `service`); then TOOLS; then Extensions; Accounts and
      Settings pinned at the bottom.
    - Group headers collapse (count shown when collapsed) and offer "+" (create).
-   - Each group shows pinned items + the first **4**; the rest and hidden items go
-     to "⋯ More (n)" (popover). The selected item is always visible.
+   - Each group shows pinned items + a capped number of slots (see "Scaling
+     rules" 2–4); the rest and hidden items go to "⋯ More (n)" (popover). The
+     selected item always takes a slot.
    - Row: real provider icon, status dot (running / starting / stopped / error),
      name, hint chip (`WSL`, `context`, `OCM`). Stopped and extension-disabled rows are dimmed.
    - Row menu (hover): Pin to top / Move to More. Resizable 50–240px; below 70px
@@ -72,3 +73,72 @@ Source: mockup plan §4. Each rule is tested with the *Everything* scenario.
 8. **Provenance**: contributed elements carry their extension icon where it adds
    meaning; "Inspect integrations" outlines every contribution with
    `<extension> · <point> · P#`.
+
+## Scaling rules (polish pass, tested with `?scenario=everything`: ~75 extensions, 34 connections, 20 tools)
+
+Rules the shell applies so the product stays usable when every integration is
+enabled. Each names where it is implemented.
+
+1. **Primary nav never pushes the footer away** (`PrimaryNav.svelte`). Dashboard
+   is pinned on top; Extensions, Accounts and Settings are pinned at the bottom;
+   everything in between scrolls with 28px fade edges and the selected row is
+   scrolled into view after navigation.
+2. **Per-group caps** (`GROUP_CAP`): Engines 4, Kubernetes 4, VMs & services 3,
+   Tools 4 (+ pinned items, which don't count). A group that overflows by one
+   shows the item instead of "More (1)".
+3. **Who gets a visible slot**: selected item › one running item per engine
+   type / provider (so Podman, Docker and WSLC all stay reachable) › other
+   running or connected items (tools: with a badge) › the rest; ties keep the
+   stable order (D10). Visible rows are displayed in stable order, so status
+   changes never reshuffle what is on screen. Selecting an overflow item swaps
+   it into the last slot; the group never grows.
+4. **"More (n)" popover** stays on screen (clamped above the status bar, scrolls),
+   uses 28px rows, and groups Tools by the contributing extension's **category**
+   (`MockExtension.category`) once there are more than 6.
+5. **Secondary nav**: core resources, then one flat "Extensions" list for
+   extensions that contribute a single section, then one sub-header (icon + name)
+   per extension contributing 2+ sections (e.g. "Pipelines & GitOps"). Rows carry
+   no extra badge (the row icon is the provenance). Connections with nothing but
+   an overview (most VMs and services) get no secondary nav at all.
+6. **Connection home** = one page: identity header with lifecycle actions (no
+   breadcrumb, no close: it is a top-level destination), Summary (resource tiles +
+   details) and Add-ons, then contributed tabs after the divider, >3 → "More".
+7. **Dashboard**: running engines first in a 2-column grid, capped at 6 with
+   "Show all n engines"; other connections as neutral chips grouped by kind
+   (Kubernetes / VMs and services), 10 per group + "+n more"; extension cards
+   capped at 4 with "Show n more cards" and configured with the ListOrganizer.
+8. **Container groups**: one row format for every grouper — title = group name
+   (never truncated by a chip, no "(type)" suffix), line 2 = chip (extension icon
+   + short label, `GrouperDef.chip`: "Quarkus Dev Services", "Compose", "Kind",
+   "Pod") + container count + details. Contributed columns appear only when a
+   container of the connection has a value.
+9. **Image Security tab**: summary first (merged severity counts + one row per
+   checker with its counts or "Passed" and its headline; click jumps to the
+   section). With more than 3 checkers, sections collapse unless they hold
+   critical findings or a remediation action. Finding rows share one grid.
+10. **Extensions page**: category chips with counts + status filter
+    (All/Enabled/Disabled) + search; results grouped by category; pack members
+    nested under their pack; compact one-card-per-extension rows with
+    contributions, "Requires …", "Required by n extensions" and an inline
+    "Enabling also enables …" notice before the toggle.
+11. **Command palette**: results grouped (Pages, Connections, Sections, Tools,
+    Create, Commands, Containers and images, Kubernetes objects), 4 per group
+    when idle ("+n more – type to filter"), 8 per group while typing; every
+    contributed item shows its extension (icon + name) on the right.
+12. **Settings nav**: core sections first, contributed sections after an
+    "Extensions" divider, alphabetical, in their authored sentence case.
+13. **Toasts**: at most 2; a task's progress toast is replaced in place by its
+    outcome (same `taskId`); success/info auto-dismiss after 5 s, warnings 8 s,
+    errors persist; compact 300px cards above the status bar.
+14. **Copy at scale**: page titles keep their authored sentence case (the
+    ui-svelte `capitalize` on NavPage titles is neutralised, only the first letter
+    is upper-cased); counts go through `plural()` and ages through
+    `duration()/timeAgo()` (`src/lib/util.ts`): "1 member", "just now".
+15. **User changes survive scenario re-opening**: the enabled set is
+    `preset(selection) + user overrides` (`pdn.overrides.<key>`); opening the same
+    selection again (URL or picker) keeps installs/toggles, "Reset extensions"
+    drops the overrides.
+16. **One owner per concept**: e.g. `redhat.redhat-authentication` owns SSO,
+    activation keys, subscriptions and the registry service account;
+    `redhat.rhel-registration` depends on it and only contributes per-system
+    registration (tab, settings list, "RHEL systems" card).

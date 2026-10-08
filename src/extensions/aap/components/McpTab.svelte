@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Connection tab "MCP server" (P9): register the AAP MCP server (Technology Preview) for AI agents. */
 import { faCheck, faPlug } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox } from '@podman-desktop/ui-svelte';
+import { Button } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import Badge from '#lib/components/Badge.svelte';
 import SlideToggle from '#lib/components/SlideToggle.svelte';
@@ -87,7 +88,7 @@ function register(): void {
       {/each}
     </div>
     <SlideToggle id="aap-mcp-write" checked={mcp.writeEnabled} onchange={toggleWrite} aria-label="Enable write tools" left>Write tools (launch job templates)</SlideToggle>
-    <pre class="rounded-md p-3 text-xs font-mono bg-[var(--pd-content-card-inset-bg)] overflow-auto" aria-label="MCP client configuration">{config}</pre>
+    <pre class="rounded-md p-3 text-xs font-mono bg-[var(--pd-content-card-inset-surface)] overflow-auto" aria-label="MCP client configuration">{config}</pre>
     <div class="flex justify-end">
       <Button icon={mcp.registered ? faCheck : faPlug} onclick={register} inProgress={registering} disabled={mcp.registered}>{mcp.registered ? 'Registered in MCP registry' : 'Register in MCP registry'}</Button>
     </div>
@@ -97,14 +98,14 @@ function register(): void {
     <h2 class="text-base font-semibold text-[var(--pd-content-card-header-text)]">Agent transcript</h2>
     <div class="self-end max-w-[80%] rounded-lg px-3 py-2 bg-[var(--pd-content-card-selected-bg)] text-[var(--pd-content-card-header-text)]">which jobs failed today?</div>
     <div class="rounded-md border border-[var(--pd-content-table-border)] text-xs font-mono">
-      <div class="px-3 py-1.5 bg-[var(--pd-content-card-inset-bg)] flex gap-2"><span class="opacity-70">tool call</span><b>controller.jobs_list</b><span class="opacity-70">aap-acme-prod</span></div>
+      <div class="px-3 py-1.5 bg-[var(--pd-content-card-inset-surface)] flex gap-2"><span class="opacity-70">tool call</span><b>controller.jobs_list</b><span class="opacity-70">aap-acme-prod</span></div>
       <pre class="px-3 py-2 overflow-auto">{`{ "status": "failed", "finished__gte": "2026-10-08T00:00:00Z" }\n→ { "count": 1, "results": [ { "id": 4821, "name": "Remediate orders", "launch_type": "webhook", "elapsed": 46.2 } ] }`}</pre>
     </div>
     <div class="rounded-md border border-[var(--pd-content-table-border)] text-xs font-mono">
-      <div class="px-3 py-1.5 bg-[var(--pd-content-card-inset-bg)] flex gap-2"><span class="opacity-70">tool call</span><b>controller.jobs_list</b><span class="opacity-70">aap-acme-prod</span></div>
+      <div class="px-3 py-1.5 bg-[var(--pd-content-card-inset-surface)] flex gap-2"><span class="opacity-70">tool call</span><b>controller.jobs_list</b><span class="opacity-70">aap-acme-prod</span></div>
       <pre class="px-3 py-2 overflow-auto">{`{ "status": "error", "finished__gte": "2026-10-08T00:00:00Z" }\n→ { "count": 1, "results": [ { "id": 4809, "name": "Deploy orders (podman)", "launch_type": "manual" } ] }`}</pre>
     </div>
-    <div class="max-w-[90%] rounded-lg px-3 py-2 bg-[var(--pd-content-card-inset-bg)] text-sm leading-6">
+    <div class="max-w-[90%] rounded-lg px-3 py-2 bg-[var(--pd-content-card-inset-surface)] text-sm leading-6">
       Two jobs did not succeed today on acme-prod:
       <ul class="list-disc pl-5">
         <li><b>4821 Remediate orders</b> — failed after 46s, launched by the EDA webhook; <code>runner_on_failed</code> on db01.lab.acme at "Restart orders-db".</li>

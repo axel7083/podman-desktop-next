@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Connection › MCP (P9): kubernetes-mcp-server bound to this connection's kubeconfig context. */
 import { faCopy, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox } from '@podman-desktop/ui-svelte';
+import { Button } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import type { ResourceContext } from '#lib/ext/types.ts';
@@ -60,13 +61,13 @@ function copy(): void {
   <section class="rounded-lg bg-[var(--pd-content-card-bg)] p-4 space-y-2" aria-label="Options">
     <Checkbox checked={s.readOnly} onclick={onReadOnly} title="Read-only">Read-only (no create, update, delete or exec tools){s.status === 'running' ? ' · applies on next start' : ''}</Checkbox>
     <div class="text-sm">Toolsets: {s.toolsets.join(', ')} · context {id}</div>
-    <pre class="text-sm font-mono whitespace-pre-wrap bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] rounded-md p-3">{cmd}</pre>
+    <pre class="text-sm font-mono whitespace-pre-wrap bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)] text-[var(--pd-code-block-text)] rounded-md p-3">{cmd}</pre>
   </section>
   <section class="rounded-lg bg-[var(--pd-content-card-bg)] p-4" aria-label="Client configuration">
     <div class="flex items-center mb-2">
       <h2 class="grow text-lg font-semibold text-[var(--pd-content-card-header-text)]">Client configuration</h2>
       <Button type="secondary" icon={faCopy} onclick={copy}>Copy</Button>
     </div>
-    <pre class="text-sm font-mono whitespace-pre-wrap bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] rounded-md p-3">{config}</pre>
+    <pre class="text-sm font-mono whitespace-pre-wrap bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)] text-[var(--pd-code-block-text)] rounded-md p-3">{config}</pre>
   </section>
 </div>

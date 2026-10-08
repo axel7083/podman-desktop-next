@@ -16,6 +16,7 @@ import LazyComponent from '#lib/components/LazyComponent.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
 import { connectionHome, navigate, startVerb, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
+import { plural } from '#lib/util.ts';
 import { startConnection, world } from '#lib/world.svelte.ts';
 
 const STATUS_TEXT_CLASS: Record<string, string> = {
@@ -32,8 +33,33 @@ const STATUS_BG_CLASS: Record<string, string> = {
 };
 
 const conns = $derived(registry.activeConnections);
-const engines = $derived(conns.filter(c => c.kind === 'engine'));
-const others = $derived(conns.filter(c => c.kind !== 'engine'));
+/** Scaling: running engines first (stable order inside), capped with "Show all". */
+const ENGINE_CAP = 6;
+const CHIP_CAP = 10;
+const CARD_CAP = 4;
+const engines = $derived(conns.filter(c => c.kind === 'engine').toSorted((a, b) => Number(a.status !== 'started') - Number(b.status !== 'started')));
+const otherGroups = $derived(
+  [
+    { id: 'kubernetes', label: 'Kubernetes', list: conns.filter(c => c.kind === 'kubernetes') },
+    { id: 'vms', label: 'VMs and services', list: conns.filter(c => c.kind === 'vm' || c.kind === 'service') },
+  ].filter(g => g.list.length),
+);
+let allEngines = $state(false);
+let allChips = $state<string[]>([]);
+let allCards = $state(false);
+const shownEngines = $derived(allEngines || engines.length <= ENGINE_CAP + 1 ? engines : engines.slice(0, ENGINE_CAP));
+
+function toggleEngines(): void {
+  allEngines = !allEngines;
+}
+
+function toggleChips(id: string): void {
+  allChips = allChips.includes(id) ? allChips.filter(x => x !== id) : [...allChips, id];
+}
+
+function toggleCards(): void {
+  allCards = !allCards;
+}
 const overall = $derived.by(() => {
   if (conns.some(c => c.status === 'error')) return { status: 'critical', text: 'Some connections need attention', icon: faCircleExclamation };
   if (conns.some(c => ['starting', 'stopping', 'creating'].includes(c.status))) return { status: 'progressing', text: 'Connections are changing state', icon: faCircleInfo };
@@ -69,11 +95,12 @@ function onReset(): void {
   ordering = new SvelteMap();
 }
 
-const cards = $derived(
+const allEnabledCards = $derived(
   registry.dashboardCards
     .filter(c => isOn(`${c.ext.id}:${c.id}`))
     .toSorted((a, b) => (ordering.get(`${a.ext.id}:${a.id}`) ?? 0) - (ordering.get(`${b.ext.id}:${b.id}`) ?? 0)),
 );
+const cards = $derived(allCards || allEnabledCards.length <= CARD_CAP + 1 ? allEnabledCards : allEnabledCards.slice(0, CARD_CAP));
 
 function open(c: ConnectionView): void {
   navigate(connectionHome(c));
@@ -90,7 +117,7 @@ function goResources(): void {
 function counts(c: ConnectionView): string {
   const n = world.containers.filter(x => x.engineId === c.id);
   const running = n.filter(x => x.state === 'RUNNING').length;
-  return `${running} running · ${n.length} containers · ${world.images.filter(i => i.engineId === c.id).length} images`;
+  return `${running} running · ${plural(n.length, 'container')} · ${plural(world.images.filter(i => i.engineId === c.id).length, 'image')}`;
 }
 
 function toggle(): void {
@@ -103,13 +130,13 @@ function toggle(): void {
     <ListOrganizer
       items={sections}
       {ordering}
-      title="Configure Dashboard Sections"
+      title="Configure dashboard sections"
       enableReorder={true}
       enableToggle={true}
       onOrderChange={onOrder}
       {onToggle}
       {onReset}
-      resetButtonLabel="Reset Layout" />
+      resetButtonLabel="Reset layout" />
   {/snippet}
   {#snippet content()}
     <div class="flex flex-col min-w-full grow bg-[var(--pd-content-bg)] py-5">
@@ -132,7 +159,8 @@ function toggle(): void {
 
                 <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-3">Container engines:</div>
                 <div class="flex flex-col gap-2 pt-2">
-                  {#each engines as c (c.id)}
+                  <div class="grid grid-cols-2 gap-2" aria-label="Container engines">
+                  {#each shownEngines as c (c.id)}
                     <Contribution ext={c.ext} kind="connection" api="P1">
                       <div class="flex flex-col gap-3 rounded-lg p-2 bg-[var(--pd-content-card-carousel-card-bg)]">
                         <div class="flex flex-row items-center gap-3">
@@ -148,13 +176,13 @@ function toggle(): void {
                           </div>
                           <div class="flex-1 min-w-0 flex flex-col gap-0.5">
                             <div class="flex items-center gap-2 text-[var(--pd-content-card-text)] [--pd-label-bg:var(--pd-content-card-bg)] [--pd-label-text:var(--pd-content-text-sub)]">
-                              <span class="font-medium">{c.name}</span>
+                              <span class="font-medium truncate" title={c.name}>{c.name}</span>
                               {#if c.version}<span><Label name="{c.providerName} v{c.version}" /></span>{/if}
                               {#if c.hint}<span><Label name={c.hint} /></span>{/if}
                             </div>
                             <div class="flex items-center gap-1.5 mt-0.5">
                               <span class="text-sm {c.status === 'started' ? STATUS_TEXT_CLASS.healthy : STATUS_TEXT_CLASS.stable}">{statusLabel(c)}</span>
-                              <span class="text-sm text-[var(--pd-content-text-sub)]">
+                              <span class="text-sm text-[var(--pd-content-text-sub)] truncate">
                                 – {c.status === 'started' ? counts(c) : 'Required to run containers and pods'}
                               </span>
                             </div>
@@ -168,26 +196,37 @@ function toggle(): void {
                       </div>
                     </Contribution>
                   {/each}
-                  {#if others.length}
-                    <div class="font-semibold text-[var(--pd-content-card-header-text)]">Kubernetes, VM and service connections:</div>
-                    <div class="rounded-lg p-2 bg-[var(--pd-content-card-carousel-card-bg)]">
-                      <div class="flex flex-wrap items-center gap-2">
-                        {#each others as c (c.id)}
-                          <Contribution ext={c.ext} kind="connection" api="P1">
-                            <div class="relative flex-shrink-0 inline-flex">
-                              <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full {STATUS_DOT_CLASS[c.status]} z-1"></span>
-                              <Button type="secondary" onclick={open.bind(undefined, c)} title="Navigate to {c.name}" padding="px-2 py-[3px]">
-                                <div class="flex items-center gap-1.5">
-                                  <div class="flex-shrink-0 w-7 h-7 flex items-center justify-center"><AppIcon icon={c.icon} size="24px" /></div>
-                                  <span class="text-xs whitespace-nowrap">{c.name}</span>
-                                </div>
-                              </Button>
-                            </div>
-                          </Contribution>
-                        {/each}
-                      </div>
-                    </div>
+                  </div>
+                  {#if engines.length > shownEngines.length || allEngines}
+                    <Button type="link" padding="px-0 py-0" class="self-start" onclick={toggleEngines}>
+                      {allEngines ? 'Show running engines first' : `Show all ${engines.length} engines (${engines.length - shownEngines.length} more)`}
+                    </Button>
                   {/if}
+                  {#each otherGroups as g (g.id)}
+                    {@const all = allChips.includes(g.id)}
+                    {@const list = all || g.list.length <= CHIP_CAP + 1 ? g.list : g.list.slice(0, CHIP_CAP)}
+                    <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-1">{g.label} ({g.list.length}):</div>
+                    <div class="flex flex-wrap items-center gap-2" aria-label="{g.label} connections">
+                      {#each list as c (c.id)}
+                        <Contribution ext={c.ext} kind="connection" api="P1">
+                          <button
+                            class="relative flex items-center gap-1.5 rounded-md pl-1.5 pr-2.5 py-1 text-sm text-[var(--pd-content-card-text)] bg-[var(--pd-content-card-carousel-card-bg)] hover:bg-[var(--pd-content-card-carousel-card-hover-bg)] focus-visible:outline-2 focus-visible:outline-[var(--pd-button-primary-bg)]"
+                            onclick={open.bind(undefined, c)}
+                            aria-label="Navigate to {c.name}"
+                            title="{c.name} · {statusLabel(c)} · {c.providerName}">
+                            <span class="relative w-5 h-5 flex items-center justify-center shrink-0">
+                              <AppIcon icon={c.icon} size="18px" />
+                              <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full {STATUS_DOT_CLASS[c.status]}"></span>
+                            </span>
+                            <span class="whitespace-nowrap" class:opacity-60={c.status !== 'started'}>{c.name}</span>
+                          </button>
+                        </Contribution>
+                      {/each}
+                      {#if g.list.length > list.length || all}
+                        <Button type="link" padding="px-1 py-0" onclick={toggleChips.bind(undefined, g.id)}>{all ? 'Show less' : `+${g.list.length - list.length} more`}</Button>
+                      {/if}
+                    </div>
+                  {/each}
                 </div>
               </div>
             </Expandable>
@@ -198,7 +237,7 @@ function toggle(): void {
           <div class="flex flex-col gap-3 bg-[var(--pd-content-card-bg)] p-5 rounded-lg" aria-label="Extensions">
             <div class="flex items-center justify-between">
               <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">Extensions</span>
-              <span class="text-sm text-[var(--pd-content-card-text)]">{cards.length} of {registry.dashboardCards.length} cards shown</span>
+              <span class="text-sm text-[var(--pd-content-card-text)]">{allEnabledCards.length} of {registry.dashboardCards.length} cards enabled · configure with the pencil</span>
             </div>
             <div class="grid grid-cols-2 gap-3">
               {#each cards as card (card.ext.id + card.id)}
@@ -209,6 +248,11 @@ function toggle(): void {
                 </Contribution>
               {/each}
             </div>
+            {#if allEnabledCards.length > cards.length || allCards}
+              <Button type="secondary" class="self-center" onclick={toggleCards}>
+                {allCards ? 'Show fewer cards' : `Show ${allEnabledCards.length - cards.length} more cards`}
+              </Button>
+            {/if}
           </div>
         {:else}
           <EmptyScreen title="No extension cards" message="Extensions can contribute cards to the dashboard." />

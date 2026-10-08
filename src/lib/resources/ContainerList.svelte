@@ -30,6 +30,7 @@ import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import StatusCell from '#lib/table/StatusCell.svelte';
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
+import { capitalize, plural } from '#lib/util.ts';
 import { type Container, deleteContainer, runTask, shortImage, startContainer, stopContainer, world } from '#lib/world.svelte.ts';
 
 import ConnectionStoppedScreen from './ConnectionStoppedScreen.svelte';
@@ -50,6 +51,7 @@ interface GroupRow {
   containers: Container[];
   allCount: number;
   details?: string[];
+  chip: string;
   selected?: boolean;
   ext?: import('#lib/ext/types.ts').ExtensionMeta;
 }
@@ -88,7 +90,7 @@ const rows: Row[] = $derived.by(() => {
       const pod = world.pods.find(p => p.id === c.podId);
       if (pod) {
         key = `pod:${pod.id}`;
-        make = (): GroupRow => ({ kind: 'group', name: `pod:${pod.name}`, groupName: pod.name, type: 'pod', icon: PodIcon, podId: pod.id, containers: [], allCount: pod.containerIds.length });
+        make = (): GroupRow => ({ kind: 'group', name: `pod:${pod.name}`, groupName: pod.name, type: 'pod', chip: 'Pod', icon: PodIcon, podId: pod.id, containers: [], allCount: pod.containerIds.length });
       }
     } else {
       const grouper = registry.groupers.find(g => c.labels[g.label]);
@@ -102,7 +104,8 @@ const rows: Row[] = $derived.by(() => {
           groupName: grouper.groupName?.(value, all) ?? value,
           details: grouper.groupDetails?.(value, all),
           type: grouper.typeName,
-          icon: grouper.icon ?? PodIcon,
+          chip: grouper.chip ?? capitalize(grouper.typeName),
+          icon: grouper.icon ?? grouper.ext.icon,
           containers: [],
           allCount: all.length,
           ext: grouper.ext,
@@ -147,10 +150,10 @@ const nameColumn = new TableColumn<Row, NameCellData>('Name', {
     if (isGroup(r)) {
       const filtered = r.allCount - r.containers.length;
       return {
-        title: `${r.groupName} (${r.type})`,
-        sub: [`${r.allCount} container${r.allCount > 1 ? 's' : ''}${filtered > 0 ? ` (${filtered} filtered)` : ''}`, ...(r.details ?? [])],
+        title: r.groupName,
+        chip: { label: r.chip, icon: r.ext ? r.icon : undefined, ext: r.ext },
+        sub: [`${plural(r.allCount, 'container')}${filtered > 0 ? ` (${filtered} filtered)` : ''}`, ...(r.details ?? [])],
         href: r.podId ? `/c/${conn.id}/pods/${r.podId}/summary` : undefined,
-        badges: r.ext ? [{ label: `grouped by ${r.ext.displayName}`, ext: r.ext }] : undefined,
       };
     }
     const port = r.ports.length ? `PORT${r.ports.length > 1 ? 'S' : ''} ${r.ports.map(p => p.host).join(', ')}` : '';
@@ -197,8 +200,9 @@ const columns = $derived([
   nameColumn,
   imageColumn,
   uptimeColumn,
+  // contributed columns only when a container of this connection has a value (no empty MODEL/AGENT columns)
   ...registry.columns
-    .filter(c => c.target === 'container')
+    .filter(c => c.target === 'container' && mine.some(x => !!c.value(x)))
     .map(
       c =>
         new TableColumn<Row, string>(c.title, {

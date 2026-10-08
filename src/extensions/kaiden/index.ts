@@ -21,6 +21,7 @@ const extension: MockExtension = {
   id: KAIDEN,
   displayName: 'Kaiden',
   publisher: 'redhat',
+  category: 'AI',
   description: 'Show Kaiden agent workspaces (sandboxes on Podman) and share inference providers, MCP servers and skills with Kaiden.',
   version: '0.1.0',
   icon,
@@ -48,7 +49,7 @@ const extension: MockExtension = {
       { id: 'kaiden-workspaces', label: 'Agent workspaces', icon, when: isGateway, component: Workspaces, order: 1, counter: (): number => workspaces().length },
       { id: 'kaiden-agents', label: 'Agents', icon, when: isGateway, component: Agents, order: 2 },
     ],
-    groupers: [{ id: 'kaiden', label: GROUP_LABEL, typeName: 'Kaiden sandboxes', icon }],
+    groupers: [{ id: 'kaiden', label: GROUP_LABEL, typeName: 'Kaiden sandboxes', chip: 'Kaiden', icon }],
     menus: [
       {
         id: 'kaiden-open',

@@ -1,6 +1,7 @@
 <script lang="ts">
 /** Generic settings section from SettingProperty[] – PD's PreferencesRenderingItem rows. */
-import { Checkbox, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import { Dropdown, Input } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import type { SettingProperty } from '#lib/ext/types.ts';
 import { world } from '#lib/world.svelte.ts';

@@ -35,6 +35,7 @@ const extension: MockExtension = {
   id: OLS_ID,
   displayName: 'OpenShift Lightspeed',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'Ask OpenShift Lightspeed about the active cluster, with kubernetes-mcp-server giving agents scoped access to the same context.',
   version: '0.1.0',
   icon: 'icons/redhat.openshift-lightspeed.png',

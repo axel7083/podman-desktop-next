@@ -45,6 +45,7 @@ const extension: MockExtension = {
   id: DG_EXT,
   displayName: 'Red Hat Data Grid',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Run a local Data Grid / Infinispan server, browse caches and their statistics, and wire it into apps that use a remote cache.',
   version: '0.2.0',
   icon: 'icons/redhat.datagrid.png',

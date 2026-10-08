@@ -22,6 +22,7 @@ const extension: MockExtension = {
   id: TC_EXT,
   displayName: 'Testcontainers',
   publisher: 'podman-desktop',
+  category: 'Application development',
   description: 'Make Podman a first-class Testcontainers runtime: socket setup, test sessions, Ryuk and reusable containers.',
   version: '0.2.0',
   icon: 'icons/podman-desktop.testcontainers.svg',

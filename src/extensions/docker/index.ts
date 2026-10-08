@@ -58,6 +58,7 @@ const extension: MockExtension = {
   id: 'podman-desktop.docker',
   displayName: 'Docker',
   publisher: 'podman-desktop',
+  category: 'Containers & engines',
   description: 'Integration for Docker engines and Docker contexts.',
   version: '1.29.0',
   icon: 'icons/podman-desktop.docker.png',

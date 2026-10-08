@@ -68,6 +68,7 @@ const extension: MockExtension = {
   id: SKUPPER_ID,
   displayName: 'Service Interconnect',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'Turn a Podman connection into a Skupper site and link local containers to services on your OpenShift clusters.',
   version: '0.1.0',
   icon: 'icons/redhat.service-interconnect.png',

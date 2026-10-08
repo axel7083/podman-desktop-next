@@ -95,7 +95,7 @@ function endpointLabel(c: ConnectionView): string {
       <Contribution ext={p.ext} kind="provider" api="P1">
         <div class="bg-[var(--pd-invert-content-card-bg)] mb-5 rounded-md p-3 flex" role="region" aria-label={p.id}>
           <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)] flex flex-col">
-            <div class="min-w-[170px] max-w-[200px] pr-5 py-2 flex flex-col flex-1">
+            <div class="w-[230px] pr-4 py-2 flex flex-col flex-1">
               <div class="flex">
                 <AppIcon icon={p.icon} size="40px" class="max-w-[40px]" title={p.name} />
                 <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 break-words">{p.name}</span>
@@ -103,11 +103,19 @@ function endpointLabel(c: ConnectionView): string {
                   <span class="my-auto text-[var(--pd-content-sub-header)] ml-3 break-words">v{p.version}</span>
                 {/if}
               </div>
-              <div class="mt-3 flex flex-col gap-2 items-start">
-                {#each p.factories as f (f.id)}
+              <!-- one line per button: first factory primary, the others secondary, stacked; long labels ellipsize with a tooltip -->
+              <div class="mt-3 flex flex-col gap-2 items-stretch">
+                {#each p.factories as f, i (f.id)}
+                  {@const label = f.label.replace(/^Create /, 'Create new ')}
                   <Contribution ext={f.ext} kind="connectionFactory" api="P12">
-                    <Button icon={faPlusCircle} onclick={create.bind(undefined, f.id)} title={f.description} aria-label={f.label}>
-                      {f.label.replace(/^Create /, 'Create new ')}
+                    <Button
+                      icon={faPlusCircle}
+                      type={i === 0 ? 'primary' : 'secondary'}
+                      class="w-full justify-start"
+                      onclick={create.bind(undefined, f.id)}
+                      title="{label}{f.description ? ` – ${f.description}` : ''}"
+                      aria-label={f.label}>
+                      <span class="block truncate max-w-[170px]">{label}</span>
                     </Button>
                   </Contribution>
                 {/each}
@@ -125,10 +133,10 @@ function endpointLabel(c: ConnectionView): string {
                     <button aria-label="{p.name} details" type="button" onclick={details.bind(undefined, c)}><Icon icon={faCircleInfo} /></button>
                   </Tooltip>
                 </div>
-                <div class="{c.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''} font-semibold">{c.name}</div>
+                <div class="{c.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : 'text-[var(--pd-invert-content-card-header-text)]'} font-semibold truncate pr-5" title={c.name}>{c.name}</div>
                 <div class="flex" aria-label="Connection Status"><ConnectionStatus status={c.status} /></div>
                 <div class="mt-2 text-[var(--pd-content-text)] text-xs" aria-label="{c.name} type">{endpointLabel(c)}</div>
-                <div class="mt-1 text-xs break-all {c.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}">{c.endpoint}</div>
+                <div class="mt-1 text-xs truncate {c.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}" title={c.endpoint}>{c.endpoint}</div>
                 {#if c.details}
                   <div class="flex flex-wrap gap-x-3 mt-2 text-xs {c.status !== 'started' ? 'text-[var(--pd-content-sub-header)]' : ''}" aria-label="Provider Configuration">
                     {#each Object.entries(c.details).slice(0, 4) as [k, v] (k)}<span>{k}: {v}</span>{/each}
