@@ -1,0 +1,23 @@
+/*
+ * Proposed tokens (not in PD's color-registry yet). Every new semantic need is
+ * defined for both themes here and documented in docs/design-spec.md.
+ * Mockup-chrome tokens (--pdn-mockup-*) are NOT product proposals.
+ */
+.dark {
+  --pd-nav-group-header: #a1a1aa;
+  --pd-nav-hint-bg: #36363d;
+  --pd-nav-hint-text: #d4d4d8;
+  --pd-contribution-badge-bg: #27272a;
+  --pdn-mockup-bg: #c4f82a;
+  --pdn-mockup-text: #0f0f11;
+  --pdn-inspect-outline: #c4f82a;
+}
+.light {
+  --pd-nav-group-header: #5c5c5c;
+  --pd-nav-hint-bg: #e4e4e4;
+  --pd-nav-hint-text: #222222;
+  --pd-contribution-badge-bg: #ffffff;
+  --pdn-mockup-bg: #c4f82a;
+  --pdn-mockup-text: #0f0f11;
+  --pdn-inspect-outline: #4d7c0f;
+}

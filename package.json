@@ -1,0 +1,39 @@
+{
+  "name": "podman-desktop-next",
+  "version": "2.0.0-next",
+  "private": true,
+  "type": "module",
+  "description": "Interactive mockup of a provider-first Podman Desktop with every integration as a mock extension",
+  "license": "Apache-2.0",
+  "imports": {
+    "#lib": "./src/lib/index.ts",
+    "#lib/*": "./src/lib/*"
+  },
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "loop": "node loop/run-all.mjs"
+  },
+  "devDependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-brands-svg-icons": "^7.3.1",
+    "@fortawesome/free-regular-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@playwright/test": "1.63.0",
+    "@podman-desktop/ui-svelte": "1.29.1",
+    "@sveltejs/adapter-static": "^4.0.0",
+    "@sveltejs/kit": "^3.0.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.19.1",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.6",
+    "svelte-fa": "^4.0.4",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.3"
+  },
+  "packageManager": "pnpm@12.8.1"
+}
