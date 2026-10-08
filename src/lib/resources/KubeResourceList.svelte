@@ -17,6 +17,7 @@ import StatusCell from '#lib/table/StatusCell.svelte';
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
 import { type KubeObject, world } from '#lib/world.svelte.ts';
 
+import { kubeActions } from './actions.ts';
 import ConnectionStoppedScreen from './ConnectionStoppedScreen.svelte';
 import { kubeColumns, kubeStatus } from './kube.ts';
 
@@ -91,13 +92,13 @@ const columns = $derived([
   }),
   new TableColumn<KubeObject, ActionsCellData>('Actions', {
     align: 'right',
-    width: '80px',
+    width: '120px',
     renderer: ActionsCell,
     overflow: true,
-    renderMapping: (o): ActionsCellData => ({
-      buttons: [{ title: `Delete ${o.kind}`, icon: faTrash, onClick: (): void => remove(o) }],
-      menu: [],
-    }),
+    renderMapping: (o): ActionsCellData => {
+      const contributed = kubeActions(conn, o);
+      return { buttons: [...contributed.buttons, { title: `Delete ${o.kind}`, icon: faTrash, onClick: (): void => remove(o) }], menu: contributed.menu };
+    },
   }),
 ]);
 
