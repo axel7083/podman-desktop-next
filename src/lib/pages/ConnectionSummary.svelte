@@ -3,15 +3,16 @@
  * Connection overview (`/c/<conn>`): provider-card-like header with
  * lifecycle actions, Summary / Add-ons (kube, P13) / extension tabs (P14).
  */
-import { faArrowsRotate, faPlay, faPuzzlePiece, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowsRotate, faCircleInfo, faPlay, faPuzzlePiece, faStop, faTrash, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button, DetailsPage, EmptyScreen, Spinner } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import Contribution from '#lib/components/Contribution.svelte';
 import LazyComponent from '#lib/components/LazyComponent.svelte';
 import ListItemButtonIcon from '#lib/components/ListItemButtonIcon.svelte';
-import { withConfirmation } from '#lib/confirm.svelte.ts';
+import { confirm, withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { AddonDef, ConnectionView, Contributed, ResourceContext } from '#lib/ext/types.ts';
 import { coreResourcesOf, href, KUBE_KINDS, navigate, startVerb, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
@@ -82,22 +83,43 @@ function addonState(a: Contributed<AddonDef>): 'installed' | 'installing' | unde
   return world.addons[`${conn.id}:${a.ext.id}:${a.id}`];
 }
 
-function install(a: Contributed<AddonDef>): void {
+function doInstall(a: Contributed<AddonDef>): void {
   const key = `${conn.id}:${a.ext.id}:${a.id}`;
+  const target = conn;
   world.addons[key] = 'installing';
   runTask({
     name: `Install ${a.label} on ${conn.name}`,
     ext: a.ext.id,
     steps: a.installSteps,
     action: { label: 'Open add-ons', href: `/c/${conn.id}?tab=addons` },
-    onDone: () => (world.addons[key] = 'installed'),
+    onDone: () => {
+      world.addons[key] = 'installed';
+      a.onInstalled?.(target);
+    },
   });
+}
+
+function install(a: Contributed<AddonDef>): void {
+  if (!a.warning) {
+    doInstall(a);
+    return;
+  }
+  confirm({ title: `Install ${a.label}?`, message: a.warning, buttonLabel: 'Install', variant: 'primary' })
+    .then(ok => {
+      if (ok) doInstall(a);
+    })
+    .catch(console.error);
+}
+
+function openEndpoint(url: string): void {
+  toast({ type: 'info', title: `Opening ${url}` });
 }
 
 function uninstall(a: Contributed<AddonDef>): void {
   withConfirmation(
     () => {
       delete world.addons[`${conn.id}:${a.ext.id}:${a.id}`];
+      a.onUninstalled?.(conn);
       toast({ type: 'success', title: `${a.label} uninstalled from ${conn.name}` });
     },
     `uninstall ${a.label} from ${conn.name}`,
@@ -224,15 +246,24 @@ const tiles = $derived([
         {/if}
         {#each addons as a (a.ext.id + a.id)}
           {@const st = addonState(a)}
+          {@const disabledReason = a.disabledReason?.(conn)}
           <Contribution ext={a.ext} kind="addon" api="P13">
             <div class="flex items-center gap-4 rounded-lg bg-[var(--pd-content-card-bg)] p-4">
               <AppIcon icon={a.icon ?? a.ext.icon} size="36px" />
               <div class="grow min-w-0">
                 <div class="font-semibold text-[var(--pd-content-card-header-text)]">{a.label}</div>
                 <div class="text-sm text-[var(--pd-content-card-text)]">{a.description}</div>
+                {#if a.warning}
+                  <div class="flex items-center gap-1.5 mt-1 text-sm text-[var(--pd-state-warning)]"><Icon icon={faTriangleExclamation} />{a.warning}</div>
+                {/if}
+                {#if disabledReason}
+                  <div class="flex items-center gap-1.5 mt-1 text-sm text-[var(--pd-content-sub-header)]"><Icon icon={faCircleInfo} />{disabledReason}</div>
+                {/if}
                 {#if st === 'installed' && a.endpoints}
-                  <div class="flex gap-3 mt-1">
-                    {#each a.endpoints(conn) as ep (ep.url)}<span class="text-sm text-[var(--pd-link)]">{ep.label}: {ep.url}</span>{/each}
+                  <div class="flex flex-wrap gap-x-3 mt-1">
+                    {#each a.endpoints(conn) as ep (ep.url)}
+                      <span class="text-sm">{ep.label}: <button class="text-[var(--pd-link)] hover:underline" onclick={openEndpoint.bind(undefined, ep.url)}>{ep.url}</button></span>
+                    {/each}
                   </div>
                 {/if}
               </div>
@@ -240,7 +271,7 @@ const tiles = $derived([
                 <span class="text-sm text-[var(--pd-status-running)]">Installed</span>
                 <Button type="secondary" onclick={uninstall.bind(undefined, a)}>Uninstall</Button>
               {:else}
-                <Button inProgress={st === 'installing'} disabled={conn.status !== 'started' || st === 'installing'} onclick={install.bind(undefined, a)}>Install</Button>
+                <Button inProgress={st === 'installing'} disabled={conn.status !== 'started' || st === 'installing' || !!disabledReason} onclick={install.bind(undefined, a)}>Install</Button>
               {/if}
             </div>
           </Contribution>

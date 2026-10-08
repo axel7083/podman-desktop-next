@@ -18,7 +18,7 @@ function versionOf(t: Contributed<CliToolDef>): string | undefined {
 function update(t: Contributed<CliToolDef>): void {
   const key = `cli.${t.ext.id}.${t.id}`;
   runTask({
-    name: `Update ${t.displayName} to v${t.latest}`,
+    name: `${versionOf(t) ? 'Update' : 'Install'} ${t.displayName}${versionOf(t) ? ' to' : ''} v${t.latest}`,
     ext: t.ext.id,
     steps: [
       { label: `Downloading ${t.name} v${t.latest}`, ms: 1800 },
@@ -44,7 +44,7 @@ function update(t: Contributed<CliToolDef>): void {
             </div>
             {#if t.latest && version !== t.latest}
               <div class="mt-2">
-                <Button icon={faCircleArrowUp} onclick={update.bind(undefined, t)} title="Update to v{t.latest}">Update to v{t.latest}</Button>
+                <Button icon={faCircleArrowUp} onclick={update.bind(undefined, t)} title="{version ? 'Update to' : 'Install'} v{t.latest}">{version ? 'Update to' : 'Install'} v{t.latest}</Button>
               </div>
             {/if}
           </div>

@@ -11,6 +11,16 @@ import { toast } from '#lib/world.svelte.ts';
 
 import SettingsPage from './SettingsPage.svelte';
 
+/** One row per server: a contribution with credentials wins over a suggestion. */
+const rows = $derived.by(() => {
+  const byServer = new Map<string, (typeof registry.registries)[number]>();
+  for (const r of registry.registries) {
+    const existing = byServer.get(r.server);
+    if (!existing || (!existing.user && r.user)) byServer.set(r.server, r);
+  }
+  return [...byServer.values()];
+});
+
 function add(): void {
   toast({ type: 'info', title: 'Add registry', body: 'Registry form is out of scope for this wave.' });
 }
@@ -27,7 +37,7 @@ function configure(name: string): void {
     <div class="grid grid-cols-[2fr_2fr_1.5fr_120px] px-4 py-2 text-xs uppercase font-semibold text-[var(--pd-table-header-text)] border-b border-[var(--pd-content-divider)]">
       <span>Repository</span><span>Server</span><span>Username</span><span></span>
     </div>
-    {#each registry.registries as r (r.ext.id + r.id)}
+    {#each rows as r (r.ext.id + r.id)}
       <Contribution ext={r.ext} kind="registry" api="P16">
         <div class="grid grid-cols-[2fr_2fr_1.5fr_120px] items-center px-4 py-2.5 border-b last:border-b-0 border-[var(--pd-content-divider)] text-[var(--pd-invert-content-card-text)]">
           <span class="flex items-center gap-2 font-semibold text-[var(--pd-invert-content-card-header-text)]">

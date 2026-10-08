@@ -133,6 +133,8 @@ const extension: MockExtension = {
         when: conn => conn.kind === 'kubernetes',
         installSteps: [{ label: 'Applying manifests', ms: 1500 }],
         endpoints: () => [{ label: 'Console', url: 'https://example.apps.local' }],
+        warning: 'Shown on the card and confirmed before install.',
+        disabledReason: conn => (conn.capabilities?.includes('arm64') ? 'Not available on arm64 clusters.' : undefined),
       },
     ],
     // Authentication provider shown in Accounts (P16).
