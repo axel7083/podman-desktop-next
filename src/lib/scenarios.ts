@@ -54,22 +54,22 @@ export const SCENARIOS: Scenario[] = [
     id: 'platform',
     label: 'Platform engineer',
     persona: 'Supply chain and developer portals',
-    description: 'RHDH Local, RHTAS, TPA, RHDA, Conforma, preflight, Pyxis catalog.',
-    icon: 'icons/redhat.redhat-pack.png',
+    description: 'RHADS pack: RHTAS, TPA, Conforma, preflight, Konflux, RHDH Local; local registry, Trivy, Helm.',
+    icon: 'icons/redhat.rhads-pack.png',
   },
   {
     id: 'automation',
     label: 'Automation',
     persona: 'Ansible content creator',
     description: 'Ansible ADT, EE builder, navigator, Export as Ansible, EDA, AAP.',
-    icon: 'icons/redhat.redhat-authentication.png',
+    icon: 'icons/redhat.ansible.png',
   },
   {
     id: 'windows',
     label: 'Windows developer',
     persona: 'WSL-first workflow',
-    description: 'WSL.C engine, RHEL Podman machine on WSL, Docker context.',
-    icon: 'icons/podman-desktop.podman-docker-context.png',
+    description: 'WSL Containers engine, Podman machine on WSL, Docker contexts, engine capability matrix.',
+    icon: 'icons/podman-desktop.wslc.png',
   },
 ];
 
