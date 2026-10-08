@@ -19,7 +19,7 @@ import { cluster, ensureCluster, KAFKA_CONN, KAFKA_EXT, sampleCluster } from './
 const SPEC: ServiceSpec = {
   kind: 'kafka',
   providerId: 'streams-kafka',
-  providerName: 'Streams for Apache Kafka',
+  providerName: 'Kafka',
   title: 'Streams for Apache Kafka',
   description: 'Single-node KRaft Kafka 4.2 with the StreamsHub Console. Browse topics, records and consumer-group lag.',
   defaultName: 'kafka-dev',
@@ -70,7 +70,7 @@ const extension: MockExtension = {
     connections: [
       serviceConnection(SPEC, KAFKA_CONN, 9092, 'started', {
         Image: 'registry.redhat.io/amq-streams/kafka-42-rhel9:3.2.0',
-        Mode: 'KRaft (broker,controller)',
+        Mode: 'KRaft (broker, controller)',
         'Cluster ID': 'q1Sh-9_ISia_zwGINzRvyQ',
         Console: 'http://localhost:3000',
       }),
@@ -87,7 +87,7 @@ const extension: MockExtension = {
       },
       {
         id: 'consumer-groups',
-        label: 'Consumer groups',
+        label: 'Groups',
         when: conn => isService(conn, 'kafka'),
         component: ConsumerGroupsSection,
         counter: (_w, conn) => cluster(conn.id).groups.length,

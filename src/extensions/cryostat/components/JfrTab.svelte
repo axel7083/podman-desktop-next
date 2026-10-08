@@ -11,10 +11,13 @@ import type { ResourceContext } from '#lib/ext/types.ts';
 import type { Container } from '#lib/world.svelte.ts';
 import { humanAge, humanSize } from '#lib/world.svelte.ts';
 
+import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
+
 import Card from '../../_appdev/Card.svelte';
+import DataTable from '../../_appdev/DataTable.svelte';
+import type { DataColumn } from '../../_appdev/types.ts';
 import CopyField from '../../_appdev/CopyField.svelte';
 import KeyValue from '../../_appdev/KeyValue.svelte';
-import Pill from '../../_appdev/Pill.svelte';
 import {
   type ActiveRecording,
   analysedArchive,
@@ -98,9 +101,59 @@ function viewOf(r: ActiveRecording): void {
   if (r.archive) showReport(container.name, r.archive);
 }
 
-function stateTone(r: ActiveRecording): 'running' | 'neutral' | 'info' {
-  if (r.state === 'RUNNING') return 'running';
-  return r.state === 'STOPPED' ? 'info' : 'neutral';
+/** Snapshot rows: the ui-svelte Table re-renders cells only when `data` changes, so copy the ticking fields. */
+interface RecRow {
+  rec: ActiveRecording;
+  state: string;
+  started: string;
+}
+
+const recRows = $derived(
+  recs.map(
+    (r): RecRow => ({
+      rec: r,
+      state: stateLabel(r),
+      // mock clock: a recording that ran `elapsed` ms started at least that long ago
+      started: `${humanAge(Math.min(r.startTime, Date.now() - r.elapsed))} ago`,
+    }),
+  ),
+);
+
+function stateLabel(r: ActiveRecording): string {
+  if (r.state === 'RUNNING') return r.continuous ? 'Running' : `Running · ${remainingSeconds(r)} s left (${progressOf(r)}%)`;
+  if (r.state === 'STOPPED') return r.archive ? (archived(r) ? 'Stopped · archived' : 'Stopped · archiving…') : 'Stopped';
+  return r.state.charAt(0) + r.state.slice(1).toLowerCase();
+}
+
+function recKey(row: RecRow): string {
+  return String(row.rec.id);
+}
+
+function recName(row: RecRow): NameCellData {
+  return { title: row.rec.name, sub: [templateOf(row.rec)] };
+}
+
+function recStatus(row: RecRow): StatusCellData {
+  return { status: row.rec.state === 'RUNNING' ? 'RUNNING' : 'STOPPED', icon: faCircleDot };
+}
+
+const recColumns: DataColumn<RecRow>[] = [
+  { title: 'State', width: '2fr', value: (row): string => row.state },
+  { title: 'Duration', width: '110px', value: (row): string => durationLabel(row.rec) },
+  { title: 'Started', width: '150px', value: (row): string => row.started },
+];
+
+function recActions(row: RecRow): ActionsCellData {
+  const r = row.rec;
+  return {
+    buttons: [
+      { title: `Stop ${r.name}`, icon: faStop, onClick: stop.bind(undefined, r), hidden: r.state !== 'RUNNING' },
+      { title: `Archive and analyse ${r.name}`, icon: faBoxArchive, onClick: archive.bind(undefined, r), hidden: r.state === 'RUNNING' || !!r.archive },
+      { title: `View report of ${r.name}`, icon: faFileLines, onClick: viewOf.bind(undefined, r), hidden: !archived(r) },
+      { title: `Delete recording ${r.name}`, icon: faTrash, onClick: remove.bind(undefined, r) },
+    ],
+    menu: [],
+  };
 }
 
 function durationLabel(r: ActiveRecording): string {
@@ -160,53 +213,9 @@ function archived(r: ActiveRecording): boolean {
     {#if recs.length === 0}
       <p class="text-sm">No recordings yet. Start one above.</p>
     {:else}
-      <table class="w-full text-left" aria-label="Recordings">
-        <thead>
-          <tr class="text-sm text-[var(--pd-table-body-text)]">
-            <th class="py-1 font-normal">Name</th>
-            <th class="py-1 font-normal">Template</th>
-            <th class="py-1 font-normal">State</th>
-            <th class="py-1 font-normal">Duration</th>
-            <th class="py-1 font-normal">Started</th>
-            <th class="py-1 font-normal text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each recs as r (r.id)}
-            <tr class="border-t border-[var(--pd-content-divider)]" aria-label="Recording {r.name}">
-              <td class="py-2 font-medium text-[var(--pd-content-card-header-text)]">{r.name}</td>
-              <td class="py-2">{templateOf(r)}</td>
-              <td class="py-2">
-                <div class="flex items-center gap-2">
-                  <Pill label={r.state} tone={stateTone(r)} />
-                  {#if r.state === 'RUNNING' && !r.continuous}
-                    <div class="h-1.5 w-20 rounded-full bg-[var(--pd-content-card-inset-bg)]" role="progressbar" aria-label="Recording progress" aria-valuenow={progressOf(r)} aria-valuemin={0} aria-valuemax={100}>
-                      <div class="h-1.5 rounded-full bg-[var(--pd-status-running)] transition-all" style="width: {progressOf(r)}%"></div>
-                    </div>
-                    <span class="text-sm tabular-nums" aria-live="polite">{remainingSeconds(r)} s left</span>
-                  {:else if r.state === 'STOPPED' && r.archive && !archived(r)}
-                    <span class="text-sm">Archiving…</span>
-                  {/if}
-                </div>
-              </td>
-              <td class="py-2">{durationLabel(r)}</td>
-              <td class="py-2">{humanAge(r.startTime)} ago</td>
-              <td class="py-2">
-                <div class="flex justify-end gap-2">
-                  {#if r.state === 'RUNNING'}
-                    <Button type="secondary" icon={faStop} onclick={stop.bind(undefined, r)} aria-label="Stop {r.name}">Stop</Button>
-                  {:else if !r.archive}
-                    <Button type="secondary" icon={faBoxArchive} onclick={archive.bind(undefined, r)} aria-label="Archive and analyse {r.name}">Archive and analyse</Button>
-                  {:else if archived(r)}
-                    <Button type="secondary" icon={faFileLines} onclick={viewOf.bind(undefined, r)} aria-label="View report of {r.name}">View report</Button>
-                  {/if}
-                  <Button type="link" icon={faTrash} onclick={remove.bind(undefined, r)} aria-label="Delete recording {r.name}" title="Delete" />
-                </div>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
+      <div class="-mx-5 -mb-2 flex" aria-label="Recordings">
+        <DataTable kind="recordings" rows={recRows} key={recKey} name={recName} status={recStatus} columns={recColumns} actions={recActions} actionsWidth="120px" icon={faCircleDot} />
+      </div>
     {/if}
   </Card>
 
@@ -220,7 +229,7 @@ function archived(r: ActiveRecording): boolean {
               <td class="py-2 px-3 whitespace-nowrap tabular-nums">{humanSize(a.size)}</td>
               <td class="py-2 px-3 whitespace-nowrap">{humanAge(a.archivedTime)} ago</td>
               <td class="py-2 text-right">
-                <Button type="secondary" icon={faFileLines} selected={analysed?.name === a.name} onclick={view.bind(undefined, a)} aria-label="View report of {a.name}">View report</Button>
+                <span class="whitespace-nowrap inline-block"><Button type="secondary" icon={faFileLines} selected={analysed?.name === a.name} onclick={view.bind(undefined, a)} aria-label="View report of {a.name}">View report</Button></span>
               </td>
             </tr>
           {/each}

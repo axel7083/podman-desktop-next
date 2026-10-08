@@ -123,9 +123,9 @@ pull.timeout=120</pre>
         {#each list as s (s.sessionId)}
           <div class="flex items-center gap-3 py-2 border-t first:border-t-0 border-[var(--pd-content-divider)]" role="row">
             <span class="font-mono text-sm w-28 text-[var(--pd-content-card-header-text)]">{s.sessionId.slice(0, 8)}</span>
-            {#if s.state === 'active'}<Pill label="Active" tone="running" />{:else}<Pill label="Leaked" tone="warning" title="No live Ryuk for this session" />{/if}
+            {#if s.state === 'active'}<Pill label="Active" tone="running" />{:else if s.state === 'ended'}<Pill label="Ended" title="Dev mode stopped: every container of this session is stopped" />{:else}<Pill label="Leaked" tone="warning" title="No live Ryuk for this session" />{/if}
             <span class="grow truncate text-sm">{sessionLabel(s)}</span>
-            <span class="text-sm">{s.containers.length} containers</span>
+            <span class="text-sm">{s.containers.length} container{s.containers.length === 1 ? '' : 's'}</span>
           </div>
         {/each}
         {#each reused as c (c.id)}

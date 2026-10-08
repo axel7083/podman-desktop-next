@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Kafka › Connectors (contributed by Debezium): Kafka Connect connectors with status, tasks and trace. */
-import { faArrowRightArrowLeft, faArrowsRotate, faPause, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { NavPage } from '@podman-desktop/ui-svelte';
+import { faArrowRightArrowLeft, faArrowsRotate, faCircleExclamation, faPause, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Button, NavPage } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import { withConfirmation } from '#lib/confirm.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
@@ -39,13 +40,29 @@ function nameOf(c: Connector): NameCellData {
 
 function status(c: Connector): StatusCellData {
   const s = effective(c);
-  return { status: s === 'RUNNING' ? 'RUNNING' : s === 'FAILED' ? 'DEGRADED' : 'PAUSED', icon: faArrowRightArrowLeft };
+  return { status: s === 'RUNNING' ? 'RUNNING' : s === 'FAILED' ? 'FAILED' : 'PAUSED', icon: faArrowRightArrowLeft };
+}
+
+/** Kafka Connect state → sentence case ("RUNNING" → "Running"). */
+function stateLabel(s: string): string {
+  return s.charAt(0) + s.slice(1).toLowerCase();
+}
+
+/** snapshot.mode value → readable label ("no_data" → "No data"). */
+function snapshotLabel(mode: string | undefined): string {
+  if (!mode) return '';
+  const words = mode.replaceAll('_', ' ');
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+function failedTask(c: Connector): number {
+  return c.tasks.find(t => t.state === 'FAILED')?.id ?? 0;
 }
 
 const columns: DataColumn<Connector>[] = [
-  { title: 'State', width: '100px', value: (c): string => effective(c) },
+  { title: 'State', width: '100px', value: (c): string => stateLabel(effective(c)) },
   { title: 'Tasks', width: '90px', value: (c): string => `${c.tasks.filter(t => t.state === 'RUNNING').length}/${c.tasks.length}` },
-  { title: 'Snapshot', width: '110px', value: (c): string => c.config['snapshot.mode'] },
+  { title: 'Snapshot', width: '110px', value: (c): string => snapshotLabel(c.config['snapshot.mode']) },
 ];
 
 function mutate(name: string, fn: (c: Connector) => void): void {
@@ -121,13 +138,20 @@ function reset(): void {
       <div class="flex flex-col w-full">
         {#each failed as c (c.name)}
           <div class="mx-5 mb-2">
-            <Card>
-              <div class="text-sm" role="alert">
-                <span class="font-semibold text-[var(--pd-state-error)]">Task 0 of {c.name} FAILED</span>
-                <pre class="mt-1 text-xs font-mono whitespace-pre-wrap">{c.tasks.find(t => t.trace)?.trace}</pre>
-                <p class="mt-1">Fix: give the connector its own slot (<code>slot.name=inventory_slot</code>) and restart it.</p>
+            <div class="rounded-lg p-4 border border-[var(--pd-state-error)] bg-[var(--pd-content-card-bg)] text-[var(--pd-content-card-text)] text-sm" role="alert">
+              <div class="flex items-start gap-3">
+                <span class="pt-0.5 text-[var(--pd-state-error)]"><Icon icon={faCircleExclamation} /></span>
+                <div class="grow min-w-0">
+                  <div class="font-semibold text-[var(--pd-content-card-header-text)]">{c.name} task {failedTask(c)} failed</div>
+                  <p class="mt-1">The replication slot <code>{c.config['slot.name']}</code> is already used by another connector. Give this connector its own slot (<code>slot.name=inventory_slot</code>) and restart it.</p>
+                  <details class="mt-1">
+                    <summary class="cursor-pointer text-[var(--pd-link)]">Stack trace</summary>
+                    <pre class="mt-1 text-xs font-mono whitespace-pre-wrap">{c.tasks.find(t => t.trace)?.trace}</pre>
+                  </details>
+                </div>
+                <Button icon={faArrowsRotate} onclick={restart.bind(undefined, c)}>Use own slot and restart</Button>
               </div>
-            </Card>
+            </div>
           </div>
         {/each}
         <DataTable kind="connectors" {rows} total={all.length} {searchTerm} onResetFilter={reset} {key} name={nameOf} {status} {columns} {actions} actionsWidth="160px" emptyMessage="Use 'Capture changes with Debezium' on a PostgreSQL container to create a connector." />

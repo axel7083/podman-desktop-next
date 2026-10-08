@@ -198,7 +198,7 @@ export function rhdhConnection(id: string, status: ConnectionDef['initialStatus'
     name: id,
     kind: 'service',
     providerId: 'rhdh-local',
-    providerName: 'Red Hat Developer Hub',
+    providerName: 'Developer Hub',
     initialStatus: status,
     endpoint: `http://localhost:${port}`,
     version: '1.10.3',

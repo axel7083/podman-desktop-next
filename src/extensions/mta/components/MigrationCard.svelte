@@ -3,6 +3,7 @@
 import { href } from '#lib/nav.ts';
 
 import { latestAnalysis, PROJECTS, resolvedIncidents, summary, targetLabel } from '../data.ts';
+import CardHeader from '../../_appdev/CardHeader.svelte';
 
 const resolved = $derived(resolvedIncidents());
 const rows = $derived(
@@ -20,6 +21,7 @@ function pathLabel(id: string): string {
 }
 </script>
 
+<CardHeader icon="icons/redhat.mta.svg" title="Migration Toolkit for Applications" />
 <div class="space-y-2 text-[var(--pd-content-card-text)]">
   {#each rows as r (r.name)}
     <div>

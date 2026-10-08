@@ -27,7 +27,7 @@ const tab = $derived(page.url.searchParams.get('tab') ?? 'messages');
 const schema = $derived(registry.isEnabled('redhat.apicurio-registry') ? findTopicSchema(topic.name) : undefined);
 const partitions = $derived(
   Array.from({ length: Math.min(topic.partitionCount, 6) }, (_, p) => {
-    const end = Math.round(topic.messages / topic.partitionCount) + p * 7;
+    const end = topic.partitionEnds?.[p] ?? Math.round(topic.messages / topic.partitionCount) + p * 7;
     return { partition: p, leader: 1, replicas: [1], isr: [1], start: 0, end };
   }),
 );
@@ -46,12 +46,17 @@ function produce(): void {
   runTask({
     name: `Produce test message to ${topic.name}`,
     ext: KAFKA_EXT,
-    steps: [{ label: 'Serializing with Apicurio AvroSerde (globalId 27)', ms: 500 }, { label: 'Sending record', ms: 400, log: [`Record sent to ${topic.name}-1@${topic.messages}`] }],
+    steps: [
+      { label: `Serializing with Apicurio AvroSerde (globalId ${schema ? latest(schema.artifact).globalId : 21})`, ms: 500 },
+      { label: 'Sending record', ms: 400, log: [`Record sent to ${topic.name}-1@${topic.partitionEnds?.[1] ?? topic.messages}`] },
+    ],
     onDone: () => {
+      const offset = topic.partitionEnds?.[1] ?? topic.messages;
+      if (topic.partitionEnds) topic.partitionEnds[1] += 1;
       topic.messages += 1;
       topic.records?.unshift({
         partition: 1,
-        offset: 6144,
+        offset,
         timestamp: new Date().toISOString(),
         key: 'ord-20261008-0194',
         value: JSON.stringify({ orderId: 'ord-20261008-0194', customerId: 'c-3391', status: 'CREATED', totalCents: 12999, currency: 'EUR', couponCode: null }),
@@ -77,7 +82,7 @@ function time(iso: string): string {
 }
 </script>
 
-<DetailsPage title={topic.name} subtitle="{topic.partitionCount} partitions · {topic.messages.toLocaleString('en-US')} messages · {conn.name}" breadcrumbLeftPart="Topics" breadcrumbRightPart={topic.name} onclose={close} onbreadcrumbClick={close}>
+<DetailsPage title={topic.name} subtitle="{topic.partitionCount} partition{topic.partitionCount === 1 ? '' : 's'} · {topic.messages.toLocaleString('en-US')} messages · {conn.name}" breadcrumbLeftPart="Topics" breadcrumbRightPart={topic.name} onclose={close} onbreadcrumbClick={close}>
   {#snippet iconSnippet()}<AppIcon icon="icons/redhat.streams-kafka.svg" size="28px" />{/snippet}
   {#snippet actionsSnippet()}
     <Button icon={faPaperPlane} onclick={produce}>Produce message</Button>
@@ -151,7 +156,7 @@ function time(iso: string): string {
           <KeyValue rows={[['topicId', topic.topicId], ['partitionCount', topic.partitionCount], ['replicationFactor', topic.replicationFactor], ...Object.entries(topic.configs)]} />
         </Card>
       {:else if tab === 'schema' && schema}
-        <Card title="{schema.artifact.name} · {schema.artifact.artifactType}" subtitle="{schema.artifact.groupId}/{schema.artifact.artifactId} · version {latest(schema.artifact).version} (globalId {latest(schema.artifact).globalId}) · compatibility BACKWARD">
+        <Card title="{schema.artifact.name} · {schema.artifact.artifactType}" subtitle="{schema.artifact.groupId}/{schema.artifact.artifactId} · version {latest(schema.artifact).version} (globalId {latest(schema.artifact).globalId}) · compatibility {schema.compatibility}">
           {#snippet actions()}<Button type="secondary" onclick={openSchema}>Open in registry</Button>{/snippet}
           <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto">{schema.artifact.content}</pre>
         </Card>

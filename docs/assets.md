@@ -70,6 +70,8 @@ Appdev wave icons (downloaded from the URLs verified in `docs/research/<id>.md`;
 | `podman-desktop.devcontainers.png` | https://raw.githubusercontent.com/devcontainers/devcontainers.github.io/gh-pages/img/devcontainers-logo.png |
 | `redhat.rhdh-local.png` | https://raw.githubusercontent.com/kadel/podman-desktop-extension-rhdh-local/main/packages/backend/icon.png |
 | `podman-desktop.debug-shell.png` | https://github.com/containers.png |
+| `valkey.png` | https://github.com/valkey-io.png (Valkey org avatar, provider icon of the Valkey service) |
+| `grafana.png` | https://github.com/grafana.png (Grafana org avatar, converted to PNG; provider icon of the otel-lgtm service) |
 Added by wave **rhel** (dossier icon URLs returned 404, so GitHub org avatars of the
 upstream project are used where they are a real logo; Red Hat logo otherwise):
 

@@ -63,7 +63,7 @@ const extension: MockExtension = {
   tags: ['appdev'],
   pApis: ['P3', 'P5', 'P9', 'P15', 'P17'],
   contributes: {
-    tools: [{ id: 'mta', label: 'Migration toolkit', icon: 'icons/redhat.mta.svg', description: 'Analyze applications for EAP 8, Quarkus and cloud readiness', component: () => import('./components/MtaTool.svelte') }],
+    tools: [{ id: 'mta', label: 'MTA', icon: 'icons/redhat.mta.svg', description: 'Analyze applications for EAP 8, Quarkus and cloud readiness', component: () => import('./components/MtaTool.svelte') }],
     imageCheckers: [
       {
         id: 'mta-eol',

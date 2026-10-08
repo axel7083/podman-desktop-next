@@ -59,7 +59,7 @@ function actions(g: ConsumerGroup): ActionsCellData {
 function reset(g: ConsumerGroup, to: 'latest' | 'earliest'): void {
   confirm({
     title: 'Reset offsets?',
-    message: `Are you sure you want to reset the offsets of consumer group ${g.groupId} to the ${to} offset?${g.state === 'Stable' ? ` The group has ${g.members} active member(s): the consumer is paused while the offsets are reset.` : ''}`,
+    message: `Are you sure you want to reset the offsets of consumer group ${g.groupId} to the ${to} offset?${g.state === 'Stable' ? ` The group has ${g.members} active member${g.members === 1 ? '' : 's'}: the consumer is paused while the offsets are reset.` : ''}`,
     buttonLabel: 'Reset offsets',
     variant: 'primary',
   })
@@ -100,7 +100,7 @@ function openTopic(t: string): void {
 </script>
 
 {#if selected}
-  <DetailsPage title={selected.groupId} subtitle="{selected.state} · {selected.members} member(s) · {selected.protocol} protocol · lag {lagOf(selected)}" breadcrumbLeftPart="Consumer groups" breadcrumbRightPart={selected.groupId} onclose={close} onbreadcrumbClick={close}>
+  <DetailsPage title={selected.groupId} subtitle="{selected.state} · {selected.members} member{selected.members === 1 ? '' : 's'} · {selected.protocol} protocol · lag {lagOf(selected)}" breadcrumbLeftPart="Consumer groups" breadcrumbRightPart={selected.groupId} onclose={close} onbreadcrumbClick={close}>
     {#snippet iconSnippet()}<AppIcon icon="icons/redhat.streams-kafka.svg" size="28px" />{/snippet}
     {#snippet actionsSnippet()}
       <Button icon={faForwardStep} onclick={resetLatest} disabled={lagOf(selected) === 0}>Reset offsets</Button>

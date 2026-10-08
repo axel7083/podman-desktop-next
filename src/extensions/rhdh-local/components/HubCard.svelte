@@ -5,10 +5,12 @@ import { href, STATUS_LABEL } from '#lib/nav.ts';
 
 import { isService } from '../../_appdev/services.ts';
 import { hub } from '../data.ts';
+import CardHeader from '../../_appdev/CardHeader.svelte';
 
 const conns = $derived(registry.activeConnections.filter(c => isService(c, 'rhdh')));
 </script>
 
+<CardHeader icon="icons/redhat.rhdh-local.png" title="Developer Hub" />
 <div class="space-y-2 text-[var(--pd-content-card-text)]">
   {#each conns as c (c.id)}
     {@const h = hub(c.id)}

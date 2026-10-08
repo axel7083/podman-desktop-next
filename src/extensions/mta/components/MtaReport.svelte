@@ -103,8 +103,8 @@ function started(): string {
 
 <DetailsPage
   title={analysis.project}
-  subtitle="{analysis.id} · {analysis.source} → {analysis.targets.join(', ')} · {analysis.mode} · {analysis.runLocal ? 'containerless' : 'hybrid (Podman)'} · {started()}"
-  breadcrumbLeftPart="Migration toolkit"
+  subtitle="{analysis.id} · {analysis.source} → {analysis.targets.map(targetLabel).join(', ')} · {analysis.mode} · {analysis.runLocal ? 'containerless' : 'hybrid (Podman)'} · {started()}"
+  breadcrumbLeftPart="MTA"
   breadcrumbRightPart="{analysis.project} report"
   onclose={close}
   onbreadcrumbClick={close}>
@@ -118,7 +118,7 @@ function started(): string {
   {/snippet}
   {#snippet tabsSnippet()}
     {#each analysis.targets as t (t)}
-      <Tab title={t} selected={t === target} url={tabUrl(t)} />
+      <Tab title={targetLabel(t)} selected={t === target} url={tabUrl(t)} />
     {/each}
   {/snippet}
   {#snippet contentSnippet()}

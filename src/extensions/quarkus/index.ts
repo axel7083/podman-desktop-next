@@ -36,7 +36,8 @@ const extension: MockExtension = {
         groupName: uuid => projectByUuid(uuid)?.name ?? `quarkus ${uuid.slice(0, 8)}`,
         groupDetails: uuid => {
           const p = projectByUuid(uuid);
-          return p ? [`Quarkus ${p.platform.split('.redhat')[0]} · dev mode`, p.path] : [];
+          // Path lives in the Quarkus tool: the group sub-line stays short.
+          return p ? [`Quarkus ${p.platform.split('.redhat')[0]}`] : [];
         },
         actions: [
           {
