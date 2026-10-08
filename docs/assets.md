@@ -76,3 +76,20 @@ Reference screenshots (`references/`):
 | `settings-resources.png` | `website/docs/img/settings.png` |
 | `extensions-catalog.png` | `website/docs/extensions/img/browse-catalog.png` |
 | `navigation-menu-{dark,light}.png` | `website/blog/img/podman-desktop-release-1.27/navigation-menu-*.png` |
+
+## Wave: platform-automation-windows icons (`static/icons/`)
+
+| File | Source |
+|---|---|
+| `redhat.rhads-pack.png` | `ext-redhat-pack/icon.png` (Red Hat pack icon, reused for RHADS pack) |
+| `redhat.trusted-artifact-signer.png` | https://github.com/sigstore.png |
+| `redhat.trusted-profile-analyzer.png` | https://github.com/guacsec.png (Trustify upstream) |
+| `redhat.conforma.png` | https://github.com/conforma.png |
+| `redhat.preflight.png` | https://github.com/redhat-openshift-ecosystem.png |
+| `redhat.konflux.png` | https://github.com/konflux-ci.png |
+| `redhat.ansible.png`, `redhat.aap.png` | https://github.com/ansible.png |
+| `podman-desktop.wslc.png` | https://github.com/microsoft.png |
+| `podman-desktop.helm.png` | https://github.com/helm.png |
+| `podman-desktop.local-registry.png` | https://github.com/project-zot.png |
+| `podman-desktop.trivy.png` | https://github.com/aquasecurity.png |
+| `podman-desktop.k3d.png` | https://github.com/k3d-io.png |
