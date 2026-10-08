@@ -16,6 +16,7 @@ import SlideToggle from '#lib/components/SlideToggle.svelte';
 import { ALL_EXTENSIONS, dependenciesOf, dependentsOf, getExtension, registry } from '#lib/ext/registry.svelte.ts';
 import { type Contributions, EXTENSION_CATEGORIES, type MockExtension } from '#lib/ext/types.ts';
 import { SCENARIOS } from '#lib/scenarios.ts';
+import { ui } from '#lib/ui.svelte.ts';
 import { plural } from '#lib/util.ts';
 
 let searchTerm = $state(page.url.searchParams.get('q') ?? '');
@@ -38,8 +39,12 @@ function inStatus(e: MockExtension): boolean {
   return status === 'all' || (status === 'enabled') === registry.isEnabled(e.id);
 }
 
-const installed = $derived(registry.installed.filter(e => matches(e) && inCategory(e) && inStatus(e)));
-const catalog = $derived(registry.catalog.filter(e => matches(e) && inCategory(e)));
+/** Query-filtered bases: tab counts, chip counts and the summary follow the search. */
+const installedQ = $derived(registry.installed.filter(matches));
+const catalogQ = $derived(registry.catalog.filter(matches));
+
+const installed = $derived(installedQ.filter(e => inCategory(e) && inStatus(e)));
+const catalog = $derived(catalogQ.filter(inCategory));
 
 /** Pack members shown under their pack (when the pack is in the result too). */
 const packMembers = $derived(new Set(installed.filter(e => e.packOf).flatMap(e => e.packOf ?? [])));
@@ -71,11 +76,21 @@ function sectionsOf(list: MockExtension[], nestPacks: boolean): Section[] {
 const installedSections = $derived(sectionsOf(installed, true));
 const catalogSections = $derived(sectionsOf(catalog, false));
 
-/** Category counts for the filter chips (over the current tab's base list). */
+/** Category counts for the filter chips (current tab, after search + status filter). */
 function categoryCount(c: string): number {
-  const base = screen === 'installed' ? registry.installed : registry.catalog;
+  const base = screen === 'installed' ? installedQ.filter(inStatus) : catalogQ;
   return c === 'all' ? base.length : base.filter(e => e.category === c).length;
 }
+
+/** Whether a category exists at all on the current tab (unfiltered) – chips never jump around while typing. */
+function categoryExists(c: string): boolean {
+  const base = screen === 'installed' ? registry.installed : registry.catalog;
+  return c === 'all' || base.some(e => e.category === c);
+}
+
+const query = $derived(searchTerm.trim());
+const tabTotal = $derived(screen === 'installed' ? registry.installed.length : registry.catalog.length);
+const tabMatches = $derived(screen === 'installed' ? installedQ.length : catalogQ.length);
 
 function setCategory(c: string): void {
   category = c;
@@ -147,6 +162,10 @@ function resetFilter(): void {
 function scenarioNames(e: MockExtension): string {
   return e.tags.map(t => SCENARIOS.find(s => s.id === t)?.label ?? t).join(', ');
 }
+
+function suggestedFor(e: MockExtension): string | undefined {
+  return e.tags.length ? `Suggested for: ${scenarioNames(e)}` : undefined;
+}
 </script>
 
 <NavPage bind:searchTerm={searchTerm} title="Extensions">
@@ -164,25 +183,30 @@ function scenarioNames(e: MockExtension): string {
         {/each}
       </div>
     {/if}
-    <div class="text-sm text-[var(--pd-content-text)] whitespace-nowrap">
-      {registry.extensions.length} enabled · {registry.installed.length} installed · {ALL_EXTENSIONS.length} known
+    <div class="text-sm text-[var(--pd-content-text)] whitespace-nowrap" aria-live="polite">
+      {#if query}
+        {tabMatches} of {tabTotal} match “{query}”
+      {:else}
+        {registry.extensions.length} enabled · {registry.installed.length} installed · {ALL_EXTENSIONS.length} known
+      {/if}
     </div>
   {/snippet}
   {#snippet tabs()}
-    <Button type="tab" onclick={setScreen.bind(undefined, 'installed')} selected={screen === 'installed'}>Installed ({registry.installed.length})</Button>
-    <Button type="tab" onclick={setScreen.bind(undefined, 'catalog')} selected={screen === 'catalog'}>Catalog ({registry.catalog.length})</Button>
+    <Button type="tab" onclick={setScreen.bind(undefined, 'installed')} selected={screen === 'installed'}>Installed ({installedQ.length})</Button>
+    <Button type="tab" onclick={setScreen.bind(undefined, 'catalog')} selected={screen === 'catalog'}>Catalog ({catalogQ.length})</Button>
   {/snippet}
   {#snippet content()}
     <div class="flex flex-col min-w-full grow">
       <div class="flex flex-wrap items-center gap-1.5 px-5 pt-1 pb-2" role="toolbar" aria-label="Filter extensions">
         {#each ['all', ...EXTENSION_CATEGORIES] as c (c)}
           {@const n = categoryCount(c)}
-          {#if n > 0 || c === 'all'}
+          {#if categoryExists(c)}
             <button
-              class="rounded-full px-2.5 py-0.5 text-sm border {category === c
+              class="rounded-full px-2.5 py-0.5 text-sm border {n === 0 && category !== c ? 'opacity-50' : ''} {category === c
                 ? 'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] border-transparent'
                 : 'border-[var(--pd-content-divider)] text-[var(--pd-content-text)] hover:bg-[var(--pd-content-card-hover-bg)]'}"
               aria-pressed={category === c}
+              title={n === 0 && query ? `No ${c === 'all' ? '' : `${c} `}extensions match “${query}”` : undefined}
               onclick={setCategory.bind(undefined, c)}>{c === 'all' ? 'All' : c} <span class="opacity-70 tabular-nums">{n}</span></button>
           {/if}
         {/each}
@@ -217,7 +241,7 @@ function scenarioNames(e: MockExtension): string {
                     {#each contributes(e) as c (c)}
                       <span class="rounded-sm px-1.5 text-xs bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]">{c}</span>
                     {/each}
-                    {#each e.pApis as p (p)}
+                    {#each ui.inspect ? e.pApis : [] as p (p)}
                       <span class="rounded-sm px-1.5 text-xs bg-[var(--pd-label-primary-bg)] text-[var(--pd-label-primary-text)]" title="Platform API item {p} (docs/integration-opportunities.md)">{p}</span>
                     {/each}
                   </div>
@@ -235,7 +259,10 @@ function scenarioNames(e: MockExtension): string {
                   <SlideToggle id="toggle-{e.id}" checked={enabled} onchange={toggle.bind(undefined, e)} aria-label="{enabled ? 'Disable' : 'Enable'} {e.displayName}" left>
                     {enabled ? 'Enabled' : 'Disabled'}
                   </SlideToggle>
-                  <span class="text-xs text-[var(--pd-table-body-text)] max-w-48 truncate" title={e.builtin ? 'Pre-installed' : scenarioNames(e)}>{e.builtin ? 'Pre-installed' : scenarioNames(e)}</span>
+                  <!-- source only: bundled ones already carry the "Bundled" badge -->
+                  {#if !e.builtin}
+                    <span class="text-xs text-[var(--pd-table-body-text)]" title={suggestedFor(e)}>From catalog</span>
+                  {/if}
                 </div>
               </div>
             {/each}
@@ -251,7 +278,7 @@ function scenarioNames(e: MockExtension): string {
             <div class="grid grid-cols-3 gap-3 content-start">
               {#each sec.items as { ext: e } (e.id)}
                 {@const missing = missingDeps(e)}
-                <div class="flex flex-col gap-2 rounded-md p-3 bg-[var(--pd-content-card-bg)]" role="region" aria-label={e.id}>
+                <div class="flex flex-col gap-2 rounded-md p-3 bg-[var(--pd-content-card-bg)]" role="region" aria-label={e.id} title={suggestedFor(e)}>
                   <div class="flex items-center gap-2">
                     <AppIcon icon={e.icon} size="32px" />
                     <div class="flex flex-col min-w-0">
@@ -262,8 +289,7 @@ function scenarioNames(e: MockExtension): string {
                   <p class="text-[var(--pd-content-text)] line-clamp-3 grow">{e.description}</p>
                   {#if e.packOf}<span class="text-sm text-[var(--pd-content-sub-header)]">Extension pack · {e.packOf.filter(id => getExtension(id)).length} extensions</span>{/if}
                   {#if missing.length}<span class="text-sm text-[var(--pd-state-warning)]" role="note">Also installs {names(missing)}</span>{/if}
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm text-[var(--pd-content-sub-header)]">{scenarioNames(e)}</span>
+                  <div class="flex items-center justify-end">
                     <Button onclick={install.bind(undefined, e)} icon={faCloudDownload}>Install</Button>
                   </div>
                 </div>

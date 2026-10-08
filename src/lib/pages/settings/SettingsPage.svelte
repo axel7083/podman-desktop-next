@@ -27,7 +27,8 @@ let { title, subtitle, actions, children }: Props = $props();
     </div>
   </div>
   <div class="flex flex-row min-w-full flex-1 min-h-0 px-5 py-4 overflow-y-auto" role="region" aria-label="Content">
-    <div class="flex flex-col grow max-w-[905px] mx-auto">
+    <!-- left-aligned with the page title (no centring inset) -->
+    <div class="flex flex-col grow min-w-0 max-w-[1100px]">
       {@render children?.()}
     </div>
   </div>
