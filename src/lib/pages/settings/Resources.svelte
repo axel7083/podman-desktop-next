@@ -1,8 +1,8 @@
 <script lang="ts">
 /**
  * Settings › Resources – PD's PreferencesResourcesRendering: one card per
- * provider, "Create new …" factory buttons on the left (P12), one 240px column
- * per connection with status, endpoint and lifecycle actions.
+ * provider, "Create new …" factory buttons on the left (P12), a responsive grid
+ * of ≥240px columns, one per connection, with status, endpoint and lifecycle actions.
  * Scaling: provider cards grouped by kind (same groups as the primary nav)
  * with a name filter on top; connection details are label/value rows.
  */
@@ -11,14 +11,14 @@ import { Button, EmptyScreen, FilteredEmptyScreen, SearchInput, Tooltip } from '
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
-import ConnectionStatus from '#lib/components/ConnectionStatus.svelte';
 import Contribution from '#lib/components/Contribution.svelte';
 import ListItemButtonIcon from '#lib/components/ListItemButtonIcon.svelte';
 import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionKind, ConnectionView } from '#lib/ext/types.ts';
 import EngineIcon from '#lib/images/ResourcesIcon.svelte';
-import { GROUPS, href, navigate } from '#lib/nav.ts';
+import { GROUPS, href, navigate, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
+import { plural } from '#lib/util.ts';
 import { deleteConnection, restartConnection, startConnection, stopConnection } from '#lib/world.svelte.ts';
 
 import SettingsPage from './SettingsPage.svelte';
@@ -141,8 +141,8 @@ function endpointLabel(c: ConnectionView): string {
     {/if}
     {#each groups as g (g.id)}
       <section aria-label={g.label}>
-        <h2 class="pt-4 pb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">
-          {g.label} <span class="font-normal">({g.items.length} · {connectionCount(g.items)})</span>
+        <h2 class="pt-4 pb-2 text-[11px] font-semibold text-[var(--pd-nav-group-header)]">
+          {g.label} <span class="font-normal">· {plural(g.items.length, 'provider')}, {plural(connectionCount(g.items), 'connection')}</span>
         </h2>
         {#each g.items as p (p.id)}
           <Contribution ext={p.ext} kind="provider" api="P1">
@@ -156,7 +156,7 @@ function endpointLabel(c: ConnectionView): string {
                       <span class="my-auto text-[var(--pd-content-sub-header)] ml-3 shrink-0">v{p.version}</span>
                     {/if}
                   </div>
-                  <!-- one line per button: first factory primary, the others secondary, stacked; long labels ellipsize with a tooltip -->
+                  <!-- one button per factory: first primary, the others secondary, stacked; long labels wrap to two lines, full label in the tooltip -->
                   <div class="mt-3 flex flex-col gap-2 items-stretch">
                     {#each p.factories as f, i (f.id)}
                       {@const label = f.label.replace(/^Create /, 'Create new ')}
@@ -164,31 +164,34 @@ function endpointLabel(c: ConnectionView): string {
                         <Button
                           icon={faPlusCircle}
                           type={i === 0 ? 'primary' : 'secondary'}
-                          class="w-full justify-start whitespace-nowrap overflow-hidden"
+                          class="w-full justify-start text-left"
                           onclick={create.bind(undefined, f.id)}
                           title="{label}{f.description ? ` – ${f.description}` : ''}"
                           aria-label={f.label}>
-                          <span class="block truncate max-w-[170px]">{label}</span>
+                          <span class="block whitespace-normal line-clamp-2 max-w-[170px] text-left">{label}</span>
                         </Button>
                       </Contribution>
                     {/each}
                   </div>
                 </div>
               </div>
-              <div class="grow min-w-0 flex flex-wrap text-[var(--pd-invert-content-card-text)]" role="region" aria-label="Provider Connections">
+              <div class="grow min-w-0 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] content-start text-[var(--pd-invert-content-card-text)]" role="region" aria-label="Provider Connections">
                 {#if p.conns.length === 0}
-                  <div class="px-5 py-2 text-[var(--pd-invert-content-card-text)] opacity-70">No connection yet. Use “Create new” to add one.</div>
+                  <div class="col-span-full px-5 py-2 text-[var(--pd-invert-content-card-text)] opacity-70">No connection yet. Use “Create new” to add one.</div>
                 {/if}
                 {#each p.conns as c (c.id)}
                   {@const dim = c.status !== 'started'}
-                  <div class="px-5 py-2 w-[240px] min-w-0 border-r border-[var(--pd-content-divider)]" role="region" aria-label={c.name}>
+                  <div class="px-5 py-2 min-w-0 border-r border-[var(--pd-content-divider)]" role="region" aria-label={c.name}>
                     <div class="flex items-center gap-2 min-w-0">
                       <div class="grow min-w-0 font-semibold truncate {dim ? 'text-[var(--pd-invert-content-card-text)] opacity-70' : 'text-[var(--pd-invert-content-card-header-text)]'}" title={c.name}>{c.name}</div>
                       <Tooltip bottom tip="{c.name} details">
                         <button aria-label="{c.name} details" type="button" onclick={details.bind(undefined, c)}><Icon icon={faCircleInfo} /></button>
                       </Tooltip>
                     </div>
-                    <div class="flex" aria-label="Connection Status"><ConnectionStatus status={c.status} /></div>
+                    <div class="flex items-center gap-1.5" aria-label="Connection Status">
+                      <span aria-label="Connection Status Icon" class="w-2.5 h-2.5 rounded-full {STATUS_DOT_CLASS[c.status]}"></span>
+                      <span aria-label="Connection Status Label" class="text-xs {c.status === 'started' ? 'text-[var(--pd-status-running)]' : 'text-[var(--pd-status-stopped)]'}">{statusLabel(c)}</span>
+                    </div>
                     <dl class="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-0.5 text-xs {dim ? 'opacity-70' : ''}" aria-label="Provider Configuration">
                       {#each detailRows(c) as [k, v] (k)}
                         <dt class="text-[var(--pd-invert-content-card-text)] opacity-70 whitespace-nowrap">{k}</dt>

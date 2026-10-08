@@ -13,7 +13,7 @@ import { page } from '$app/state';
 import AppIcon from '#lib/components/AppIcon.svelte';
 import Badge from '#lib/components/Badge.svelte';
 import SlideToggle from '#lib/components/SlideToggle.svelte';
-import { ALL_EXTENSIONS, dependenciesOf, dependentsOf, getExtension, registry } from '#lib/ext/registry.svelte.ts';
+import { dependenciesOf, dependentsOf, getExtension, registry } from '#lib/ext/registry.svelte.ts';
 import { type Contributions, EXTENSION_CATEGORIES, type MockExtension } from '#lib/ext/types.ts';
 import { SCENARIOS } from '#lib/scenarios.ts';
 import { ui } from '#lib/ui.svelte.ts';
@@ -187,7 +187,7 @@ function suggestedFor(e: MockExtension): string | undefined {
       {#if query}
         {tabMatches} of {tabTotal} match “{query}”
       {:else}
-        {registry.extensions.length} enabled · {registry.installed.length} installed · {ALL_EXTENSIONS.length} known
+        {registry.installed.length} installed · {registry.extensions.length} enabled · {registry.catalog.length} more in catalog
       {/if}
     </div>
   {/snippet}
@@ -217,7 +217,7 @@ function suggestedFor(e: MockExtension): string | undefined {
         {/if}
         <div class="grow px-5 pb-3">
           {#each installedSections as sec (sec.category)}
-            <h2 class="sticky top-0 z-1 bg-[var(--pd-content-bg)] pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">
+            <h2 class="sticky top-0 z-1 bg-[var(--pd-content-bg)] pt-3 pb-1.5 text-[11px] font-semibold text-[var(--pd-nav-group-header)]">
               {sec.category} <span class="font-normal">({sec.items.length})</span>
             </h2>
             {#each sec.items as { ext: e, member } (e.id)}
@@ -274,7 +274,7 @@ function suggestedFor(e: MockExtension): string | undefined {
         {/if}
         <div class="grow px-5 pb-3">
           {#each catalogSections as sec (sec.category)}
-            <h2 class="pt-3 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">{sec.category} <span class="font-normal">({sec.items.length})</span></h2>
+            <h2 class="pt-3 pb-1.5 text-[11px] font-semibold text-[var(--pd-nav-group-header)]">{sec.category} <span class="font-normal">({sec.items.length})</span></h2>
             <div class="grid grid-cols-3 gap-3 content-start">
               {#each sec.items as { ext: e } (e.id)}
                 {@const missing = missingDeps(e)}

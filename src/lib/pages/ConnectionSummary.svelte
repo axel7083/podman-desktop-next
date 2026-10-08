@@ -4,7 +4,7 @@
  * lifecycle actions, Summary / Add-ons (kube, P13) / extension tabs (P14).
  */
 import { faArrowsRotate, faCircleInfo, faPlay, faPuzzlePiece, faStop, faTrash, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, DetailsPage, EmptyScreen, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, DetailsPage, DropdownMenu, EmptyScreen, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
@@ -156,7 +156,13 @@ const tiles = $derived([
 
 <!-- Connection home: one header (identity + lifecycle), Summary + contributed tabs. No breadcrumb/close: it is a top-level destination reached from the primary nav. -->
 <div class="h-full w-full [&_[aria-label=Header]_button[aria-label=Close]]:hidden">
-<DetailsPage title={conn.name} subtitle="{conn.providerName}{conn.version ? ` ${conn.version}` : ''} · {conn.endpoint}" onclose={noop}>
+<DetailsPage title={conn.name} onclose={noop}>
+  {#snippet subtitleSnippet()}
+    <span class="text-sm leading-none line-clamp-1">
+      <span class="text-[var(--pd-content-sub-header)]">{conn.providerName}{conn.version ? ` ${conn.version}` : ''} ·</span>
+      <span class="text-[var(--pd-link)]">{conn.endpoint}</span>
+    </span>
+  {/snippet}
   {#snippet iconSnippet()}
     <div class="relative">
       <AppIcon icon={conn.icon} size="32px" />
@@ -168,15 +174,28 @@ const tiles = $derived([
       {#if busy}
         <span class="flex items-center gap-2 text-sm text-[var(--pd-content-text)] pr-2"><Spinner size="1em" />{statusLabel(conn)}…</span>
       {/if}
-      <ListItemButtonIcon title={startVerb(conn)} icon={faPlay} detailed onClick={start} hidden={conn.status !== 'stopped'} />
-      <ListItemButtonIcon title="Stop" icon={faStop} detailed onClick={stop} hidden={conn.status !== 'started'} />
-      <ListItemButtonIcon title="Restart" icon={faArrowsRotate} detailed onClick={restart} enabled={conn.status === 'started'} />
-      {#each detailsMenus as m (m.ext.id + m.id)}
-        <Contribution ext={m.ext} kind="menu (details)" api="P4">
-          <ListItemButtonIcon title={m.label} icon={m.icon ?? faPuzzlePiece} detailed onClick={runMenu.bind(undefined, m)} />
-        </Contribution>
-      {/each}
-      <ListItemButtonIcon title="Delete" icon={faTrash} detailed onClick={remove} enabled={!busy} />
+      <!-- lifecycle icon buttons carry a visible tooltip; everything else (extension actions, delete) is labelled in the kebab menu -->
+      {#if conn.status === 'stopped'}
+        <Tooltip bottom tip="{startVerb(conn)} {conn.name}">
+          <ListItemButtonIcon title={startVerb(conn)} icon={faPlay} detailed onClick={start} />
+        </Tooltip>
+      {/if}
+      {#if conn.status === 'started'}
+        <Tooltip bottom tip="Stop {conn.name}">
+          <ListItemButtonIcon title="Stop" icon={faStop} detailed onClick={stop} />
+        </Tooltip>
+      {/if}
+      <Tooltip bottom tip="Restart {conn.name}">
+        <ListItemButtonIcon title="Restart" icon={faArrowsRotate} detailed onClick={restart} enabled={conn.status === 'started'} />
+      </Tooltip>
+      <DropdownMenu title="More actions" shownAsMenuActionItem={true}>
+        {#each detailsMenus as m (m.ext.id + m.id)}
+          <Contribution ext={m.ext} kind="menu (details)" api="P4">
+            <ListItemButtonIcon title={m.label} icon={m.icon ?? faPuzzlePiece} onClick={runMenu.bind(undefined, m)} menu={true} />
+          </Contribution>
+        {/each}
+        <ListItemButtonIcon title="Delete {conn.kind === 'kubernetes' ? 'cluster' : 'connection'}" icon={faTrash} onClick={remove} enabled={!busy} menu={true} />
+      </DropdownMenu>
     {/if}
   {/snippet}
   {#snippet tabsSnippet()}

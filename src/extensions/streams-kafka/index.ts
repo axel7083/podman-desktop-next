@@ -76,7 +76,7 @@ const extension: MockExtension = {
         Console: 'http://localhost:3000',
       }),
     ],
-    connectionFactories: [{ ...serviceFactory(SPEC) }],
+    connectionFactories: [{ ...serviceFactory(SPEC), label: 'Create Kafka cluster' }],
     navSections: [
       {
         id: 'topics',

@@ -11,6 +11,7 @@ import { SvelteMap } from 'svelte/reactivity';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import Contribution from '#lib/components/Contribution.svelte';
+import HintChip from '#lib/components/HintChip.svelte';
 import Label from '#lib/components/Label.svelte';
 import LazyComponent from '#lib/components/LazyComponent.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
@@ -74,7 +75,7 @@ const enabledSections = new SvelteMap<string, boolean>();
 let ordering = $state(new SvelteMap<string, number>());
 
 const sections: ListOrganizerItem[] = $derived([
-  { id: 'system-overview', label: 'System Overview', enabled: enabledSections.get('system-overview') ?? true, originalOrder: 0 },
+  { id: 'system-overview', label: 'System overview', enabled: enabledSections.get('system-overview') ?? true, originalOrder: 0 },
   ...registry.dashboardCards.map((c, i) => ({ id: `${c.ext.id}:${c.id}`, label: `${c.title} (${c.ext.displayName})`, enabled: enabledSections.get(`${c.ext.id}:${c.id}`) ?? true, originalOrder: i + 1 })),
 ]);
 
@@ -117,7 +118,7 @@ function goResources(): void {
 function counts(c: ConnectionView): string {
   const n = world.containers.filter(x => x.engineId === c.id);
   const running = n.filter(x => x.state === 'RUNNING').length;
-  return `${running} running · ${plural(n.length, 'container')} · ${plural(world.images.filter(i => i.engineId === c.id).length, 'image')}`;
+  return `${running} of ${plural(n.length, 'container')} running · ${plural(world.images.filter(i => i.engineId === c.id).length, 'image')}`;
 }
 
 let organizer = $state<HTMLDivElement>();
@@ -159,7 +160,7 @@ function toggle(): void {
           <div class="flex flex-1 flex-col bg-[var(--pd-content-card-bg)] p-5 rounded-lg">
             <Expandable bind:initialized bind:expanded onclick={toggle}>
               {#snippet title()}
-                <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">System Overview</span>
+                <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">System overview</span>
               {/snippet}
               <div class="pt-2" aria-label="System Overview">
                 <button
@@ -171,9 +172,9 @@ function toggle(): void {
                   <Icon icon={faChevronRight} size="sm" />
                 </button>
 
-                <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-3">Container engines</div>
+                <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-3">Engines ({engines.length})</div>
                 <div class="flex flex-col gap-2 pt-2">
-                  <div class="grid grid-cols-2 gap-2" aria-label="Container engines">
+                  <div class="grid grid-cols-2 gap-2" aria-label="Engines">
                   {#each shownEngines as c (c.id)}
                     <Contribution ext={c.ext} kind="connection" api="P1">
                       <div class="flex flex-col gap-3 rounded-lg p-2 bg-[var(--pd-content-card-carousel-card-bg)]">
@@ -192,12 +193,12 @@ function toggle(): void {
                             <div class="flex items-center gap-2 text-[var(--pd-content-card-text)] [--pd-label-bg:var(--pd-content-card-bg)] [--pd-label-text:var(--pd-content-text-sub)]">
                               <span class="font-medium truncate" title={c.name}>{c.name}</span>
                               {#if c.version}<span><Label name="{c.providerName} v{c.version}" /></span>{/if}
-                              {#if c.hint}<span><Label name={c.hint} /></span>{/if}
+                              {#if c.hint}<HintChip hint={c.hint} tooltip={c.hintTooltip} />{/if}
                             </div>
                             <div class="flex items-center gap-1.5 mt-0.5">
                               <span class="text-sm {c.status === 'started' ? STATUS_TEXT_CLASS.healthy : STATUS_TEXT_CLASS.stable}">{statusLabel(c)}</span>
                               <span class="text-sm text-[var(--pd-content-text-sub)] truncate">
-                                – {c.status === 'started' ? counts(c) : 'Required to run containers and pods'}
+                                · {c.status === 'started' ? counts(c) : 'Required to run containers and pods'}
                               </span>
                             </div>
                           </div>

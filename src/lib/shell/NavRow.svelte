@@ -7,6 +7,7 @@
 import { Tooltip } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
 
+import HintChip from '#lib/components/HintChip.svelte';
 import { href as toHref } from '#lib/nav.ts';
 
 interface Props {
@@ -69,9 +70,7 @@ const tip = $derived(tooltip ?? label);
           {#if expanded}
             <span class="text-sm truncate ml-3 min-w-0 [flex:1_1_auto]" class:font-medium={selected}>{label}</span>
             {#if hint && label.length + hint.length <= 22}
-              <span
-                class="ml-1 shrink-0 whitespace-nowrap rounded-sm px-1 text-[9px] leading-[14px] font-semibold uppercase bg-[var(--pd-nav-hint-bg)] text-[var(--pd-nav-hint-text)] group-hover/navrow:hidden"
-                title={hintTooltip ?? hint}>{hint}</span>
+              <HintChip {hint} tooltip={hintTooltip} class="ml-1 group-hover/navrow:hidden" />
             {/if}
             {#if counter !== undefined}
               <span class="ml-1 shrink-0 text-xs text-[var(--pd-global-nav-icon)] group-hover/navrow:hidden">{counter}</span>

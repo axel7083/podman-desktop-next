@@ -47,7 +47,7 @@ const contributed = $derived(registry.settings.toSorted((a, b) => a.title.locale
     {/each}
     {#if registry.settings.length}
       <div class="flex items-center gap-2 px-4 pt-4 pb-1.5" role="separator" aria-label="Extension settings">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">Extensions</span>
+        <span class="text-[11px] font-semibold text-[var(--pd-nav-group-header)]">Extensions</span>
         <span class="grow border-t border-[var(--pd-global-nav-bg-border)]"></span>
       </div>
     {/if}
