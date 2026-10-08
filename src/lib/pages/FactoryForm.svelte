@@ -107,7 +107,7 @@ function openResult(): void {
           {#if factory.description}<p class="text-[var(--pd-content-card-text)]">{factory.description}</p>{/if}
           {#snippet issueList(list: FactoryIssue[])}
             {#each list as issue, i (i)}
-              <div class="flex items-start gap-2 rounded-md bg-[var(--pd-content-card-inset-bg)] px-3 py-2 text-sm" role={issue.level === 'error' ? 'alert' : 'status'} aria-label="{issue.level}: {issue.message}">
+              <div class="flex items-start gap-2 rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)] px-3 py-2 text-sm" role={issue.level === 'error' ? 'alert' : 'status'} aria-label="{issue.level}: {issue.message}">
                 <span class="mt-0.5 {ISSUE_CLASS[issue.level]}"><Icon icon={ISSUE_ICON[issue.level]} /></span>
                 <div class="grow text-[var(--pd-content-card-text)]">
                   <div class="font-semibold {ISSUE_CLASS[issue.level]}">{issue.message}</div>
@@ -149,13 +149,13 @@ function openResult(): void {
           {/each}
 
           {#if task}
-            <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-3 space-y-2" aria-label="Creation progress">
+            <div class="rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)] p-3 space-y-2" aria-label="Creation progress">
               <div class="flex justify-between text-[var(--pd-content-card-text)]">
                 <span>{task.status === 'in-progress' ? (task.step ?? 'Working') : task.status === 'success' ? 'Done' : (task.error ?? 'Canceled')}</span>
                 <span class="tabular-nums">{task.progress}%</span>
               </div>
               {#if running}<LinearProgress />{/if}
-              <pre class="max-h-32 overflow-auto text-xs font-mono text-[var(--pd-content-card-text)]">{task.logs.join('\n')}</pre>
+              <pre class="max-h-32 overflow-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--pd-content-card-text)]">{task.logs.join('\n')}</pre>
             </div>
           {/if}
 
