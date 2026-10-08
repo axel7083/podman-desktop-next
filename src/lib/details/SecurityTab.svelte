@@ -97,22 +97,25 @@ function openAdvisory(f: Finding): void {
           {#if Array.isArray(results.get(key))}
             {@const list = findingsOf(key)}
             {@const headline = c.summary?.(image, list)}
+            {@const pkgCols = list.some(f => f.package || f.fixedIn || f.vexStatus)}
             {#if headline}<p class="mb-2 font-semibold text-[var(--pd-content-card-header-text)]" aria-label="{c.label} summary">{headline}</p>{/if}
             {#if list.length === 0}
               <p class="text-[var(--pd-state-success)]">Passed – no findings.</p>
             {:else}
               <table class="w-full text-left table-fixed">
                 <thead class="text-xs uppercase text-[var(--pd-table-header-text)]">
-                  <tr><th class="py-1 w-24">Severity</th><th>Finding</th><th class="w-52">Package</th><th class="w-36">Fixed in</th><th class="w-36">VEX</th><th class="w-60"></th></tr>
+                  <tr><th class="py-1 w-24">Severity</th><th>Finding</th>{#if pkgCols}<th class="w-44">Package</th><th class="w-32">Fixed in</th><th class="w-32">VEX</th>{/if}<th class="w-52"></th></tr>
                 </thead>
                 <tbody>
                   {#each list as f (f.id)}
                     <tr class="border-t border-[var(--pd-content-divider)] {f.vexStatus === 'not_affected' || f.vexStatus === 'will_not_fix' ? 'opacity-60' : ''}">
                       <td class="py-1.5"><span class="rounded-sm px-1.5 text-xs font-semibold capitalize {SEV_CLASS[f.severity]}">{f.severity}</span></td>
-                      <td class="py-1.5 pr-2"><div class="text-[var(--pd-table-body-text-highlight)]">{f.cve ?? f.ruleId ?? f.id}</div><div class="text-xs">{f.title}</div></td>
-                      <td class="py-1.5 pr-2 text-sm break-words">{f.package ?? ''}{f.installed ? ` ${f.installed}` : ''}</td>
-                      <td class="py-1.5 pr-2 text-sm">{f.fixedIn ?? '—'}</td>
-                      <td class="py-1.5 pr-2 text-sm">{f.vexStatus?.replaceAll('_', ' ') ?? '—'}</td>
+                      <td class="py-1.5 pr-2"><div class="text-[var(--pd-table-body-text-highlight)] break-words">{f.cve ?? f.ruleId ?? f.id}</div><div class="text-xs">{f.title}</div></td>
+                      {#if pkgCols}
+                        <td class="py-1.5 pr-2 text-sm break-words">{f.package ?? ''}{f.installed ? ` ${f.installed}` : ''}</td>
+                        <td class="py-1.5 pr-2 text-sm break-words">{f.fixedIn ?? '—'}</td>
+                        <td class="py-1.5 pr-2 text-sm">{f.vexStatus?.replaceAll('_', ' ') ?? '—'}</td>
+                      {/if}
                       <td class="py-1.5 text-right whitespace-nowrap">
                         {#each f.actions ?? [] as a (a.label)}
                           <Button type="secondary" class="mr-2" onclick={a.run.bind(undefined, image)}>{a.label}</Button>
