@@ -103,7 +103,17 @@ const extension: MockExtension = {
     // Column / badge in a core list (P14).
     columns: [{ id: 'example-col', title: 'Example', target: 'image', value: img => ('base' in img && img.base?.startsWith('ubi') ? 'UBI' : undefined) }],
     // Group container rows by label (P10).
-    groupers: [{ id: 'example-group', label: 'io.example.group', typeName: 'example', icon: 'icons/podman-desktop.svg' }],
+    // `groupName` / `groupDetails` resolve opaque label values (session ids…) into readable group rows.
+    groupers: [
+      {
+        id: 'example-group',
+        label: 'io.example.group',
+        typeName: 'example',
+        icon: 'icons/podman-desktop.svg',
+        groupName: value => value.slice(0, 8),
+        groupDetails: (_value, containers) => [`${containers.length} example containers`],
+      },
+    ],
     // Structured image findings (P5).
     imageCheckers: [
       {

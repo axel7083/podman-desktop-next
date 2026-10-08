@@ -49,6 +49,7 @@ interface GroupRow {
   podId?: string;
   containers: Container[];
   allCount: number;
+  details?: string[];
   selected?: boolean;
   ext?: import('#lib/ext/types.ts').ExtensionMeta;
 }
@@ -75,6 +76,9 @@ const visible = $derived(
 );
 
 const rows: Row[] = $derived.by(() => {
+  // ui-svelte Table (legacy mode) only re-renders cells when `data` changes:
+  // depend on every state so lifecycle changes (incl. group children) show up.
+  for (const c of visible) void c.state;
   const groups = new Map<string, GroupRow>();
   const out: Row[] = [];
   for (const c of visible) {
@@ -91,14 +95,16 @@ const rows: Row[] = $derived.by(() => {
       if (grouper) {
         const value = c.labels[grouper.label];
         key = `${grouper.id}:${value}`;
+        const all = mine.filter(x => x.labels[grouper.label] === value);
         make = (): GroupRow => ({
           kind: 'group',
           name: key!,
-          groupName: value,
+          groupName: grouper.groupName?.(value, all) ?? value,
+          details: grouper.groupDetails?.(value, all),
           type: grouper.typeName,
           icon: grouper.icon ?? PodIcon,
           containers: [],
-          allCount: mine.filter(x => x.labels[grouper.label] === value).length,
+          allCount: all.length,
           ext: grouper.ext,
         });
       }
@@ -142,7 +148,7 @@ const nameColumn = new TableColumn<Row, NameCellData>('Name', {
       const filtered = r.allCount - r.containers.length;
       return {
         title: `${r.groupName} (${r.type})`,
-        sub: [`${r.allCount} container${r.allCount > 1 ? 's' : ''}${filtered > 0 ? ` (${filtered} filtered)` : ''}`],
+        sub: [`${r.allCount} container${r.allCount > 1 ? 's' : ''}${filtered > 0 ? ` (${filtered} filtered)` : ''}`, ...(r.details ?? [])],
         href: r.podId ? `/c/${conn.id}/pods/${r.podId}/summary` : undefined,
         badges: r.ext ? [{ label: `grouped by ${r.ext.displayName}`, ext: r.ext }] : undefined,
       };
@@ -180,7 +186,7 @@ const actionsColumn = new TableColumn<Row, ActionsCellData>('Actions', {
       title: a.label,
       icon: a.icon,
       ext: grouper!.ext,
-      onClick: (): void => a.run(r.groupName, r.containers),
+      onClick: (): void => a.run(r.name.slice(r.name.indexOf(':') + 1), r.containers),
     }));
     return { buttons: base.buttons, menu: [...base.menu, ...extra] };
   },
