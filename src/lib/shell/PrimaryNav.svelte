@@ -165,24 +165,58 @@ $effect(() => {
   return (): void => observer.disconnect();
 });
 
-// keep the selected row in view after navigation (e.g. from the palette)
+/**
+ * Keep the selected row in view after navigation (e.g. from the palette)
+ * without ever landing mid-group: the row's group starts in view when the
+ * group fits (otherwise its sticky header covers the top), and a group cut
+ * at the top edge (an orphaned "More (n)" / "⋯ n" row) is scrolled past when
+ * the selected row still fits.
+ */
+function revealSelected(): void {
+  const el = scroller;
+  const row = el?.querySelector<HTMLElement>('[aria-current="page"]');
+  if (!el || !row) return;
+  const base = el.getBoundingClientRect().top - el.scrollTop;
+  const top = (n: Element): number => n.getBoundingClientRect().top - base;
+  const bottom = (n: Element): number => n.getBoundingClientRect().bottom - base;
+  const groupEls = [...el.querySelectorAll<HTMLElement>(':scope > [role="group"]')];
+  const own = groupEls.find(g => g.contains(row));
+  const rowTop = top(row);
+  const rowBottom = bottom(row);
+  const view = el.clientHeight;
+  const header = own?.firstElementChild;
+  const headerH = header ? header.getBoundingClientRect().height : 0;
+  const ownTop = own ? top(own) : rowTop;
+  let target = el.scrollTop;
+  if (rowBottom - ownTop <= view) {
+    // the whole group start fits with the row: show it
+    if (ownTop < target) target = ownTop;
+    else if (rowBottom > target + view) target = rowBottom - view;
+    // expanded: the sticky header already labels a visible row, so don't move the user's scroll
+    if (expanded && rowTop - headerH >= el.scrollTop && rowBottom <= el.scrollTop + view) return;
+  } else if (rowTop - headerH < target) target = rowTop - headerH;
+  else if (rowBottom > target + view) target = rowBottom - view;
+  // skip past a group that is cut at the top edge when the row still fits below its end
+  const cut = groupEls.find(g => g !== own && top(g) < target && bottom(g) > target + 1);
+  if (cut && bottom(cut) <= rowTop && rowBottom - bottom(cut) <= view) target = bottom(cut);
+  target = Math.max(0, Math.min(target, el.scrollHeight - view));
+  if (Math.abs(target - el.scrollTop) > 1) el.scrollTop = target;
+}
+
 $effect(() => {
   void path;
+  void expanded;
   if (!scroller) return;
-  requestAnimationFrame(() => scroller?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest' }));
+  requestAnimationFrame(revealSelected);
 });
 
 /*
  * The mask lives on the scroller only, which starts strictly below the pinned
- * Dashboard row: nothing can render behind a pinned row. The top edge is
- * fully transparent for 8px so a half-scrolled row never reads as a ghost
- * under the divider, then fades in over 28px.
+ * Dashboard row: nothing can render behind a pinned row. Group headers (and
+ * the rail dividers) are sticky with an opaque background, so the top edge
+ * needs no fade; only the bottom fades out over 28px.
  */
-const fadeMask = $derived(
-  fadeTop || fadeBottom
-    ? `linear-gradient(to bottom, ${fadeTop ? 'transparent 0, transparent 8px, black 28px' : 'black 0'}, ${fadeBottom ? 'black calc(100% - 28px), transparent 100%' : 'black 100%'})`
-    : undefined,
-);
+const fadeMask = $derived(fadeBottom ? 'linear-gradient(to bottom, black calc(100% - 28px), transparent 100%)' : undefined);
 
 /** "More engines (4)", "More Kubernetes (4)", "More VMs & services (16)": proper nouns keep their case. */
 function moreLabel(group: Group): string {
@@ -310,7 +344,8 @@ function onResizeDblClick(): void {
       {@const collapsed = ui.collapsedGroups.includes(group.id)}
       <div role="group" aria-label={group.label}>
         {#if expanded}
-          <div class="group/header flex items-center pl-3.5 pr-1.5 pt-3 pb-1 text-[var(--pd-nav-group-header)]">
+          <!-- sticky inside its group: a scrolled group never shows rows without its header -->
+          <div class="group/header sticky top-0 z-10 bg-[var(--pd-global-nav-bg)] flex items-center pl-3.5 pr-1.5 pt-3 pb-1 text-[var(--pd-nav-group-header)]">
             <button
               class="flex items-center gap-1 grow min-w-0 text-[11px] font-semibold hover:text-[var(--pd-global-nav-icon-selected)]"
               aria-expanded={!collapsed}
@@ -329,7 +364,9 @@ function onResizeDblClick(): void {
           </div>
         {:else}
           <!-- icon rail: a 1px divider stands in for the group header (docs/ia.md, below 70px) -->
-          <div class="mx-2 my-2 border-t border-[var(--pd-global-nav-icon)] opacity-40" role="separator" aria-label={group.label}></div>
+          <div class="sticky top-0 z-10 bg-[var(--pd-global-nav-bg)] px-2 py-2" role="separator" aria-label={group.label}>
+            <div class="border-t border-[var(--pd-global-nav-icon)] opacity-40"></div>
+          </div>
         {/if}
 
         {#if !collapsed || !expanded}
