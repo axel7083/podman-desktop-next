@@ -63,7 +63,7 @@ function registrationIssues(v: FormValues): FactoryIssue[] {
 
 const rhelDetails = (release: string, vmType: string, cpus: string, mem: string, disk: string, image: string): Record<string, string> => ({
   OS: RELEASES[release]?.pretty ?? release,
-  'VM type': vmType,
+  'VM type': ({ wsl: 'WSL', hyperv: 'Hyper-V', applehv: 'applehv', libkrun: 'libkrun' } as Record<string, string>)[vmType] ?? vmType,
   CPUs: cpus,
   Memory: mem,
   Disk: disk,

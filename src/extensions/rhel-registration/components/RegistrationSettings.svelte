@@ -20,7 +20,7 @@ const keys = $derived(activationKeys());
 const subs = $derived(subscriptions());
 const regs = $derived(allRegistrations());
 const duplicate = $derived(keys.some(k => k.name === name.trim()));
-const systems = $derived(registry.activeConnections.filter(c => c.capabilities?.includes('rhel') || c.capabilities?.includes('machine')));
+const systems = $derived(registry.activeConnections.filter(c => c.capabilities?.includes('rhel')));
 
 function startCreate(): void {
   creating = true;

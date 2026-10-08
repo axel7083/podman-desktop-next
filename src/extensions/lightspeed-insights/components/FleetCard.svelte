@@ -3,12 +3,13 @@
 import { Button } from '@podman-desktop/ui-svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
+import { registry } from '#lib/ext/registry.svelte.ts';
 import { navigate } from '#lib/nav.ts';
 
 import { allRegistrations } from '../../rhel-registration/store.ts';
 import { lsStore } from '../data.ts';
 
-const systems = $derived(Object.entries(allRegistrations()).filter(([, r]) => r.status === 'Current').length);
+const systems = $derived(registry.activeConnections.filter(c => c.capabilities?.includes('rhel') && allRegistrations()[c.id]?.status === 'Current').length);
 const hits = $derived(lsStore().advisor.length);
 const open = $derived(lsStore().cves.filter(c => c.status_name !== 'Resolved'));
 const critical = $derived(open.filter(c => c.impact === 'Critical').length);

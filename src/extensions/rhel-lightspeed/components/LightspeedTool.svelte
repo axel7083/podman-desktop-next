@@ -145,7 +145,7 @@ function render(text: string): string[] {
                 <div class="max-w-[75%] rounded-lg px-4 py-3 {m.role === 'user' ? 'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)]' : 'bg-[var(--pd-content-card-bg)] text-[var(--pd-content-card-text)]'}">
                   {#each render(m.text) as line, j (j)}
                     {#if line.startsWith('    ')}
-                      <pre class="font-mono text-xs bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] px-2 py-0.5">{line.trim()}</pre>
+                      <pre class="font-mono text-xs border border-[var(--pd-content-divider)] bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] px-2 py-0.5">{line.trim()}</pre>
                     {:else}
                       <p class="min-h-2">{line}</p>
                     {/if}

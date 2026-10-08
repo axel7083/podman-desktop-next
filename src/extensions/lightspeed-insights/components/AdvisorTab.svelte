@@ -109,7 +109,7 @@ function console_(): void {
           <div class="px-10 pb-4 space-y-2">
             <div class="font-mono text-xs opacity-80">{h.rule_id} · likelihood {h.likelihood}/4 · impact {h.impact}/4 · published {h.publish_date}</div>
             <p>{h.summary}</p>
-            <pre class="rounded-md bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] p-2 text-xs font-mono">{h.remediation.join('\n')}</pre>
+            <pre class="rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] p-2 text-xs font-mono">{h.remediation.join('\n')}</pre>
             <div class="flex gap-2">
               <Button icon={faWrench} onclick={fix.bind(undefined, h)} disabled={h.state === 'remediated' || conn.status !== 'started'}>Fix in terminal</Button>
               <Button type="secondary" icon={faWandMagicSparkles} onclick={explain.bind(undefined, h)}>Explain with RHEL Lightspeed</Button>

@@ -34,8 +34,8 @@ const extension: MockExtension = {
         providerId: 'podman',
         providerName: 'Podman',
         engineType: 'podman',
-        hint: (s.has('windows') || s.has('rhel')) ? 'WSL' : undefined,
-        hintTooltip: (s.has('windows') || s.has('rhel')) ? 'Runs in WSL 2 distribution podman-machine-default' : undefined,
+        hint: s.has('windows') ? 'WSL' : undefined,
+        hintTooltip: s.has('windows') ? 'Runs in WSL 2 distribution podman-machine-default' : undefined,
         initialStatus: 'started',
         endpoint: (s.has('windows') || s.has('rhel'))
           ? 'npipe:////./pipe/podman-machine-default'
