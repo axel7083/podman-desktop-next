@@ -14,7 +14,7 @@ import ListItemButtonIcon from '#lib/components/ListItemButtonIcon.svelte';
 import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { AddonDef, ConnectionView, Contributed, ResourceContext } from '#lib/ext/types.ts';
-import { coreResourcesOf, href, KUBE_KINDS, navigate, STATUS_DOT_CLASS, STATUS_LABEL } from '#lib/nav.ts';
+import { coreResourcesOf, href, KUBE_KINDS, navigate, startVerb, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import { deleteConnection, restartConnection, runTask, startConnection, stopConnection, toast, world } from '#lib/world.svelte.ts';
 
@@ -134,9 +134,9 @@ const tiles = $derived([
   {#snippet actionsSnippet()}
     {#if !conn.extensionDisabled}
       {#if busy}
-        <span class="flex items-center gap-2 text-sm text-[var(--pd-content-text)] pr-2"><Spinner size="1em" />{STATUS_LABEL[conn.status]}…</span>
+        <span class="flex items-center gap-2 text-sm text-[var(--pd-content-text)] pr-2"><Spinner size="1em" />{statusLabel(conn)}…</span>
       {/if}
-      <ListItemButtonIcon title="Start" icon={faPlay} detailed onClick={start} hidden={conn.status !== 'stopped'} />
+      <ListItemButtonIcon title={startVerb(conn)} icon={faPlay} detailed onClick={start} hidden={conn.status !== 'stopped'} />
       <ListItemButtonIcon title="Stop" icon={faStop} detailed onClick={stop} hidden={conn.status !== 'started'} />
       <ListItemButtonIcon title="Restart" icon={faArrowsRotate} detailed onClick={restart} enabled={conn.status === 'started'} />
       {#each detailsMenus as m (m.ext.id + m.id)}
@@ -173,8 +173,8 @@ const tiles = $derived([
         {#if conn.status !== 'started'}
           <div class="flex items-center gap-3 rounded-lg p-3 bg-[var(--pd-content-card-bg)] text-[var(--pd-content-text)]">
             <span class="w-2.5 h-2.5 rounded-full {STATUS_DOT_CLASS[conn.status]}"></span>
-            <span class="grow">{conn.name} is {STATUS_LABEL[conn.status].toLowerCase()}. Start it to work with its resources.</span>
-            {#if conn.status === 'stopped'}<Button icon={faPlay} onclick={start}>Start</Button>{/if}
+            <span class="grow">{conn.name} is {statusLabel(conn).toLowerCase()}. {startVerb(conn)} to work with its resources.</span>
+            {#if conn.status === 'stopped'}<Button icon={faPlay} onclick={start}>{startVerb(conn)}</Button>{/if}
           </div>
         {/if}
         <div class="grid grid-cols-4 gap-3" aria-label="Resources">
@@ -197,7 +197,7 @@ const tiles = $derived([
           <h2 class="text-lg font-semibold text-[var(--pd-content-card-header-text)] mb-2">Details</h2>
           <table class="w-full">
             <tbody>
-              {#each [['Status', STATUS_LABEL[conn.status]], ['Provider', conn.providerName], ['Type', conn.kind === 'engine' ? `${conn.engineType ?? ''} engine` : conn.kind], ['Endpoint', conn.endpoint], ['Version', conn.version ?? ''], ...Object.entries(conn.details ?? {}).filter(([k]) => !(parent && k === 'Runs on')), ['Contributed by', `${conn.ext.displayName} (${conn.ext.id})`]] as [label, value] (label)}
+              {#each [['Status', statusLabel(conn)], ['Provider', conn.providerName], ['Type', conn.kind === 'engine' ? `${conn.engineType ?? ''} engine` : conn.kind], ['Endpoint', conn.endpoint], ['Version', conn.version ?? ''], ...Object.entries(conn.details ?? {}).filter(([k]) => !(parent && k === 'Runs on')), ['Contributed by', `${conn.ext.displayName} (${conn.ext.id})`]] as [label, value] (label)}
                 {#if value}
                   <tr><td class="py-1 w-48 text-[var(--pd-table-body-text)]">{label}</td><td class="py-1 wrap-anywhere">{value}</td></tr>
                 {/if}

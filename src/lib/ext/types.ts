@@ -105,6 +105,12 @@ export interface ConnectionDef {
   resources?: string[];
   /** Child connection (e.g. a Docker context pointing at a Podman machine). */
   parentId?: string;
+  /**
+   * Remote connection (OCM cluster, remote context…): the shell says
+   * "Not connected" / "Connect" instead of "Stopped" / "Start". Pair with
+   * `startHandlers` (world) to run the real connect flow.
+   */
+  remote?: boolean;
 }
 
 /** Runtime view of a connection, as consumed by the shell. */

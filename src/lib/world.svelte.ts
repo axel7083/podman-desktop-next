@@ -614,7 +614,19 @@ export function setConnectionStatus(id: string, status: ConnectionStatus): void 
   world.connStatus[id] = status;
 }
 
+/**
+ * Extensions can replace the generic start of a connection they own, e.g.
+ * "Connect" on an OCM cluster runs `oc login --web` as a task. Registered at
+ * module load (keyed by connection id).
+ */
+export const startHandlers = new Map<string, (id: string, name: string) => void>();
+
 export function startConnection(id: string, name: string): void {
+  const handler = startHandlers.get(id);
+  if (handler) {
+    handler(id, name);
+    return;
+  }
   world.connStatus[id] = 'starting';
   later(2200, () => {
     world.connStatus[id] = 'started';

@@ -15,7 +15,7 @@ import Label from '#lib/components/Label.svelte';
 import LazyComponent from '#lib/components/LazyComponent.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { connectionHome, navigate, STATUS_DOT_CLASS, STATUS_LABEL } from '#lib/nav.ts';
+import { connectionHome, navigate, startVerb, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
 import { startConnection, world } from '#lib/world.svelte.ts';
 
 const STATUS_TEXT_CLASS: Record<string, string> = {
@@ -153,16 +153,16 @@ function toggle(): void {
                               {#if c.hint}<span><Label name={c.hint} /></span>{/if}
                             </div>
                             <div class="flex items-center gap-1.5 mt-0.5">
-                              <span class="text-sm {c.status === 'started' ? STATUS_TEXT_CLASS.healthy : STATUS_TEXT_CLASS.stable}">{STATUS_LABEL[c.status]}</span>
+                              <span class="text-sm {c.status === 'started' ? STATUS_TEXT_CLASS.healthy : STATUS_TEXT_CLASS.stable}">{statusLabel(c)}</span>
                               <span class="text-sm text-[var(--pd-content-text-sub)]">
                                 – {c.status === 'started' ? counts(c) : 'Required to run containers and pods'}
                               </span>
                             </div>
                           </div>
                           {#if c.status === 'stopped'}
-                            <Button type="primary" onclick={start.bind(undefined, c)}>Start</Button>
+                            <Button type="primary" onclick={start.bind(undefined, c)}>{startVerb(c)}</Button>
                           {:else if c.status !== 'started'}
-                            <Button type="secondary" inProgress={true}>{STATUS_LABEL[c.status]}</Button>
+                            <Button type="secondary" inProgress={true}>{statusLabel(c)}</Button>
                           {/if}
                         </div>
                       </div>

@@ -128,6 +128,18 @@ export const STATUS_LABEL: Record<string, string> = {
   unknown: 'Unknown',
 };
 
+/** Status label; remote connections read "Not connected" / "Connecting" (ConnectionDef.remote). */
+export function statusLabel(conn: { status: string; remote?: boolean }): string {
+  if (conn.remote && conn.status === 'stopped') return 'Not connected';
+  if (conn.remote && conn.status === 'starting') return 'Connecting';
+  return STATUS_LABEL[conn.status] ?? conn.status;
+}
+
+/** Verb of the start action: "Connect" for remote connections. */
+export function startVerb(conn: { remote?: boolean }): string {
+  return conn.remote ? 'Connect' : 'Start';
+}
+
 /** Strip the base path from a pathname: `/base/c/x` → `/c/x`. */
 export function appPath(pathname: string): string {
   const root = href('/').replace(/\/$/, '');

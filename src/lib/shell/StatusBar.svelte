@@ -14,7 +14,7 @@ import Contribution from '#lib/components/Contribution.svelte';
 import Popover from '#lib/components/Popover.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { connectionHome, GROUPS, navigate, STATUS_LABEL } from '#lib/nav.ts';
+import { connectionHome, GROUPS, navigate, startVerb, statusLabel } from '#lib/nav.ts';
 import { ui } from '#lib/ui.svelte.ts';
 import { cancelTask, startConnection, stopConnection, world } from '#lib/world.svelte.ts';
 
@@ -26,7 +26,7 @@ const errors = $derived(conns.filter(c => c.status === 'error'));
 const summary = $derived.by(() => {
   if (conns.length === 0) return { text: 'No connections', state: 'stopped' };
   if (errors.length) return { text: `${errors.length} connection${errors.length > 1 ? 's' : ''} with errors`, state: 'error' };
-  if (busy.length) return { text: `${busy[0].name} ${STATUS_LABEL[busy[0].status].toLowerCase()}…`, state: 'busy' };
+  if (busy.length) return { text: `${busy[0].name} ${statusLabel(busy[0]).toLowerCase()}…`, state: 'busy' };
   if (running.length === conns.length) return { text: 'All systems running', state: 'ok' };
   return { text: `${running.length} of ${conns.length} running`, state: 'partial' };
 });
@@ -193,11 +193,11 @@ const statusIcon: Record<string, typeof faCircleCheck> = {
             </button>
             <span class="text-xs flex items-center gap-1 {c.status === 'started' ? 'text-[var(--pd-status-running)]' : c.status === 'error' ? 'text-[var(--pd-status-terminated)]' : 'text-[var(--pd-content-sub-header)]'}">
               {#if ['starting', 'stopping', 'creating'].includes(c.status)}<Spinner size="10px" />{/if}
-              {STATUS_LABEL[c.status]}
+              {statusLabel(c)}
             </span>
             {#if c.status === 'started' || c.status === 'stopped'}
               <button class="text-xs text-[var(--pd-link)] hover:underline w-8 text-right" onclick={toggleConnection.bind(undefined, c)}>
-                {c.status === 'started' ? 'Stop' : 'Start'}
+                {c.status === 'started' ? 'Stop' : startVerb(c)}
               </button>
             {:else}
               <span class="w-8"></span>
