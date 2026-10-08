@@ -58,7 +58,7 @@ function copy(): void {
     {/if}
   </section>
   <section class="rounded-lg bg-[var(--pd-content-card-bg)] p-4 space-y-2" aria-label="Options">
-    <Checkbox checked={s.readOnly} disabled={s.status !== 'stopped'} onclick={onReadOnly} title="Read-only">Read-only (no create, update, delete or exec tools)</Checkbox>
+    <Checkbox checked={s.readOnly} onclick={onReadOnly} title="Read-only">Read-only (no create, update, delete or exec tools){s.status === 'running' ? ' · applies on next start' : ''}</Checkbox>
     <div class="text-sm">Toolsets: {s.toolsets.join(', ')} · context {id}</div>
     <pre class="text-sm font-mono whitespace-pre-wrap bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] rounded-md p-3">{cmd}</pre>
   </section>

@@ -31,7 +31,7 @@ export function isPushed(image: ContainerImage): boolean {
 /** Clair report (`manifest/{digest}/security?vulnerabilities=true`) → P5 findings. */
 export function clairFindings(image: ContainerImage): Finding[] {
   if (!isPushed(image)) {
-    return [{ id: 'not-scanned', title: 'Not scanned yet: push the image to quay.io to get a Clair report (status: unsupported until pushed).', severity: 'info' }];
+    return [{ id: 'not-scanned', ruleId: 'Not scanned', title: 'Not scanned yet: push the image to quay.io to get a Clair report (status: unsupported until pushed).', severity: 'info' }];
   }
   const ssl = image.packages?.find(p => p.name === 'openssl-libs')?.version ?? '';
   const out: Finding[] = [];

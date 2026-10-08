@@ -37,7 +37,7 @@ function installRecommended(): void {
   {/if}
   <div class="flex items-center gap-3">
     <span class="grow text-sm">Binaries are installed to <code>{BIN_DIR}</code> and added to your PATH.</span>
-    <Button icon={faDownload} disabled={pending.length === 0} onclick={installRecommended}>{pending.length ? `Install recommended (${pending.length})` : 'Recommended tools up to date'}</Button>
+    <span class="shrink-0 whitespace-nowrap"><Button icon={faDownload} disabled={pending.length === 0} onclick={installRecommended}>{pending.length ? `Install recommended (${pending.length})` : 'Recommended tools up to date'}</Button></span>
   </div>
   <div class="bg-[var(--pd-invert-content-card-bg)] rounded-md" role="table" aria-label="OpenShift CLI tools">
     <div role="row" class="grid grid-cols-[150px_2fr_100px_100px_140px] gap-2 px-4 py-2 text-xs uppercase font-semibold text-[var(--pd-table-header-text)] border-b border-[var(--pd-content-divider)]">

@@ -105,6 +105,11 @@ function applyFix(t: Turn): void {
   });
 }
 
+/** Minimal markdown: `inline code` segments. */
+function segments(text: string): { text: string; code: boolean }[] {
+  return text.split('`').map((part, i) => ({ text: part, code: i % 2 === 1 }));
+}
+
 function openDoc(url: string): void {
   toast({ type: 'info', title: `Opening ${url}` });
 }
@@ -146,7 +151,7 @@ function clear(): void {
           {#each turns as t, i (i)}
             <div class="flex {t.role === 'user' ? 'justify-end' : 'justify-start'}">
               <div class="max-w-[75%] rounded-lg p-3 {t.role === 'user' ? 'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)]' : 'bg-[var(--pd-content-card-bg)] text-[var(--pd-content-card-text)]'}">
-                <div class="whitespace-pre-wrap text-base">{t.text}{#if t.streaming}<span class="animate-pulse">▌</span>{/if}</div>
+                <div class="whitespace-pre-wrap text-base">{#each segments(t.text) as seg, j (j)}{#if seg.code}<code class="font-mono text-sm rounded-sm px-1 bg-[var(--pd-content-card-inset-bg)]">{seg.text}</code>{:else}{seg.text}{/if}{/each}{#if t.streaming}<span class="animate-pulse">▌</span>{/if}</div>
                 {#if t.attachments?.length}
                   <div class="flex flex-wrap gap-1 mt-2">
                     {#each t.attachments as a (a.label)}<span class="text-xs rounded-sm px-1.5 py-0.5 bg-[var(--pd-content-card-inset-bg)] text-[var(--pd-content-card-text)] flex items-center gap-1"><Icon icon={faPaperclip} />{a.label}</span>{/each}

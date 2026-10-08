@@ -76,3 +76,18 @@ Reference screenshots (`references/`):
 | `settings-resources.png` | `website/docs/img/settings.png` |
 | `extensions-catalog.png` | `website/docs/extensions/img/browse-catalog.png` |
 | `navigation-menu-{dark,light}.png` | `website/blog/img/podman-desktop-release-1.27/navigation-menu-*.png` |
+
+### Wave: openshift
+
+| File (`static/icons/`) | Source |
+|---|---|
+| `redhat.openshift-cluster-manager.svg`, `redhat.openshift-cli-pack.svg` | https://cdn.simpleicons.org/redhatopenshift (Red Hat OpenShift mark) |
+| `redhat.olm.png` | https://github.com/operator-framework.png |
+| `redhat.openshift-virtualization.png` | https://github.com/kubevirt.png |
+| `redhat.quay.png` | https://github.com/quay.png |
+| `redhat.acs-image-check.png` | https://github.com/stackrox.png |
+| `redhat.openshift-pipelines-gitops.svg` | https://cdn.simpleicons.org/tekton |
+| `argo-cd.svg` | https://cdn.simpleicons.org/argo |
+| `redhat.service-interconnect.png` | https://github.com/skupperproject.png |
+| `containers.kubernetes-mcp-server.png` | https://github.com/containers.png |
+| `redhat.openshift-lightspeed.png` | `ext-redhat-lightspeed/packages/extension/icon.png` |

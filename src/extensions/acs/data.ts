@@ -10,6 +10,7 @@ export const CENTRAL = { name: 'acme-prod', endpoint: 'central-stackrox.apps.ros
 
 export interface ViolatedPolicy {
   name: string;
+  component?: { name: string; version: string; fixedBy?: string };
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   description: string;
   violation: string[];
@@ -32,6 +33,7 @@ export function acsCheck(image: ContainerImage): ViolatedPolicy[] {
       violation: [`Fixable CVE-2026-31790 (CVSS 7.5) (severity Important) found in component 'openssl-libs' (version ${ssl}), resolved by version 1:3.2.2-6.el9_6`],
       remediation: 'Use your package manager to update to a fixed version in future builds or speak with your security team to mitigate the vulnerabilities.',
       failingCheck: true,
+      component: { name: 'openssl-libs', version: ssl, fixedBy: '1:3.2.2-6.el9_6' },
     });
   }
   if (image.labels?.['io.acme.user'] === 'root') {
@@ -62,6 +64,7 @@ export function acsCheck(image: ContainerImage): ViolatedPolicy[] {
       violation: [`Image includes component 'dnf' (version ${pkg(image, 'dnf')})`],
       remediation: 'Run `rpm -e $(rpm -qa *dnf*)` in the image build for production containers.',
       failingCheck: false,
+      component: { name: 'dnf', version: pkg(image, 'dnf') ?? '' },
     });
   }
   return out;
@@ -77,6 +80,9 @@ export function toFindings(policies: ViolatedPolicy[]): Finding[] {
     ruleId: p.name,
     title: `${p.failingCheck ? 'Breaks build · ' : ''}${p.violation[0]}`,
     severity: p.severity.toLowerCase() as Finding['severity'],
+    package: p.component?.name,
+    installed: p.component?.version,
+    fixedIn: p.component?.fixedBy,
     description: `${p.description}. Remediation: ${p.remediation}`,
   }));
 }

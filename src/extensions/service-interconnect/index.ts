@@ -11,7 +11,7 @@ import { mkContainer } from '#lib/ext/helpers.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView, MockExtension, ResourceContext } from '#lib/ext/types.ts';
 import { confirm } from '#lib/confirm.svelte.ts';
-import { addKube, type Container, kube, runTask, toast, world } from '#lib/world.svelte.ts';
+import { addKube, type Container, kube, runTask, toast } from '#lib/world.svelte.ts';
 
 import { linkTarget, linkToCluster } from './actions.ts';
 import ServiceNetwork from './components/ServiceNetwork.svelte';
