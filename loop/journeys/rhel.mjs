@@ -95,7 +95,13 @@ export async function journey(t) {
   await page.getByRole('button', { name: 'Start and register' }).click();
   await page.waitForTimeout(2500);
   await t.shot('rhel9-db-registered');
-  await page.locator('a', { hasText: 'Terminal' }).first().click();
+  // Terminal may sit in the "More" tabs menu (docs/ia.md rule 3)
+  const terminalTab = page.locator('a', { hasText: 'Terminal' }).first();
+  if (await terminalTab.isVisible()) await terminalTab.click();
+  else {
+    await page.getByRole('button', { name: 'More tabs' }).click();
+    await page.getByRole('menuitem', { name: /Terminal/ }).click();
+  }
   const input = page.getByRole('textbox', { name: 'Terminal input' });
   await input.fill('sudo subscription-manager status');
   await input.press('Enter');

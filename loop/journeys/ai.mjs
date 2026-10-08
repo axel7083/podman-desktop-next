@@ -147,7 +147,7 @@ export async function journey(t) {
   await t.shot('mcp-add-to-vscode');
   await page.getByRole('button', { name: 'Add to VS Code' }).click();
   await page.getByRole('button', { name: 'Deploy to rhoai-dev' }).click();
-  await waitTask('Applying MCPServer kubernetes-mcp completed');
+  await waitTask(/Applying MCPServer kubernetes-mcp completed|MCPServer kubernetes-mcp is Ready/);
   await t.open('/c/rhoai-dev/rhoai-mcp', fast);
   await t.shot('rhoai-mcpserver');
   await t.open('/tools/mcp', { ...fast, tab: 'clients' });

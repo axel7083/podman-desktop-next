@@ -42,7 +42,7 @@ let failed = false;
 for (const file of journeys) {
   const mod = await import(pathToFileURL(path.join(journeyDir, file)).href);
   for (const theme of ['dark', 'light']) {
-    const t = await launch({ baseUrl, run, scenario: mod.scenario, theme });
+    const t = await launch({ baseUrl, run, scenario: mod.scenario, theme, name: file.replace('.mjs', '') });
     const started = Date.now();
     try {
       await mod.journey(t);
