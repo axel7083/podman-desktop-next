@@ -51,6 +51,19 @@ extension's `package.json`).
 | `podman-desktop.skills.png` | `podman-desktop/extensions/skills/builtin/skills.cdix/icon.png` |
 | `podman-desktop.svg` | `podman-desktop/buildResources/icon.svg` |
 
+Added by wave **rhel** (dossier icon URLs returned 404, so GitHub org avatars of the
+upstream project are used where they are a real logo; Red Hat logo otherwise):
+
+| File (`static/icons/`) | Source |
+|---|---|
+| `redhat.rhel-registration.png` | `ext-redhat-account/icon.png` |
+| `redhat.image-builder.png` | `https://github.com/osbuild.png` (osbuild / Image Builder project avatar) |
+| `redhat.lightspeed-insights.png` | `https://github.com/RedHatInsights.png` |
+| `redhat.security-data-checker.png` | `https://github.com/RedHatProductSecurity.png` |
+| `redhat.dependency-analytics.png` | `https://github.com/trustification.png` (Trustify, RHDA backend) |
+| `redhat.openscap-checker.png` | `https://github.com/OpenSCAP.png` |
+| `redhat.satellite.svg`, `redhat.edge-manager.svg`, `redhat.catalog-checker.svg`, `redhat.rhel-lifecycle-checker.svg` | `ext-redhat-account/icons/redhat-logo.svg` (fallback named in the dossiers; flightctl/catalog have no published logo) |
+
 Other assets:
 
 | File | Source | Licence |
