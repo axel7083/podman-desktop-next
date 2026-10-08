@@ -41,7 +41,7 @@ const engines = $derived(conns.filter(c => c.kind === 'engine').toSorted((a, b) 
 const otherGroups = $derived(
   [
     { id: 'kubernetes', label: 'Kubernetes', list: conns.filter(c => c.kind === 'kubernetes') },
-    { id: 'vms', label: 'VMs and services', list: conns.filter(c => c.kind === 'vm' || c.kind === 'service') },
+    { id: 'vms', label: 'VMs & services', list: conns.filter(c => c.kind === 'vm' || c.kind === 'service') },
   ].filter(g => g.list.length),
 );
 let allEngines = $state(false);
@@ -120,6 +120,18 @@ function counts(c: ConnectionView): string {
   return `${running} running · ${plural(n.length, 'container')} · ${plural(world.images.filter(i => i.engineId === c.id).length, 'image')}`;
 }
 
+let organizer = $state<HTMLDivElement>();
+
+/** "Customize" does what the header pencil does: opens the ListOrganizer dropdown. */
+function customize(): void {
+  // after this click has finished bubbling, so ListOrganizer's outside-click handler doesn't close it again
+  requestAnimationFrame(() => {
+    const pencil = organizer?.querySelector('button');
+    pencil?.scrollIntoView({ block: 'nearest' });
+    pencil?.click();
+  });
+}
+
 function toggle(): void {
   expanded = !expanded;
 }
@@ -127,6 +139,7 @@ function toggle(): void {
 
 <NavPage searchEnabled={false} title="Dashboard">
   {#snippet additionalActions()}
+    <div class="contents" bind:this={organizer}>
     <ListOrganizer
       items={sections}
       {ordering}
@@ -137,6 +150,7 @@ function toggle(): void {
       {onToggle}
       {onReset}
       resetButtonLabel="Reset layout" />
+    </div>
   {/snippet}
   {#snippet content()}
     <div class="flex flex-col min-w-full grow bg-[var(--pd-content-bg)] py-5">
@@ -157,7 +171,7 @@ function toggle(): void {
                   <Icon icon={faChevronRight} size="sm" />
                 </button>
 
-                <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-3">Container engines:</div>
+                <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-3">Container engines</div>
                 <div class="flex flex-col gap-2 pt-2">
                   <div class="grid grid-cols-2 gap-2" aria-label="Container engines">
                   {#each shownEngines as c (c.id)}
@@ -205,7 +219,7 @@ function toggle(): void {
                   {#each otherGroups as g (g.id)}
                     {@const all = allChips.includes(g.id)}
                     {@const list = all || g.list.length <= CHIP_CAP + 1 ? g.list : g.list.slice(0, CHIP_CAP)}
-                    <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-1">{g.label} ({g.list.length}):</div>
+                    <div class="font-semibold text-[var(--pd-content-card-header-text)] pt-1">{g.label} ({g.list.length})</div>
                     <div class="flex flex-wrap items-center gap-2" aria-label="{g.label} connections">
                       {#each list as c (c.id)}
                         <Contribution ext={c.ext} kind="connection" api="P1">
@@ -237,7 +251,7 @@ function toggle(): void {
           <div class="flex flex-col gap-3 bg-[var(--pd-content-card-bg)] p-5 rounded-lg" aria-label="Extensions">
             <div class="flex items-center justify-between">
               <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">Extensions</span>
-              <span class="text-sm text-[var(--pd-content-card-text)]">{allEnabledCards.length} of {registry.dashboardCards.length} cards enabled · configure with the pencil</span>
+              <Button type="link" padding="px-1 py-0" title="Choose and reorder dashboard sections" onclick={customize}>Customize</Button>
             </div>
             <div class="grid grid-cols-2 gap-3">
               {#each cards as card (card.ext.id + card.id)}

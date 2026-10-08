@@ -2,10 +2,12 @@
 /**
  * Provider-first primary navigation (docs/ia.md rule 1).
  * Shell markup from PD's AppNavigation.svelte (resizable 50–240px, collapses
- * to icons below 70px); groups ENGINES / KUBERNETES / VMS & SERVICES / TOOLS
+ * to icons below 70px); groups Engines / Kubernetes / VMs & services / Tools (sentence case, no uppercase
+ * transform so "VMs" survives)
  * with collapsible headers, pinned items, a per-group cap and "More" overflow.
  */
 import { faChevronDown, faChevronRight, faEllipsis, faEllipsisVertical, faEye, faEyeSlash, faPlus, faThumbtack } from '@fortawesome/free-solid-svg-icons';
+import { Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
@@ -170,11 +172,23 @@ $effect(() => {
   requestAnimationFrame(() => scroller?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest' }));
 });
 
+/*
+ * The mask lives on the scroller only, which starts strictly below the pinned
+ * Dashboard row: nothing can render behind a pinned row. The top edge is
+ * fully transparent for 8px so a half-scrolled row never reads as a ghost
+ * under the divider, then fades in over 28px.
+ */
 const fadeMask = $derived(
   fadeTop || fadeBottom
-    ? `linear-gradient(to bottom, ${fadeTop ? 'transparent 0, black 28px' : 'black 0'}, ${fadeBottom ? 'black calc(100% - 28px), transparent 100%' : 'black 100%'})`
+    ? `linear-gradient(to bottom, ${fadeTop ? 'transparent 0, transparent 8px, black 28px' : 'black 0'}, ${fadeBottom ? 'black calc(100% - 28px), transparent 100%' : 'black 100%'})`
     : undefined,
 );
+
+/** "More engines (4)", "More Kubernetes (4)", "More VMs & services (16)": proper nouns keep their case. */
+function moreLabel(group: Group): string {
+  const label = /^(Kubernetes|VMs)/.test(group.label) ? group.label : group.label.toLowerCase();
+  return `More ${label} (${group.overflow.length})`;
+}
 
 const groups: Group[] = $derived.by(() => {
   const result: Group[] = [];
@@ -274,9 +288,16 @@ function onResizeDblClick(): void {
   aria-label="AppNavigation"
   class:select-none={isDragging}
   style:width="{ui.navWidth}px">
-  <NavRow href="/" label="Dashboard" selected={path === '/' || path === ''} {expanded}>
-    {#snippet icon()}<DashboardIcon size="24" />{/snippet}
-  </NavRow>
+  <div class="flex-shrink-0 relative z-10 bg-[var(--pd-global-nav-bg)]">
+    <NavRow href="/" label="Dashboard" selected={path === '/' || path === ''} {expanded}>
+      {#snippet icon()}<DashboardIcon size="24" />{/snippet}
+    </NavRow>
+  </div>
+  <!-- 1px divider between the pinned row and the scroll region, shown once scrolled -->
+  <div
+    class="flex-shrink-0 h-px w-full"
+    class:bg-[var(--pd-global-nav-bg-border)]={fadeTop}
+    aria-hidden="true"></div>
 
   <div
     bind:this={scroller}
@@ -291,12 +312,12 @@ function onResizeDblClick(): void {
         {#if expanded}
           <div class="group/header flex items-center pl-3.5 pr-1.5 pt-3 pb-1 text-[var(--pd-nav-group-header)]">
             <button
-              class="flex items-center gap-1 grow min-w-0 text-[10px] font-semibold uppercase tracking-wider hover:text-[var(--pd-global-nav-icon-selected)]"
+              class="flex items-center gap-1 grow min-w-0 text-[11px] font-semibold hover:text-[var(--pd-global-nav-icon-selected)]"
               aria-expanded={!collapsed}
               onclick={toggleGroup.bind(undefined, group.id)}>
               <span class="truncate">{group.label}</span>
               <span class="opacity-0 group-hover/header:opacity-100 w-3"><Icon icon={collapsed ? faChevronRight : faChevronDown} size="xs" /></span>
-              {#if collapsed}<span class="ml-auto font-normal normal-case tracking-normal">{group.entries.length}</span>{/if}
+              {#if collapsed}<span class="ml-auto font-normal">{group.entries.length}</span>{/if}
             </button>
             {#if group.createHref}
               <a
@@ -307,7 +328,8 @@ function onResizeDblClick(): void {
             {/if}
           </div>
         {:else}
-          <div class="mx-2.5 my-1.5 border-t border-[var(--pd-global-nav-bg-border)]" aria-hidden="true"></div>
+          <!-- icon rail: a 1px divider stands in for the group header (docs/ia.md, below 70px) -->
+          <div class="mx-2 my-2 border-t border-[var(--pd-global-nav-icon)] opacity-40" role="separator" aria-label={group.label}></div>
         {/if}
 
         {#if !collapsed || !expanded}
@@ -338,14 +360,23 @@ function onResizeDblClick(): void {
             </Contribution>
           {/each}
           {#if group.overflow.length}
-            <button
-              class="w-full flex py-2 px-2.5 items-center min-h-9 border-l-[4px] border-l-[var(--pd-global-nav-bg)] text-[color:var(--pd-global-nav-icon)] hover:text-[color:var(--pd-global-nav-icon-selected)]"
-              title="{group.overflow.length} more in {group.label}"
-              aria-label="More {group.label}"
-              onclick={openMore.bind(undefined, group.id)}>
-              <span class="flex items-center justify-center w-6"><Icon icon={faEllipsis} /></span>
-              {#if expanded}<span class="text-sm ml-3">More ({group.overflow.length})</span>{/if}
-            </button>
+            <Tooltip right tip={expanded ? undefined : moreLabel(group)} class="block w-full" containerClass="relative w-full">
+              <button
+                class="w-full flex py-2 px-2.5 items-center min-h-9 border-l-[4px] border-l-[var(--pd-global-nav-bg)] text-[color:var(--pd-global-nav-icon)] hover:text-[color:var(--pd-global-nav-icon-selected)] hover:bg-[var(--pd-global-nav-icon-hover-bg)]"
+                title={expanded ? moreLabel(group) : undefined}
+                aria-label="More {group.label}"
+                onclick={openMore.bind(undefined, group.id)}>
+                <span class="relative flex items-center justify-center w-6 h-6">
+                  <Icon icon={faEllipsis} />
+                  {#if !expanded}
+                    <span
+                      class="absolute -top-1 -right-2 min-w-4 h-4 px-1 rounded-full text-[10px] leading-4 font-semibold text-center bg-[var(--pd-global-nav-icon-inset-bg)] text-[var(--pd-global-nav-icon-selected)]"
+                      aria-hidden="true">{group.overflow.length}</span>
+                  {/if}
+                </span>
+                {#if expanded}<span class="text-sm ml-3">More ({group.overflow.length})</span>{/if}
+              </button>
+            </Tooltip>
           {/if}
         {/if}
       </div>
@@ -368,17 +399,15 @@ function onResizeDblClick(): void {
 {#if moreGroup}
   {@const group = moreGroup}
 <Popover open={true} anchor={moreAnchor} placement="right-start" onclose={closeMore} class="w-64 py-1">
-  <div class="px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">
-    More {group.label.toLowerCase()} ({group.overflow.length})
-  </div>
+  <div class="px-3 pt-1.5 pb-1 text-[11px] font-semibold text-[var(--pd-nav-group-header)]">{moreLabel(group)}</div>
   {#each group.id === 'tools' && group.overflow.length > 6 ? byCategory(group.overflow) : [{ category: '', entries: group.overflow }] as section (section.category)}
     {#if section.category}
-      <div class="px-3 pt-2 pb-0.5 text-[10px] font-semibold text-[var(--pd-content-sub-header)]" role="presentation">{section.category}</div>
+      <div class="px-3 pt-2 pb-0.5 text-[10px] font-semibold text-[var(--pd-table-body-text)]" role="presentation">{section.category}</div>
     {/if}
     {#each section.entries as entry (entry.id)}
       <MenuItem dense title={entry.label} icon={entry.icon} onclick={goFromMore.bind(undefined, entry)}>
         {#snippet trailing()}
-          {#if entry.counter !== undefined}<span class="text-xs text-[var(--pd-content-sub-header)]">{entry.counter}</span>{/if}
+          {#if entry.counter !== undefined}<span class="text-xs text-[var(--pd-table-body-text)]">{entry.counter}</span>{/if}
           {#if entry.dot}<span class="w-2 h-2 rounded-full {entry.dot}" title={entry.status}></span>{/if}
           {#if ui.hidden.includes(entry.id)}<span class="text-[9px] uppercase opacity-70">hidden</span>{/if}
         {/snippet}

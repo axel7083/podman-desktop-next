@@ -188,10 +188,15 @@ function onWindowKeydown(e: KeyboardEvent): void {
 
 {#if ui.paletteOpen}
   <button class="fixed inset-0 bg-[var(--pd-modal-fade)] opacity-60 z-50 cursor-default" aria-label="Close command palette" onclick={close}></button>
-  <div class="absolute m-auto left-0 right-0 top-[38px] z-50" role="dialog" aria-label="Command palette">
-    <div class="flex justify-center items-center mt-1">
-      <div class="bg-[var(--pd-content-card-bg)] w-[700px] max-h-fit shadow-lg p-2 rounded-sm shadow-[var(--pd-input-field-stroke)] text-base">
-        <div class="w-full flex flex-row gap-2 items-center px-1 border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-focused-bg)] rounded-sm">
+  <!--
+    Grows out of the title-bar search field (TitleBar: 38px bar, 26px field 6px from
+    the top, centred in the window): the palette input sits exactly over that field,
+    replacing it in place, and the results open below it.
+  -->
+  <div class="fixed inset-x-0 top-[6px] z-50 pointer-events-none" role="dialog" aria-label="Command palette">
+    <div class="flex justify-center items-start">
+      <div class="pointer-events-auto bg-[var(--pd-content-card-bg)] w-[700px] max-w-[calc(100vw-24px)] max-h-fit shadow-lg px-2 pb-2 rounded-md shadow-[var(--pd-input-field-stroke)] text-base">
+        <div class="w-full h-[26px] flex flex-row gap-2 items-center px-3 border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-focused-bg)] rounded-md">
           <Icon icon={faMagnifyingGlass} class="text-[var(--pd-input-field-placeholder-text)]" />
           <input
             bind:this={input}
@@ -199,7 +204,7 @@ function onWindowKeydown(e: KeyboardEvent): void {
             oninput={onInput}
             aria-label="Command palette command input"
             placeholder="Search connections, resources and commands…"
-            class="w-full py-1.5 bg-transparent outline-hidden text-[var(--pd-input-field-focused-text)] placeholder:text-[var(--pd-input-field-placeholder-text)]" />
+            class="w-full h-full py-0 bg-transparent outline-hidden text-[var(--pd-input-field-focused-text)] placeholder:text-[var(--pd-input-field-placeholder-text)]" />
         </div>
         <div class="flex flex-row m-2">
           {#each TABS as t (t.id)}
@@ -210,7 +215,7 @@ function onWindowKeydown(e: KeyboardEvent): void {
           {#each groups as g (g.group)}
             <li class="px-1 pt-2 pb-0.5 flex items-baseline gap-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]" role="presentation">
               {g.group}
-              {#if g.more}<span class="normal-case tracking-normal font-normal text-[var(--pd-content-sub-header)]">+{g.more} more{query ? '' : ' – type to filter'}</span>{/if}
+              {#if g.more}<span class="normal-case tracking-normal font-normal text-[var(--pd-table-body-text)]">+{g.more} more{query ? '' : ' – type to filter'}</span>{/if}
             </li>
             {#each g.items as item (item.id)}
               {@const i = filtered.indexOf(item)}
@@ -223,10 +228,10 @@ function onWindowKeydown(e: KeyboardEvent): void {
                   <div class="text-base py-[3pt] flex items-center gap-2">
                     <span class="w-4 h-4 flex items-center justify-center shrink-0"><AppIcon icon={item.icon} size="16px" /></span>
                     <span class="truncate">{item.label}</span>
-                    {#if item.detail && item.detail !== item.ext?.displayName}<span class="text-xs text-[var(--pd-content-sub-header)] truncate">{item.detail}</span>{/if}
+                    {#if item.detail && item.detail !== item.ext?.displayName}<span class="text-xs text-[var(--pd-table-body-text)] truncate">{item.detail}</span>{/if}
                     <span class="grow"></span>
                     {#if item.ext}
-                      <span class="flex items-center gap-1 text-xs text-[var(--pd-content-sub-header)] shrink-0" title="Contributed by {item.ext.displayName}">
+                      <span class="flex items-center gap-1 text-xs text-[var(--pd-table-body-text)] shrink-0" title="Contributed by {item.ext.displayName}">
                         <AppIcon icon={item.ext.icon} size="12px" />{item.ext.displayName}
                       </span>
                     {/if}
@@ -241,7 +246,7 @@ function onWindowKeydown(e: KeyboardEvent): void {
             <div class="text-lg font-bold">No results matching '{query}' found</div>
           </div>
         {/if}
-        <div class="border-[var(--pd-global-nav-bg-border)] border-t-[1px] flex flex-row items-center px-3 pt-2 mt-1 gap-4 text-sm text-[var(--pd-button-tab-text)]">
+        <div class="border-[var(--pd-global-nav-bg-border)] border-t-[1px] flex flex-row items-center px-3 pt-2 mt-1 gap-4 text-sm text-[var(--pd-table-body-text)]">
           <span class="flex items-center gap-2"><span class="bg-[var(--pd-action-button-bg)] rounded-sm p-1.5"><EnterIcon size="12" /></span>To select</span>
           <span class="flex items-center gap-2">
             <span class="bg-[var(--pd-action-button-bg)] rounded-sm p-1.5"><ArrowUpIcon size="12" /></span>

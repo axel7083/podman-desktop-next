@@ -72,9 +72,10 @@ function count(id: string): number | undefined {
   class="z-1 w-leftsidebar min-w-leftsidebar shrink-0 flex-col flex bg-[var(--pd-secondary-nav-bg)] border-[var(--pd-global-nav-bg-border)] border-r-[1px]"
   aria-label="{conn.name} Navigation Bar">
   <a href={href(`/c/${conn.id}`)} class="block pt-4 px-3 mb-4 border-l-[4px] border-transparent group/header" title="{conn.name} overview">
-    <div class="flex items-center gap-2 min-w-0">
+    <div class="flex items-start gap-2 min-w-0">
       <AppIcon icon={conn.icon} size="20px" class="shrink-0" />
-      <p class="text-base leading-tight font-semibold text-[color:var(--pd-secondary-nav-header-text)] truncate group-hover/header:underline" title={conn.name}>{conn.name}</p>
+      <!-- long names wrap to two lines at hyphens/spaces; mid-word breaks only as a last resort -->
+      <p class="text-base leading-tight font-semibold text-[color:var(--pd-secondary-nav-header-text)] min-w-0 line-clamp-2 [overflow-wrap:anywhere] group-hover/header:underline" title={conn.name}>{conn.name}</p>
     </div>
     <div class="flex items-center gap-1.5 mt-1 pl-0.5 text-xs text-[var(--pd-secondary-nav-text)] opacity-80">
       <span class="w-2 h-2 rounded-full {STATUS_DOT_CLASS[conn.status]}"></span>
@@ -102,7 +103,7 @@ function count(id: string): number | undefined {
     {/snippet}
     {#if sectionGroups.singles.length}
       <div class="flex items-center gap-2 px-4 pt-4 pb-1.5" role="separator" aria-label="Extensions">
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]">Extensions</span>
+        <span class="text-[11px] font-semibold text-[var(--pd-nav-group-header)]">Extensions</span>
         <span class="grow border-t border-[var(--pd-global-nav-bg-border)]"></span>
       </div>
       {#each sectionGroups.singles as s (s.ext.id + s.id)}
@@ -112,7 +113,8 @@ function count(id: string): number | undefined {
     {#each sectionGroups.multi as list (list[0].ext.id)}
       <div class="flex items-center gap-1.5 px-4 pt-4 pb-1.5 min-w-0" role="separator" aria-label={list[0].ext.displayName}>
         <AppIcon icon={list[0].ext.icon} size="12px" class="shrink-0" />
-        <span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)] truncate" title={list[0].ext.displayName}>{list[0].ext.displayName}</span>
+        <!-- contributed sub-headers wrap rather than ellipsize -->
+        <span class="text-[11px] leading-tight font-semibold text-[var(--pd-nav-group-header)] min-w-0 [overflow-wrap:anywhere]" title={list[0].ext.displayName}>{list[0].ext.displayName}</span>
         <span class="grow border-t border-[var(--pd-global-nav-bg-border)] min-w-2"></span>
       </div>
       {#each list as s (s.ext.id + s.id)}
