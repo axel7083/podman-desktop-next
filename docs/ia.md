@@ -40,9 +40,11 @@ Source: mockup plan §4. Each rule is tested with the *Everything* scenario.
 ## Rules
 
 1. **Primary nav**
-   - Connections grouped by kind: ENGINES (`engine`), KUBERNETES (`kubernetes`),
-     VMS & SERVICES (`vm`, `service`); then TOOLS; then Extensions; Accounts and
-     Settings pinned at the bottom.
+   - Connections grouped by kind: Engines (`engine`), Kubernetes (`kubernetes`),
+     VMs & services (`vm`, `service`); then Tools; then Extensions; Accounts and
+     Settings pinned at the bottom. Group headers are small semibold sentence
+     case (no uppercase transform, so "VMs" survives); the same labels are used
+     on the dashboard and in the status popover.
    - Group headers collapse (count shown when collapsed) and offer "+" (create).
    - Each group shows pinned items + a capped number of slots (see "Scaling
      rules" 2–4); the rest and hidden items go to "⋯ More (n)" (popover). The
@@ -50,7 +52,8 @@ Source: mockup plan §4. Each rule is tested with the *Everything* scenario.
    - Row: real provider icon, status dot (running / starting / stopped / error),
      name, hint chip (`WSL`, `context`, `OCM`). Stopped and extension-disabled rows are dimmed.
    - Row menu (hover): Pin to top / Move to More. Resizable 50–240px; below 70px
-     only icons + tooltips, group headers become dividers.
+     only icons + tooltips, each group header becomes a 1px divider and each
+     "⋯" row carries a count badge with the tooltip "More engines (4)".
    - Order: Podman first (default engine), then provider, then name. Status never reorders.
 2. **Secondary nav** (170px): connection header (icon, name, status · provider),
    Overview, core resources with counters, "Extensions" divider, contributed
@@ -81,8 +84,10 @@ enabled. Each names where it is implemented.
 
 1. **Primary nav never pushes the footer away** (`PrimaryNav.svelte`). Dashboard
    is pinned on top; Extensions, Accounts and Settings are pinned at the bottom;
-   everything in between scrolls with 28px fade edges and the selected row is
-   scrolled into view after navigation.
+   everything in between scrolls and the selected row is scrolled into view after
+   navigation. The scroll region starts strictly below the pinned Dashboard row
+   (a 1px divider appears once scrolled), and its 28px fade is a `mask-image` on
+   the scroller only, so nothing ever renders behind a pinned row.
 2. **Per-group caps** (`GROUP_CAP`): Engines 4, Kubernetes 4, VMs & services 3,
    Tools 4 (+ pinned items, which don't count). A group that overflows by one
    shows the item instead of "More (1)".
@@ -98,15 +103,19 @@ enabled. Each names where it is implemented.
 5. **Secondary nav**: core resources, then one flat "Extensions" list for
    extensions that contribute a single section, then one sub-header (icon + name)
    per extension contributing 2+ sections (e.g. "Pipelines & GitOps"). Rows carry
-   no extra badge (the row icon is the provenance). Connections with nothing but
+   no extra badge (the row icon is the provenance). Nothing ellipsizes at 170px:
+   the connection name, sub-headers and row labels ("ConfigMaps & Secrets") wrap
+   to two lines (mid-word breaks only as a last resort) and rows have a title tooltip. Connections with nothing but
    an overview (most VMs and services) get no secondary nav at all.
 6. **Connection home** = one page: identity header with lifecycle actions (no
    breadcrumb, no close: it is a top-level destination), Summary (resource tiles +
    details) and Add-ons, then contributed tabs after the divider, >3 → "More".
 7. **Dashboard**: running engines first in a 2-column grid, capped at 6 with
    "Show all n engines"; other connections as neutral chips grouped by kind
-   (Kubernetes / VMs and services), 10 per group + "+n more"; extension cards
-   capped at 4 with "Show n more cards" and configured with the ListOrganizer.
+   (Kubernetes / VMs & services), 10 per group + "+n more"; headings carry a
+   count but no trailing colon; extension cards capped at 4 with "Show n more
+   cards" and configured with the ListOrganizer (header pencil, or the
+   "Customize" link on the Extensions card).
 8. **Container groups**: one row format for every grouper — title = group name
    (never truncated by a chip, no "(type)" suffix), line 2 = chip (extension icon
    + short label, `GrouperDef.chip`: "Quarkus Dev Services", "Compose", "Kind",
@@ -119,16 +128,30 @@ enabled. Each names where it is implemented.
    section). With more than 3 checkers, sections collapse unless they hold
    critical findings or a remediation action. Finding rows share one grid.
 10. **Extensions page**: category chips with counts + status filter
-    (All/Enabled/Disabled) + search; results grouped by category; pack members
-    nested under their pack; compact one-card-per-extension rows with
-    contributions, "Requires …", "Required by n extensions" and an inline
-    "Enabling also enables …" notice before the toggle.
+    (All/Enabled/Disabled) + search; tab and chip counts follow the search
+    (chips with 0 matches are dimmed, never removed) and the summary becomes
+    "9 of 72 match “openshift”" while a query is active; results grouped by
+    category; pack members nested under their pack; compact one-card-per-extension
+    rows with contributions, "Requires …", "Required by n extensions" and an
+    inline "Enabling also enables …" notice before the toggle. The right column
+    shows the source only ("From catalog"; nothing for bundled, which has the
+    badge); persona/scenario tags are a tooltip, P# chips appear only in Inspect mode.
 11. **Command palette**: results grouped (Pages, Connections, Sections, Tools,
     Create, Commands, Containers and images, Kubernetes objects), 4 per group
     when idle ("+n more – type to filter"), 8 per group while typing; every
-    contributed item shows its extension (icon + name) on the right.
-12. **Settings nav**: core sections first, contributed sections after an
-    "Extensions" divider, alphabetical, in their authored sentence case.
+    contributed item shows its extension (icon + name) on the right. Provenance,
+    meta, "+n more" and the footer count use secondary text; accent is reserved
+    for the selected row. The palette grows out of the title-bar search field
+    (its input sits exactly over it) instead of stacking a second search box.
+    **Status-bar connections popover**: grouped by kind with collapsible headers
+    and counts, 6 rows per group (running first) + "Show all n"; status is a dot
+    plus neutral text, start/stop is a labelled icon button.
+12. **Settings nav** (220px): core sections first (never truncated),
+    contributed sections after an "Extensions" divider, alphabetical, in their
+    authored sentence case, each with its extension's icon and a title tooltip
+    (label – extension) when it ellipsizes. Settings › Resources groups provider
+    cards by kind (Engines / Kubernetes / VMs & services) under a name filter;
+    connection details are label/value rows that ellipsize with a tooltip.
 13. **Toasts**: at most 2; a task's progress toast is replaced in place by its
     outcome (same `taskId`); success/info auto-dismiss after 5 s, warnings 8 s,
     errors persist; compact 300px cards above the status bar.
