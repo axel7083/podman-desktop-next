@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Analyze wizard (`kantra analyze`): input, source, targets, mode, hybrid providers; live task log. */
-import { faFolderOpen } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 import { Button, Checkbox, Dropdown, FormPage, Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -25,6 +26,7 @@ const task = $derived(taskId ? world.tasks.find(t => t.id === taskId) : undefine
 const running = $derived(task?.status === 'in-progress');
 const done = $derived(task?.status === 'success');
 const locked = $derived(running || done);
+const selectedTargets = $derived(TARGETS.filter(t => targets.includes(t.id)));
 const valid = $derived(input.trim().length > 0 && targets.length > 0);
 
 const MODES = [
@@ -82,7 +84,7 @@ function cancel(): void {
 }
 </script>
 
-<FormPage title="Analyze application" inProgress={running} breadcrumbLeftPart="Migration toolkit" breadcrumbRightPart="Analyze application" onclose={close} onbreadcrumbClick={close}>
+<FormPage title="Analyze application" inProgress={running} breadcrumbLeftPart="MTA" breadcrumbRightPart="Analyze application" onclose={close} onbreadcrumbClick={close}>
   {#snippet icon()}<AppIcon icon="icons/redhat.mta.svg" size="40px" />{/snippet}
   {#snippet content()}
     <div class="px-5 pb-5 min-w-full max-w-[960px]">
@@ -105,13 +107,22 @@ function cancel(): void {
 
         <fieldset class="flex flex-col gap-1.5">
           <legend class="block text-base font-semibold text-[var(--pd-content-card-header-text)] mb-1.5">Targets</legend>
-          <div class="grid grid-cols-2 gap-2">
-            {#each TARGETS as target (target.id)}
-              <Checkbox checked={targets.includes(target.id)} onclick={toggleTarget.bind(undefined, target.id)} disabled={locked} title={target.label}>
-                <span><code>{target.id}</code> · {target.label}</span>
-              </Checkbox>
-            {/each}
-          </div>
+          {#if locked}
+            <!-- read-only while the run is going: show what is analyzed, not greyed-out checkboxes -->
+            <ul class="grid grid-cols-2 gap-2" aria-label="Selected targets">
+              {#each selectedTargets as target (target.id)}
+                <li class="flex items-center gap-2"><span class="text-[var(--pd-state-success)]"><Icon icon={faCheck} /></span><span><code>{target.id}</code> · {target.label}</span></li>
+              {/each}
+            </ul>
+          {:else}
+            <div class="grid grid-cols-2 gap-2">
+              {#each TARGETS as target (target.id)}
+                <Checkbox checked={targets.includes(target.id)} onclick={toggleTarget.bind(undefined, target.id)} title={target.label}>
+                  <span><code>{target.id}</code> · {target.label}</span>
+                </Checkbox>
+              {/each}
+            </div>
+          {/if}
         </fieldset>
 
         <div class="flex flex-col gap-1.5">
@@ -120,8 +131,14 @@ function cancel(): void {
         </div>
 
         <div class="flex flex-col gap-1">
-          <Checkbox checked={hybrid} onclick={onHybrid} disabled={locked}>Run providers in containers (hybrid mode, Podman)</Checkbox>
-          <span class="text-sm opacity-80 pl-7">
+          {#if locked}
+            <div class="flex items-center gap-2 font-semibold text-[var(--pd-content-card-header-text)]">
+              {#if hybrid}<span class="text-[var(--pd-state-success)]"><Icon icon={faCheck} /></span>Providers run in containers (hybrid mode, Podman){:else}Providers run in-process (containerless){/if}
+            </div>
+          {:else}
+            <Checkbox checked={hybrid} onclick={onHybrid}>Run providers in containers (hybrid mode, Podman)</Checkbox>
+          {/if}
+          <span class="text-sm opacity-80" class:pl-7={!locked}>
             {hybrid
               ? 'Starts quay.io/konveyor/java-external-provider on podman-machine-default for the duration of the run (--run-local=false).'
               : 'Runs the Java provider in-process: needs JDK 17+ and Maven on this machine (default, containerless).'}

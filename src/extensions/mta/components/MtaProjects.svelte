@@ -10,7 +10,7 @@ import Card from '../../_appdev/Card.svelte';
 import DataTable from '../../_appdev/DataTable.svelte';
 import Pill from '../../_appdev/Pill.svelte';
 import type { DataColumn } from '../../_appdev/types.ts';
-import { type Analysis, analyses, latestAnalysis, type Project, PROJECTS, resolvedIncidents, summary } from '../data.ts';
+import { type Analysis, analyses, latestAnalysis, type Project, PROJECTS, resolvedIncidents, summary, targetLabel } from '../data.ts';
 
 let searchTerm = $state('');
 const rows = $derived(PROJECTS.filter(p => p.name.includes(searchTerm.toLowerCase()) || p.path.includes(searchTerm)));
@@ -23,13 +23,13 @@ function key(p: Project): string {
 
 function nameOf(p: Project): NameCellData {
   const last = latestAnalysis(p.name);
-  return { title: p.name, sub: [p.path, p.build], href: last ? `/tools/mta?report=${last.id}` : undefined };
+  return { title: p.name, sub: [p.path, p.build, ...(p.stackDetails ? [p.stackDetails] : [])], href: last ? `/tools/mta?report=${last.id}` : undefined };
 }
 
 function lastPoints(p: Project): string {
   const last = latestAnalysis(p.name);
   if (!last) return 'Not analyzed';
-  return last.targets.map(t => `${t} ${summary(last, t, resolved).points} pts`).join(' · ');
+  return last.targets.map(t => `${targetLabel(t)} ${summary(last, t, resolved).points} pts`).join(' · ');
 }
 
 const columns: DataColumn<Project>[] = [
@@ -69,7 +69,7 @@ function when(a: Analysis): string {
 }
 </script>
 
-<NavPage bind:searchTerm={searchTerm} title="Migration toolkit">
+<NavPage bind:searchTerm={searchTerm} title="Migration Toolkit for Applications">
   {#snippet additionalActions()}
     <Button icon={faMagnifyingGlassChart} onclick={analyzeDefault} aria-label="Analyze">Analyze</Button>
   {/snippet}

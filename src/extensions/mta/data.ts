@@ -27,6 +27,8 @@ export interface Project {
   name: string;
   path: string;
   stack: string;
+  /** Notable subsystems, shown on the project's second line. */
+  stackDetails?: string;
   build: string;
 }
 
@@ -34,7 +36,8 @@ export const PROJECTS: Project[] = [
   {
     name: 'inventory-service',
     path: '~/dev/inventory-service',
-    stack: 'Jakarta EE / JBoss EAP 7.4 WAR (Java EE 8, RH-SSO 7.6 adapter, JMS, Infinispan)',
+    stack: 'JBoss EAP 7.4 · Java EE 8 WAR',
+    stackDetails: 'RH-SSO 7.6 adapter · JMS · Infinispan',
     build: 'Maven · packaging war',
   },
   { name: 'acme-orders', path: '~/dev/acme-orders', stack: 'Red Hat build of Quarkus 3.33', build: 'Maven · quarkus-maven-plugin' },
@@ -779,9 +782,13 @@ function pad(n: number): string {
   return String(n).padStart(2, '0');
 }
 
+/** The scripted first run: its id and start time agree, and are the same in every theme. */
+const FIRST_RUN_ID = 'analysis-20261008-0912';
+const FIRST_RUN_AT = new Date(2026, 9, 8, 9, 12, 4).toISOString();
+
 function newAnalysisId(): string {
   const taken = new Set(analyses().map(a => a.id));
-  if (!taken.has('analysis-20261008-0912')) return 'analysis-20261008-0912';
+  if (!taken.has(FIRST_RUN_ID)) return FIRST_RUN_ID;
   const d = new Date();
   const base = `analysis-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
   let id = base;
@@ -883,7 +890,7 @@ export function startAnalysis(o: AnalyzeOptions): Analysis {
     targets: [...o.targets],
     mode: o.mode,
     runLocal: !o.hybrid,
-    startedAt: new Date().toISOString(),
+    startedAt: id === FIRST_RUN_ID ? FIRST_RUN_AT : new Date().toISOString(),
     status: 'running',
     taskId,
   };

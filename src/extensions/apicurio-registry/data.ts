@@ -76,8 +76,8 @@ export function sampleRegistry(): RegistryData {
   return {
     artifacts: [
       {
-        groupId: 'default',
-        artifactId: 'orders.created-value',
+        groupId: 'acme.orders',
+        artifactId: 'OrderCreated',
         artifactType: 'AVRO',
         name: 'OrderCreated',
         owner: 'acme-orders',
@@ -85,16 +85,15 @@ export function sampleRegistry(): RegistryData {
         modifiedOn: '2026-10-06T13:01:22Z',
         labels: { topic: 'orders.created' },
         versions: [
-          { version: '1', globalId: 9, contentId: 7, state: 'DISABLED', createdOn: '2026-09-02T08:12:40Z', note: 'Initial schema' },
-          { version: '2', globalId: 14, contentId: 12, state: 'DEPRECATED', createdOn: '2026-09-12T10:40:00Z', note: 'Added currency (default EUR)' },
-          { version: '3', globalId: 21, contentId: 18, state: 'DEPRECATED', createdOn: '2026-09-22T12:00:00Z', note: 'status as enum OrderStatus' },
-          { version: '4', globalId: 27, contentId: 24, state: 'ENABLED', createdOn: '2026-10-06T13:01:22Z', note: 'Added optional couponCode' },
+          { version: '1', globalId: 9, contentId: 7, state: 'DEPRECATED', createdOn: '2026-09-02T08:12:40Z', note: 'Initial schema' },
+          { version: '2', globalId: 14, contentId: 12, state: 'DEPRECATED', createdOn: '2026-09-12T10:40:00Z', note: 'Added currency (default EUR), status as enum OrderStatus' },
+          { version: '3', globalId: 21, contentId: 18, state: 'ENABLED', createdOn: '2026-10-06T13:01:22Z', note: 'Added optional couponCode' },
         ],
         content: ORDER_CREATED_AVRO,
       },
       {
-        groupId: 'default',
-        artifactId: 'payments-value',
+        groupId: 'acme.payments',
+        artifactId: 'PaymentEvent',
         artifactType: 'AVRO',
         name: 'PaymentEvent',
         createdOn: '2026-09-03T10:20:00Z',
@@ -107,7 +106,7 @@ export function sampleRegistry(): RegistryData {
         content: PAYMENT_AVRO,
       },
       {
-        groupId: 'com.acme.orders',
+        groupId: 'acme.orders',
         artifactId: 'acme-orders-api',
         artifactType: 'OPENAPI',
         name: 'Acme Orders API',
@@ -120,7 +119,7 @@ export function sampleRegistry(): RegistryData {
         content: 'openapi: 3.1.0\ninfo:\n  title: Acme Orders API\n  version: 1.5.0\npaths:\n  /orders:\n    post:\n      operationId: createOrder\n      responses:\n        "201": { description: Created }\n  /orders/{id}:\n    get:\n      operationId: getOrder\n',
       },
       {
-        groupId: 'com.acme.orders',
+        groupId: 'acme.orders',
         artifactId: 'orders-events',
         artifactType: 'ASYNCAPI',
         name: 'Orders events',
@@ -132,8 +131,8 @@ export function sampleRegistry(): RegistryData {
     ],
     rules: [
       { ruleType: 'COMPATIBILITY', config: 'BACKWARD', scope: 'global' },
-      { ruleType: 'VALIDITY', config: 'FULL', scope: 'artifact', target: 'payments-value' },
-      { ruleType: 'INTEGRITY', config: 'REFS_EXIST', scope: 'group', target: 'com.acme.orders' },
+      { ruleType: 'VALIDITY', config: 'FULL', scope: 'artifact', target: 'acme.payments/PaymentEvent' },
+      { ruleType: 'INTEGRITY', config: 'REFS_EXIST', scope: 'group', target: 'acme.orders' },
     ],
   };
 }
@@ -150,13 +149,28 @@ export function ensureRegistry(connId: string, data: RegistryData = sampleRegist
   return world.ext[APICURIO_EXT][connId] as RegistryData;
 }
 
-/** TopicIdStrategy: the value schema of `<topic>` is artifact `<topic>-value` (any registry). */
-export function findTopicSchema(topic: string): { connId: string; artifact: Artifact } | undefined {
-  for (const [connId, data] of Object.entries(world.ext[APICURIO_EXT] ?? {})) {
-    const artifact = (data as RegistryData).artifacts.find(a => a.artifactId === `${topic}-value`);
-    if (artifact) return { connId, artifact };
+/**
+ * Value schema of `<topic>` in any registry: TopicIdStrategy (`<topic>-value`,
+ * e.g. Debezium) or a record-named artifact labelled `topic=<topic>`
+ * (`acme.orders/OrderCreated`). Compatibility: artifact rule, else the global one.
+ */
+export function findTopicSchema(topic: string): { connId: string; artifact: Artifact; compatibility: string } | undefined {
+  for (const [connId, raw] of Object.entries(world.ext[APICURIO_EXT] ?? {})) {
+    const data = raw as RegistryData;
+    const artifact = data.artifacts.find(a => a.artifactId === `${topic}-value` || a.labels?.topic === topic);
+    if (artifact) {
+      const rule =
+        data.rules.find(r => r.ruleType === 'COMPATIBILITY' && r.scope === 'artifact' && r.target === `${artifact.groupId}/${artifact.artifactId}`) ??
+        data.rules.find(r => r.ruleType === 'COMPATIBILITY' && r.scope === 'global');
+      return { connId, artifact, compatibility: rule?.config ?? 'NONE' };
+    }
   }
   return undefined;
+}
+
+/** Number of non-internal topics of a Kafka cluster whose value schema is registered. */
+export function schemaCount(topics: string[]): number {
+  return topics.filter(t => findTopicSchema(t)).length;
 }
 
 /** Register (or bump) an artifact, used by Debezium's Avro converter (auto-register). */

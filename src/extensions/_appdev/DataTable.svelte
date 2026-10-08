@@ -10,9 +10,9 @@ import type { Component } from 'svelte';
 
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
-import StatusCell from '#lib/table/StatusCell.svelte';
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
 
+import StatusCell from './StatusCell.svelte';
 import type { DataColumn } from './types.ts';
 
 interface Props {

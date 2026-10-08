@@ -65,9 +65,19 @@ export function answersFor(target: Container, image: string): Record<string, str
   const main = mainProcess(target);
   const java = isJava(target);
   const ports = target.ports.length ? target.ports.map(p => p.container) : [8080];
+  // dev containers (devcontainers/cli) keep PID 1 alive with a sleep loop as `vscode`; the app runs in dev mode under it
+  const devContainer = !!target.labels['devcontainer.local_folder'];
   const ps = [
     'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND',
-    `${java ? '185 ' : 'root'}           1  2.4  6.1 4512340 498212 ?     Ssl  08:12   1:42 ${main}`,
+    ...(devContainer
+      ? [
+          'vscode         1  0.0  0.0   2484   1536 ?        Ss   10:32   0:00 /bin/sh -c echo Container started; trap "exit 0" 15; exec "$@"; while sleep 1 & wait $!; do :; done -',
+          'vscode        42  0.1  0.4 114872  38912 ?        Sl   10:33   0:01 /home/vscode/.vscode-server/bin/node /home/vscode/.vscode-server/out/server-main.js',
+          'vscode       187  0.0  0.0   7364   3712 pts/1    Ss   10:34   0:00 /bin/bash',
+          'vscode       233 31.6 11.8 6840516 961240 pts/1   Sl+  10:34   2:11 /usr/local/sdkman/candidates/java/current/bin/java -classpath /usr/local/sdkman/candidates/maven/current/boot/plexus-classworlds-2.8.0.jar org.codehaus.plexus.classworlds.launcher.Launcher quarkus:dev',
+          'vscode       318  4.2  5.3 4987260 431904 pts/1   Sl+  10:35   0:18 /usr/local/sdkman/candidates/java/21.0.8-tem/bin/java -Dquarkus-internal.serialized-app-model.path=target/quarkus/bootstrap/dev-app-model.dat -jar target/acme-orders-dev.jar',
+        ]
+      : [`${java ? '185 ' : 'root'}           1  2.4  6.1 4512340 498212 ?     Ssl  08:12   1:42 ${main}`]),
     'root          58  0.0  0.0  12092  4320 pts/0    Ss   10:41   0:00 bash',
     'root          71  0.0  0.0  14420  3600 pts/0    R+   10:41   0:00 ps aux',
   ].join('\n');
@@ -90,7 +100,7 @@ export function answersFor(target: Container, image: string): Record<string, str
     : 'cat: /proc/1/root/deployments/config/application.properties: No such file or directory';
   const ss = [
     'State  Recv-Q Send-Q Local Address:Port  Peer Address:Port Process',
-    ...ports.map(p => `LISTEN 0      4096         0.0.0.0:${p}        0.0.0.0:*     users:(("${java ? 'java' : 'app'}",pid=1,fd=${p === 8080 ? 112 : 118}))`),
+    ...ports.map(p => `LISTEN 0      4096         0.0.0.0:${p}        0.0.0.0:*     users:(("${java ? 'java' : 'app'}",pid=${devContainer ? 318 : 1},fd=${p === 8080 ? 112 : 118}))`),
     ...(target.labels['io.cryostat.jmxPort'] ? [`LISTEN 0      50           0.0.0.0:${target.labels['io.cryostat.jmxPort']}        0.0.0.0:*     users:(("java",pid=1,fd=17))`] : []),
   ].join('\n');
   const health = java

@@ -8,7 +8,7 @@
  * `io.podman-desktop.service=<connection id>` (grouped in the containers list, P10).
  */
 import { mkContainer } from '#lib/ext/helpers.ts';
-import type { ConnectionDef, ConnectionStatus, FactoryDef, FormField, FormValues } from '#lib/ext/types.ts';
+import type { ConnectionDef, ConnectionStatus, FactoryDef, FormField, FormValues, IconRef } from '#lib/ext/types.ts';
 import type { Container, TaskStep, World } from '#lib/world.svelte.ts';
 
 export const SERVICE_LABEL = 'io.podman-desktop.service';
@@ -25,6 +25,10 @@ export interface ServiceSpec {
   providerName: string;
   /** Catalog title, e.g. "Streams for Apache Kafka". */
   title: string;
+  /** Provider icon when it differs from the contributing extension's (Valkey, Grafana…). */
+  icon?: IconRef;
+  /** Vendor shown in the catalog ("by Red Hat"); defaults to the extension publisher. */
+  vendor?: string;
   description: string;
   defaultName: string;
   images: { value: string; label: string }[];
@@ -45,6 +49,9 @@ export interface ServiceSpec {
   onCreated?: (world: World, conn: ConnectionDef, values: FormValues) => void;
 }
 
+/** Catalog presentation per factory id (= service kind), filled by `serviceFactory`. */
+export const SERVICE_META = new Map<string, { icon?: IconRef; vendor?: string }>();
+
 /** Container backing a service connection. */
 export function serviceContainer(
   connId: string,
@@ -62,6 +69,7 @@ export function serviceConnection(spec: ServiceSpec, id: string, port: number, s
     kind: 'service',
     providerId: spec.providerId,
     providerName: spec.providerName,
+    ...(spec.icon ? { icon: spec.icon } : {}),
     initialStatus: status,
     endpoint: spec.endpoint(port),
     version: spec.version,
@@ -71,6 +79,7 @@ export function serviceConnection(spec: ServiceSpec, id: string, port: number, s
 }
 
 export function serviceFactory(spec: ServiceSpec): FactoryDef {
+  SERVICE_META.set(spec.kind, { icon: spec.icon, vendor: spec.vendor });
   return {
     id: spec.kind,
     label: `Create ${spec.title}`,

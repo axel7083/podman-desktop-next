@@ -49,6 +49,9 @@ let snapshot = $state('initial');
 let converter = $state('avro');
 let kafka = $state('acme-kafka');
 let selected = $state<string[]>(['public.orders']);
+/** Once a connector exists the wizard folds into its summary; "Add another connector" reopens it. */
+let addAnother = $state(false);
+const showForm = $derived(existing.length === 0 || addAnother);
 
 const config = $derived(connectorConfig({ name, host: container.name, db: dbName, prefix, tables: selected, snapshot, avro: converter === 'avro' && hasRegistry }));
 const walRunning = $derived(!!walTask && world.tasks.find(t => t.id === walTask)?.status === 'in-progress');
@@ -93,6 +96,7 @@ function create(): void {
     ],
     action: { label: 'Open topic', href: `/c/${kafkaConn}/topics?topic=${encodeURIComponent(topics[0] ?? '')}` },
     onDone: () => {
+      addAnother = false;
       if (needConnect) world.containers.push(serviceContainer(kafkaConn, 'kafka', { name: 'acme-connect', image: 'quay.io/debezium/connect:3.7', ports: [8083], upM: 0, group: true }));
       const s = ensureStore();
       s.connectors = [
@@ -157,6 +161,10 @@ function onPrefix(e: Event): void {
   prefix = (e.currentTarget as HTMLInputElement).value;
 }
 
+function showWizard(): void {
+  addAnother = true;
+}
+
 function openTopic(conn: string, topic: string): void {
   navigate(`/c/${conn}/topics?topic=${encodeURIComponent(topic)}`);
 }
@@ -177,16 +185,20 @@ function openConnectors(conn: string): void {
       <div class="flex items-center gap-3" role="region" aria-label="Connector {c.name}">
         <AppIcon icon="icons/redhat.debezium.png" size="28px" />
         <div class="grow min-w-0">
-          <div class="flex items-center gap-2"><span class="font-semibold text-[var(--pd-content-card-header-text)]">{c.name}</span><Pill label={c.state} tone={c.state === 'RUNNING' ? 'running' : c.state === 'FAILED' ? 'error' : 'warning'} /></div>
-          <div class="text-sm">{c.config['table.include.list']} → {c.kafka}{c.snapshotRows ? ` · snapshot ${c.snapshotRows.toLocaleString('en-US')} rows` : ''}</div>
+          <div class="flex items-center gap-2"><span class="font-semibold text-[var(--pd-content-card-header-text)]">Connector {c.name}</span><Pill label={c.state === 'RUNNING' ? 'Running' : c.state === 'FAILED' ? 'Failed' : c.state.charAt(0) + c.state.slice(1).toLowerCase()} tone={c.state === 'RUNNING' ? 'running' : c.state === 'FAILED' ? 'error' : 'warning'} /></div>
+          <div class="text-sm">{c.config['table.include.list']} → {c.kafka}{c.snapshotRows ? ` · snapshot of ${c.snapshotRows.toLocaleString('en-US')} rows done, now streaming changes` : ''}</div>
         </div>
         {#each c.topics as t (t)}
-          <Button type="secondary" icon={faArrowUpRightFromSquare} onclick={openTopic.bind(undefined, c.kafka, t)}>Open {t}</Button>
+          <Button icon={faArrowUpRightFromSquare} onclick={openTopic.bind(undefined, c.kafka, t)} aria-label="Open {t}">Open topic</Button>
         {/each}
-        <Button type="link" onclick={openConnectors.bind(undefined, c.kafka)}>All connectors</Button>
+        <Button type="secondary" onclick={openConnectors.bind(undefined, c.kafka)}>Open connector</Button>
       </div>
+      {#if createTask}<div class="mt-3"><TaskLog taskId={createTask} label="Connector task" collapseWhenDone /></div>{/if}
     </Card>
   {/each}
+  {#if !showForm}
+    <Button type="link" onclick={showWizard}>Add another connector</Button>
+  {:else}
 
   <Card title="1. Prerequisites">
     <div class="flex items-center gap-3">
@@ -197,38 +209,40 @@ function openConnectors(conn: string): void {
       </div>
       {#if wal !== 'logical'}<Button icon={faBolt} onclick={enableLogical} inProgress={walRunning} disabled={walRunning}>Enable logical replication</Button>{/if}
     </div>
-    {#if walTask}<div class="mt-3"><TaskLog taskId={walTask} label="Logical replication task" /></div>{/if}
+    {#if walTask}<div class="mt-3"><TaskLog taskId={walTask} label="Logical replication task" collapseWhenDone /></div>{/if}
   </Card>
 
   <Card title="2. Connector" subtitle={wal !== 'logical' ? 'Available once logical replication is enabled.' : undefined}>
-    <div class="grid grid-cols-2 gap-x-6 gap-y-3" class:opacity-50={wal !== 'logical'}>
+    <!-- every control sits in a 38px slot so left and right columns line up -->
+    <div class="grid grid-cols-2 gap-x-6 gap-y-4 items-start [&_.dbz-control]:h-[38px] [&_.dbz-control]:flex [&_.dbz-control]:items-center [&_.dbz-control>*]:w-full" class:opacity-50={wal !== 'logical'}>
       <div class="flex flex-col gap-1">
         <label for="dbz-name" class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">Connector name</label>
-        <Input id="dbz-name" value={name} oninput={onName} disabled={wal !== 'logical'} />
+        <div class="dbz-control"><Input id="dbz-name" value={name} oninput={onName} disabled={wal !== 'logical'} /></div>
       </div>
       <div class="flex flex-col gap-1">
         <label for="dbz-kafka" class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">Kafka</label>
-        <Dropdown id="dbz-kafka" value={kafka} options={kafkas.map(k => ({ value: k.id, label: `${k.name} (${k.endpoint})` }))} onChange={onKafka} disabled={wal !== 'logical'} />
+        <div class="dbz-control"><Dropdown id="dbz-kafka" value={kafka} options={kafkas.map(k => ({ value: k.id, label: `${k.name} (${k.endpoint})` }))} onChange={onKafka} disabled={wal !== 'logical'} /></div>
       </div>
       <div class="flex flex-col gap-1">
         <label for="dbz-prefix" class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">Topic prefix</label>
-        <Input id="dbz-prefix" value={prefix} oninput={onPrefix} disabled={wal !== 'logical'} />
+        <div class="dbz-control"><Input id="dbz-prefix" value={prefix} oninput={onPrefix} disabled={wal !== 'logical'} /></div>
         <span class="text-xs opacity-80">Topics are named &lt;prefix&gt;.&lt;schema&gt;.&lt;table&gt;</span>
       </div>
       <div class="flex flex-col gap-1">
-        <label for="dbz-snapshot" class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">snapshot.mode</label>
-        <Dropdown id="dbz-snapshot" value={snapshot} options={['initial', 'always', 'initial_only', 'no_data', 'when_needed'].map(v => ({ value: v, label: v }))} onChange={onSnapshot} disabled={wal !== 'logical'} />
+        <label for="dbz-snapshot" class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">Snapshot mode</label>
+        <div class="dbz-control"><Dropdown id="dbz-snapshot" value={snapshot} options={['initial', 'always', 'initial_only', 'no_data', 'when_needed'].map(v => ({ value: v, label: v }))} onChange={onSnapshot} disabled={wal !== 'logical'} /></div>
+        <span class="text-xs opacity-80"><code>snapshot.mode</code>: initial copies existing rows, then streams changes</span>
       </div>
       <div class="flex flex-col gap-1">
         <span class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">Tables ({dbName})</span>
         {#each tables as t (t.schema + t.name)}
           {@const id = `${t.schema}.${t.name}`}
-          <Checkbox checked={selected.includes(id)} onclick={toggleTable.bind(undefined, id)} disabled={wal !== 'logical'}>{id} <span class="opacity-70">({t.rows.toLocaleString('en-US')} rows)</span></Checkbox>
+          <Checkbox checked={selected.includes(id)} onclick={toggleTable.bind(undefined, id)} disabled={wal !== 'logical'}>{id}<span class="opacity-70">&nbsp;· {t.rows.toLocaleString('en-US')} rows</span></Checkbox>
         {/each}
       </div>
       <div class="flex flex-col gap-1">
         <label for="dbz-conv" class="text-sm font-semibold text-[var(--pd-content-card-header-text)]">Value converter</label>
-        <Dropdown id="dbz-conv" value={converter} options={[{ value: 'avro', label: hasRegistry ? 'Avro, schemas in Apicurio Registry (acme-registry)' : 'Avro (requires an Apicurio Registry service)' }, { value: 'json', label: 'JSON (schemas embedded)' }]} onChange={onConverter} disabled={wal !== 'logical'} />
+        <div class="dbz-control"><Dropdown id="dbz-conv" value={converter} options={[{ value: 'avro', label: hasRegistry ? 'Avro, schemas in Apicurio Registry (acme-registry)' : 'Avro (requires an Apicurio Registry service)' }, { value: 'json', label: 'JSON (schemas embedded)' }]} onChange={onConverter} disabled={wal !== 'logical'} /></div>
       </div>
     </div>
     <details class="mt-3">
@@ -238,6 +252,7 @@ function openConnectors(conn: string): void {
     <div class="flex justify-end mt-3">
       <Button icon={faPlay} onclick={create} disabled={wal !== 'logical' || selected.length === 0 || creating} inProgress={creating}>Create connector</Button>
     </div>
-    {#if createTask}<div class="mt-3"><TaskLog taskId={createTask} label="Connector task" /></div>{/if}
+    {#if createTask && existing.length === 0}<div class="mt-3"><TaskLog taskId={createTask} label="Connector task" /></div>{/if}
   </Card>
+  {/if}
 </div>

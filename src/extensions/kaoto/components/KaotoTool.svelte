@@ -58,7 +58,8 @@ function run(): void {
   const integration = name;
   const from = f.steps[0]?.detail ?? '';
   runTask({
-    name: `camel run ${f.file} --dev`,
+    // the task ends when the route is up (it keeps running): name it after that, not after the command
+    name: `Start ${integration}`,
     ext: KAOTO_EXT,
     steps: [
       { label: 'Resolving dependencies', ms: 1400, log: [`[jbang] Resolving dependencies...`, `[jbang]    org.apache.camel:camel-jbang-core:${CAMEL_VERSION}`, `[jbang] Dependencies resolved`] },
@@ -146,7 +147,7 @@ function exportQuarkus(): void {
     <div class="flex flex-col w-full h-full overflow-auto px-5 pb-4 gap-3">
       <div class="grid grid-cols-[220px_minmax(0,1fr)_280px] gap-3 min-h-[420px]">
         <nav class="rounded-lg bg-[var(--pd-content-card-bg)] p-2 text-[var(--pd-content-card-text)]" aria-label="Integration files">
-          <div class="px-2 py-1 text-xs uppercase font-semibold text-[var(--pd-table-header-text)]" title={WORKSPACE}>{WORKSPACE}</div>
+          <div class="px-2 py-1 text-xs font-mono font-semibold text-[var(--pd-table-header-text)] truncate" title={WORKSPACE}>{WORKSPACE}</div>
           {#each ws.files as f (f.file)}
             <button
               class="w-full flex items-start gap-2 rounded-md px-2 py-2 text-left {f.file === file?.file ? 'bg-[var(--pd-content-card-selected-bg)]' : 'hover:bg-[var(--pd-content-card-hover-bg)]'}"
@@ -237,11 +238,11 @@ function exportQuarkus(): void {
           </div>
           <p class="text-sm mt-3 mb-1">camel get route</p>
           <div class="rounded-md overflow-hidden bg-[var(--pd-content-card-inset-bg)]" role="table" aria-label="Routes">
-            <div class="grid grid-cols-[80px_1fr_1fr_1.6fr_80px_80px_60px_50px_50px_50px_50px] gap-2 px-3 py-2 text-xs uppercase text-[var(--pd-table-header-text)] font-semibold" role="row">
-              <span role="columnheader">PID</span><span role="columnheader">Name</span><span role="columnheader">ID</span><span role="columnheader">From</span><span role="columnheader">Status</span><span role="columnheader">Age</span><span role="columnheader">Total</span><span role="columnheader">Fail</span><span role="columnheader">Mean</span><span role="columnheader">Min</span><span role="columnheader">Max</span>
+            <div class="grid grid-cols-[70px_1fr_1fr_1.6fr_80px_70px_60px_50px] gap-2 px-3 py-2 text-xs uppercase text-[var(--pd-table-header-text)] font-semibold" role="row">
+              <span role="columnheader">PID</span><span role="columnheader">Name</span><span role="columnheader">ID</span><span role="columnheader">From</span><span role="columnheader">Status</span><span role="columnheader">Age</span><span role="columnheader">Total</span><span role="columnheader">Fail</span>
             </div>
             {#each routes as { r, route } (`${r.pid}-${route.id}`)}
-              <div class="grid grid-cols-[80px_1fr_1fr_1.6fr_80px_80px_60px_50px_50px_50px_50px] gap-2 px-3 py-2 text-sm border-t border-[var(--pd-content-divider)] text-[var(--pd-table-body-text)] tabular-nums" role="row">
+              <div class="grid grid-cols-[70px_1fr_1fr_1.6fr_80px_70px_60px_50px] gap-2 px-3 py-2 text-sm border-t border-[var(--pd-content-divider)] text-[var(--pd-table-body-text)] tabular-nums" role="row">
                 <span role="cell">{r.pid}</span>
                 <span role="cell" class="truncate">{r.name}</span>
                 <span role="cell" class="truncate">{route.id}</span>
@@ -250,9 +251,6 @@ function exportQuarkus(): void {
                 <span role="cell">{camelAge(r.started, now)}</span>
                 <span role="cell">{route.total}</span>
                 <span role="cell">{route.fail}</span>
-                <span role="cell">{route.meanMs}</span>
-                <span role="cell">{route.minMs}</span>
-                <span role="cell">{route.maxMs}</span>
               </div>
             {/each}
           </div>

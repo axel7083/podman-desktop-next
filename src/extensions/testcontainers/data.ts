@@ -22,7 +22,7 @@ export interface SessionMeta {
 export const SESSIONS: SessionMeta[] = [
   { sessionId: 'e4b19f27-5c3a-4d0e-9a61-2f8d7c3b1a90', lang: 'java', version: '2.0.5', project: '~/dev/acme-orders', command: './mvnw verify' },
   { sessionId: '7c1d0e55-03aa-4b2e-8f19-6e4a2b9d0c31', lang: 'java', version: '2.0.5', project: '~/dev/inventory-service', command: './mvnw verify' },
-  { sessionId: 'a3f0c9e2-1b44-4c8e-b7a1-90d2e6f3c5aa', lang: 'java', version: '2.0.5', project: '~/dev/acme-orders', command: 'quarkus dev (Dev Services)' },
+  { sessionId: 'a3f0c9e2-1b44-4c8e-b7a1-90d2e6f3c5aa', lang: 'java', version: '2.0.5', project: '~/dev/acme-orders', command: 'quarkus dev' },
 ];
 
 export function sessionMeta(id: string): SessionMeta | undefined {
@@ -53,7 +53,8 @@ export interface SessionView {
   meta?: SessionMeta;
   containers: Container[];
   ryukAlive: boolean;
-  state: 'active' | 'leaked';
+  /** `ended`: a Quarkus Dev Services session whose containers are all stopped. */
+  state: 'active' | 'leaked' | 'ended';
 }
 
 /** Sessions currently visible on the engine (Quarkus Dev Services sessions included). */
@@ -67,8 +68,12 @@ export function sessions(): SessionView[] {
   return [...byId.entries()].map(([sessionId, containers]) => {
     const ryuk = containers.find(c => c.labels[RYUK]);
     const quarkus = containers.some(c => c.labels['io.quarkus.devservice']);
-    const ryukAlive = ryuk?.state === 'RUNNING' || quarkus;
-    return { sessionId, meta: sessionMeta(sessionId), containers, ryukAlive, state: ryukAlive ? 'active' : 'leaked' };
+    // Dev Services sessions have no Ryuk container: Quarkus owns them, so
+    // their state follows the containers (all stopped → ended, not leaked).
+    const quarkusRunning = quarkus && containers.some(c => c.state === 'RUNNING');
+    const ryukAlive = ryuk?.state === 'RUNNING' || quarkusRunning;
+    const state: SessionView['state'] = ryukAlive ? 'active' : quarkus ? 'ended' : 'leaked';
+    return { sessionId, meta: sessionMeta(sessionId), containers, ryukAlive, state };
   });
 }
 

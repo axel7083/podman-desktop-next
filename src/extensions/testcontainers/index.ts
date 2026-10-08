@@ -13,6 +13,11 @@ import { deleteContainer, toast } from '#lib/world.svelte.ts';
 import TestcontainersTool from './components/TestcontainersTool.svelte';
 import { RYUK, SESSION, sessionMeta, sessions, TC_EXT, tcContainer } from './data.ts';
 
+function activeSessionsLabel(): string {
+  const n = sessions().filter(s => s.state === 'active').length;
+  return `TC: ${n} session${n === 1 ? '' : 's'}`;
+}
+
 const extension: MockExtension = {
   id: TC_EXT,
   displayName: 'Testcontainers',
@@ -29,11 +34,15 @@ const extension: MockExtension = {
         label: SESSION,
         typeName: 'Testcontainers',
         icon: 'icons/podman-desktop.testcontainers.svg',
-        groupName: id => `session ${id.slice(0, 8)}`,
+        // "acme-orders · e4b19f27": project first so the session sits next to the app's other containers.
+        groupName: id => {
+          const meta = sessionMeta(id);
+          return meta ? `${meta.project.split('/').pop()} · ${id.slice(0, 8)}` : `session ${id.slice(0, 8)}`;
+        },
         groupDetails: (id, containers) => {
           const meta = sessionMeta(id);
           const ryuk = containers.filter(c => c.labels[RYUK]).length;
-          return [meta ? `${meta.command} · ${meta.project}` : 'java · 2.0.5', ...(ryuk ? [`+${ryuk} infra (Ryuk)`] : [])];
+          return [meta ? meta.command : 'java · 2.0.5', ...(ryuk ? [`+${ryuk} infra (Ryuk)`] : [])];
         },
         actions: [
           {
@@ -55,7 +64,7 @@ const extension: MockExtension = {
       },
     ],
     tools: [{ id: 'testcontainers', label: 'Testcontainers', icon: 'icons/podman-desktop.testcontainers.svg', component: TestcontainersTool, badge: () => sessions().filter(s => s.state === 'leaked').length || undefined }],
-    statusItems: [{ id: 'tc-sessions', align: 'right', icon: 'icons/podman-desktop.testcontainers.svg', text: () => `TC: ${sessions().filter(s => s.state === 'active').length} sessions`, tooltip: 'Active Testcontainers sessions', command: 'testcontainers.open' }],
+    statusItems: [{ id: 'tc-sessions', align: 'right', icon: 'icons/podman-desktop.testcontainers.svg', text: () => activeSessionsLabel(), tooltip: 'Active Testcontainers sessions', command: 'testcontainers.open' }],
     commands: [
       { id: 'testcontainers.open', title: 'Open Testcontainers sessions', category: 'Testcontainers', run: (): void => navigate('/tools/testcontainers') },
       { id: 'testcontainers.clean', title: 'Clean leaked Testcontainers containers', category: 'Testcontainers', icon: faBroom, run: (): void => navigate('/tools/testcontainers') },

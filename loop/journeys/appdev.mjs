@@ -17,6 +17,8 @@ export async function journey(t) {
   await t.open(`${ENGINE}/containers`);
   await page.getByRole('table', { name: 'container' }).waitFor();
   await page.getByRole('row', { name: 'acme-orders', exact: true }).waitFor();
+  // fold the Kafka service group so Dev Services and the Testcontainers session fit
+  await page.getByRole('row', { name: 'acme-kafka', exact: true }).getByTitle('Collapse Row').click();
   await t.shot('j1-containers-grouped');
   await page.getByRole('row', { name: 'acme-orders', exact: true }).getByRole('button', { name: 'Stop all' }).click();
   await page.waitForTimeout(1600);

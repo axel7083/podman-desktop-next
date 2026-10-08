@@ -9,8 +9,12 @@ import { Button, NavPage } from '@podman-desktop/ui-svelte';
 import AppIcon from '#lib/components/AppIcon.svelte';
 import Contribution from '#lib/components/Contribution.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
-import type { ConnectionView, Contributed, FactoryDef } from '#lib/ext/types.ts';
+import type { ConnectionView, Contributed, FactoryDef, IconRef } from '#lib/ext/types.ts';
 import { navigate, STATUS_DOT_CLASS, STATUS_LABEL } from '#lib/nav.ts';
+
+import { SERVICE_META } from '../../_appdev/services.ts';
+
+const PUBLISHERS: Record<string, string> = { redhat: 'Red Hat', 'podman-desktop': 'Podman Desktop' };
 
 let searchTerm = $state('');
 
@@ -26,6 +30,15 @@ const factories = $derived(
 
 function title(f: FactoryDef): string {
   return f.label.replace(/^Create /, '');
+}
+
+function icon(f: Contributed<FactoryDef>): IconRef {
+  return SERVICE_META.get(f.id)?.icon ?? f.ext.icon;
+}
+
+/** "by Red Hat": the vendor, never the product name repeated. */
+function vendor(f: Contributed<FactoryDef>): string {
+  return SERVICE_META.get(f.id)?.vendor ?? PUBLISHERS[f.ext.id.split('.')[0]] ?? f.ext.displayName;
 }
 
 function create(f: Contributed<FactoryDef>): void {
@@ -70,10 +83,10 @@ function open(c: ConnectionView): void {
             <Contribution ext={f.ext} kind="service factory" api="P12">
               <div class="flex flex-col h-full rounded-lg p-4 bg-[var(--pd-content-card-bg)] gap-2" role="region" aria-label={title(f)}>
                 <div class="flex items-center gap-3">
-                  <AppIcon icon={f.ext.icon} size="32px" />
+                  <AppIcon icon={icon(f)} size="32px" />
                   <div class="min-w-0">
                     <div class="font-semibold text-[var(--pd-content-card-header-text)] truncate">{title(f)}</div>
-                    <div class="text-xs text-[var(--pd-content-card-text)] opacity-80 truncate">by {f.ext.displayName}</div>
+                    <div class="text-xs text-[var(--pd-content-card-text)] opacity-80 truncate">by {vendor(f)}</div>
                   </div>
                 </div>
                 <p class="text-sm text-[var(--pd-content-card-text)] grow">{f.description}</p>

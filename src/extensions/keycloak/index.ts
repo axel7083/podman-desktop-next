@@ -20,7 +20,7 @@ const RHBK_IMAGE = 'registry.redhat.io/rhbk/keycloak-rhel9:26.4';
 const SPEC: ServiceSpec = {
   kind: 'keycloak',
   providerId: 'keycloak',
-  providerName: 'Red Hat build of Keycloak',
+  providerName: 'Keycloak',
   title: 'Red Hat build of Keycloak',
   description: 'Identity and access management for your apps: realms, OIDC clients, users and roles. Runs start-dev with realm import.',
   defaultName: 'keycloak',

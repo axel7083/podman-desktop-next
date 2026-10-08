@@ -27,6 +27,8 @@ export interface Topic {
   /** Who created it (shown as a hint): e.g. "Debezium acme-orders-cdc". */
   createdBy?: string;
   records?: KafkaRecord[];
+  /** Log-end offset per partition when it must match other screens (consumer-group table). */
+  partitionEnds?: number[];
 }
 
 export type GroupState = 'Stable' | 'PreparingRebalance' | 'CompletingRebalance' | 'Empty' | 'Dead' | 'Assigning' | 'Reconciling';
@@ -62,15 +64,23 @@ export function lagOf(g: ConsumerGroup): number {
 const ORDER_VALUE = (id: number, total: number, status = 'CREATED'): string =>
   JSON.stringify({ orderId: `ord-20261008-${String(id).padStart(4, '0')}`, customerId: `c-${3300 + (id % 97)}`, status, totalCents: total, currency: 'EUR', couponCode: id % 3 === 0 ? 'AUTUMN10' : null });
 
+/** Log-end offsets of orders.created, shared with the inventory-projector offsets. */
+export const ORDERS_ENDS = [6150, 6143, 6159];
+
 function orderRecords(): KafkaRecord[] {
-  return Array.from({ length: 8 }, (_, i) => ({
-    partition: i % 3,
-    offset: 6150 - i,
-    timestamp: new Date(Date.now() - i * 41_000).toISOString(),
-    key: `ord-20261008-${String(193 - i).padStart(4, '0')}`,
-    value: ORDER_VALUE(193 - i, 4999 + i * 1250),
-    headers: { 'apicurio.value.globalId': '27', 'apicurio.value.encoding': 'BINARY' },
-  }));
+  // newest first; each partition has its own offset sequence ending at log-end − 1
+  const next = ORDERS_ENDS.map(e => e - 1);
+  return Array.from({ length: 8 }, (_, i) => {
+    const partition = i % 3;
+    return {
+      partition,
+      offset: next[partition]--,
+      timestamp: new Date(Date.now() - i * 41_000).toISOString(),
+      key: `ord-20261008-${String(193 - i).padStart(4, '0')}`,
+      value: ORDER_VALUE(193 - i, 4999 + i * 1250),
+      headers: { 'apicurio.value.globalId': '21', 'apicurio.value.encoding': 'BINARY' },
+    };
+  });
 }
 
 export function sampleCluster(clusterId = 'q1Sh-9_ISia_zwGINzRvyQ'): KafkaCluster {
@@ -84,7 +94,8 @@ export function sampleCluster(clusterId = 'q1Sh-9_ISia_zwGINzRvyQ'): KafkaCluste
         partitionCount: 3,
         replicationFactor: 1,
         configs: { 'cleanup.policy': 'delete', 'retention.ms': '604800000', 'min.insync.replicas': '1' },
-        messages: 18452,
+        messages: ORDERS_ENDS.reduce((a, b) => a + b, 0),
+        partitionEnds: [...ORDERS_ENDS],
         records: orderRecords(),
       },
       {
@@ -119,9 +130,9 @@ export function sampleCluster(clusterId = 'q1Sh-9_ISia_zwGINzRvyQ'): KafkaCluste
         protocol: 'consumer',
         members: 1,
         offsets: [
-          { topic: 'orders.created', partition: 0, currentOffset: 6150, logEndOffset: 6150, consumerId: 'inventory-projector-1-7f3c', host: '/10.89.0.12' },
-          { topic: 'orders.created', partition: 1, currentOffset: 6101, logEndOffset: 6143, consumerId: 'inventory-projector-1-7f3c', host: '/10.89.0.12' },
-          { topic: 'orders.created', partition: 2, currentOffset: 6159, logEndOffset: 6159, consumerId: 'inventory-projector-1-7f3c', host: '/10.89.0.12' },
+          { topic: 'orders.created', partition: 0, currentOffset: ORDERS_ENDS[0], logEndOffset: ORDERS_ENDS[0], consumerId: 'inventory-projector-1-7f3c', host: '/10.89.0.12' },
+          { topic: 'orders.created', partition: 1, currentOffset: ORDERS_ENDS[1] - 42, logEndOffset: ORDERS_ENDS[1], consumerId: 'inventory-projector-1-7f3c', host: '/10.89.0.12' },
+          { topic: 'orders.created', partition: 2, currentOffset: ORDERS_ENDS[2], logEndOffset: ORDERS_ENDS[2], consumerId: 'inventory-projector-1-7f3c', host: '/10.89.0.12' },
         ],
       },
       {
@@ -140,7 +151,8 @@ export function sampleCluster(clusterId = 'q1Sh-9_ISia_zwGINzRvyQ'): KafkaCluste
         state: 'Empty',
         protocol: 'classic',
         members: 0,
-        offsets: [{ topic: 'inventory.reservations', partition: 0, currentOffset: 1898, logEndOffset: 2210 }],
+        // caught up before it stopped: the only lag on the cluster is inventory-projector's 42
+        offsets: [{ topic: 'inventory.reservations', partition: 0, currentOffset: 2210, logEndOffset: 2210 }],
       },
     ],
   };

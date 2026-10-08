@@ -10,7 +10,8 @@ import { isService, serviceConnection, serviceContainer, serviceFactory, type Se
 import ArtifactsSection from './components/ArtifactsSection.svelte';
 import RulesSection from './components/RulesSection.svelte';
 import SchemasSection from './components/SchemasSection.svelte';
-import { APICURIO_CONN, APICURIO_EXT, ensureRegistry, registryData, sampleRegistry } from './data.ts';
+import { cluster } from '../streams-kafka/data.ts';
+import { APICURIO_CONN, APICURIO_EXT, ensureRegistry, registryData, sampleRegistry, schemaCount } from './data.ts';
 
 const SPEC: ServiceSpec = {
   kind: 'apicurio',
@@ -80,7 +81,14 @@ const extension: MockExtension = {
       },
       { id: 'rules', label: 'Rules', when: conn => isService(conn, 'apicurio'), component: RulesSection, order: 2 },
       // cross-extension section: shown under Kafka connections
-      { id: 'schemas', label: 'Schemas', when: conn => isService(conn, 'kafka'), component: SchemasSection, order: 10 },
+      {
+        id: 'schemas',
+        label: 'Schemas',
+        when: conn => isService(conn, 'kafka'),
+        component: SchemasSection,
+        counter: (_w, conn) => schemaCount(cluster(conn.id).topics.filter(t => !t.internal).map(t => t.name)),
+        order: 10,
+      },
     ],
   },
   seed(world): void {

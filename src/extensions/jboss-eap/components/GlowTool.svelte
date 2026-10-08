@@ -4,9 +4,11 @@
  * for the Galleon layers it needs, eap:image provisions a trimmed EAP 8.1
  * server image, then the image runs as a container on podman-machine-default.
  */
-import { faArrowUpRightFromSquare, faFolderOpen, faHammer, faMagnifyingGlass, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpRightFromSquare, faCircleCheck, faFolderOpen, faHammer, faMagnifyingGlass, faPlay } from '@fortawesome/free-solid-svg-icons';
 import { Button, Checkbox, Dropdown, FormPage, Input } from '@podman-desktop/ui-svelte';
+import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
+import { tick } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import { href, navigate } from '#lib/nav.ts';
@@ -55,6 +57,21 @@ const stale = $derived(
 );
 const canBuild = $derived(!!result && result.errors.length === 0 && !stale && !building && !scanning);
 const saved = $derived(FULL_IMAGE_SIZE - IMAGE_SIZE);
+
+let resultCard = $state<HTMLElement>();
+let builtShown = false;
+
+// a fresh build: bring its result (at the top of the page) into view
+$effect(() => {
+  if (image && buildTaskId && !builtShown) {
+    builtShown = true;
+    tick().then(() => resultCard?.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  }
+});
+
+function openImages(): void {
+  navigate(`/c/${ENGINE}/images`);
+}
 
 function isRunning(id: string | undefined): boolean {
   return !!id && world.tasks.find(t => t.id === id)?.status === 'in-progress';
@@ -114,6 +131,17 @@ function versionLabel(v: ServerVersion): string {
   {#snippet icon()}<AppIcon icon="icons/redhat.jboss-eap.png" size="40px" />{/snippet}
   {#snippet content()}
     <div class="px-5 pb-5 min-w-full max-w-[960px] space-y-4 text-[var(--pd-content-card-text)]">
+      {#if image && buildTaskId && !building}
+        <div bind:this={resultCard} class="scroll-mt-4 rounded-lg p-4 border border-[var(--pd-state-success)] bg-[var(--pd-content-card-bg)] flex items-center gap-4" role="region" aria-label="Image built">
+          <span class="text-[var(--pd-state-success)]"><Icon icon={faCircleCheck} size="1.5x" /></span>
+          <div class="grow min-w-0">
+            <div class="font-semibold text-base text-[var(--pd-content-card-header-text)]">Image built: <span class="font-mono">{image.name}:{image.tag}</span></div>
+            <div class="text-sm tabular-nums">{humanSize(image.size)} · {humanSize(saved)} smaller than the full EAP 8.1 server image ({humanSize(FULL_IMAGE_SIZE)}) · {(result?.layers.length ?? 0) + 1} Galleon layers</div>
+          </div>
+          <Button type="secondary" onclick={openImages}>Open image</Button>
+          <Button icon={faPlay} onclick={doRun} inProgress={starting} disabled={starting}>{container ? 'Run again' : 'Run'}</Button>
+        </div>
+      {/if}
       <div class="bg-[var(--pd-content-card-bg)] py-6 px-8 rounded-lg space-y-5" role="form" aria-label="Containerize WAR">
         <p>WildFly Glow scans your deployment and provisions only the Galleon layers it needs, then builds a trimmed JBoss EAP image with the eap-maven-plugin.</p>
 
