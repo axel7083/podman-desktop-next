@@ -77,7 +77,7 @@ function skip(): void {
                   <span class="font-semibold text-[var(--pd-content-card-header-text)]">{s.label}</span>
                 </div>
                 <span class="text-sm text-[var(--pd-content-card-text)]">{s.persona}</span>
-                <span class="text-xs text-[var(--pd-content-sub-header)] line-clamp-3">{s.description}</span>
+                <span class="text-xs text-[var(--pd-content-card-text)] opacity-75 line-clamp-3">{s.description}</span>
                 {#if checked}
                   <span class="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)] flex items-center justify-center">
                     <Icon icon={faCheck} size="xs" />

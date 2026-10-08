@@ -66,7 +66,7 @@ export const CORE_RESOURCES: Record<string, CoreResource> = {
   'k8s-pods': { id: 'k8s-pods', label: 'Pods', singular: 'Pod', icon: PodIcon },
   services: { id: 'services', label: 'Services', singular: 'Service', icon: ServiceIcon },
   configmaps: { id: 'configmaps', label: 'ConfigMaps & Secrets', singular: 'ConfigMap', icon: ConfigMapSecretIcon },
-  pvcs: { id: 'pvcs', label: 'Persistent Volume Claims', singular: 'PVC', icon: PVCIcon },
+  pvcs: { id: 'pvcs', label: 'PVCs', singular: 'PVC', icon: PVCIcon },
   workloads: { id: 'workloads', label: 'Workloads', singular: 'Workload', icon: faCubes },
   machines: { id: 'machines', label: 'Machines', singular: 'Machine', icon: faServer },
 };

@@ -36,6 +36,18 @@ export async function journey(t) {
   await page.getByRole('table').waitFor();
   await t.shot('kind-deployments');
 
+  // create a Podman machine through the factory wizard (task → new connection)
+  await t.open('/settings/create/podman-machine', { speed: '5' });
+  await page.getByRole('textbox', { name: 'Name' }).fill('podman-machine-dev');
+  await t.shot('create-machine-form');
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.waitForTimeout(400);
+  await t.shot('create-machine-progress');
+  await page.getByRole('region', { name: 'Tab Content' }).getByRole('button', { name: 'Open podman-machine-dev' }).waitFor({ timeout: 15000 });
+  await page.getByRole('region', { name: 'Tab Content' }).getByRole('button', { name: 'Open podman-machine-dev' }).click();
+  await page.getByRole('link', { name: 'podman-machine-dev' }).first().waitFor();
+  await t.shot('new-machine');
+
   await page.getByRole('link', { name: 'Extensions' }).first().click();
   await page.getByRole('region', { name: 'podman-desktop.compose' }).waitFor();
   await t.shot('extensions');

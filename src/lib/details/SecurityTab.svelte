@@ -76,12 +76,12 @@ function openAdvisory(f: Finding): void {
       <Icon icon={faShieldHalved} size="lg" />
       <div class="grow">
         <div class="font-semibold text-[var(--pd-content-card-header-text)]">
-          {scanning ? 'Scanning…' : all.length === 0 ? 'No issues found' : `${all.length} findings from ${checkers.length} checker${checkers.length > 1 ? 's' : ''}`}
+          {scanning ? 'Scanning…' : all.length === 0 ? 'No issues found' : `${all.length} finding${all.length === 1 ? '' : 's'} from ${checkers.length} checker${checkers.length > 1 ? 's' : ''}`}
         </div>
         <div class="text-sm">Merged across providers; VEX "not affected" findings are excluded from counts.</div>
       </div>
       {#each SEVERITIES as sev (sev)}
-        <span class="rounded-sm px-2 py-0.5 text-sm font-semibold capitalize {SEV_CLASS[sev]}">{count(sev)} {sev}</span>
+        <span class="rounded-sm px-2 py-0.5 text-sm font-semibold capitalize {count(sev) ? SEV_CLASS[sev] : 'bg-[var(--pd-label-bg)] text-[var(--pd-label-text)] opacity-60'}">{count(sev)} {sev}</span>
       {/each}
     </div>
     {#each checkers as c (c.ext.id + c.id)}

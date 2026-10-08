@@ -60,7 +60,7 @@ function count(id: string): number | undefined {
   <a href={href(`/c/${conn.id}`)} class="block pt-4 px-3 mb-4 border-l-[4px] border-transparent group/header" title="{conn.name} overview">
     <div class="flex items-center gap-2 min-w-0">
       <AppIcon icon={conn.icon} size="20px" class="shrink-0" />
-      <p class="text-lg font-semibold text-[color:var(--pd-secondary-nav-header-text)] truncate group-hover/header:underline">{conn.name}</p>
+      <p class="text-base leading-tight font-semibold text-[color:var(--pd-secondary-nav-header-text)] break-all line-clamp-2 group-hover/header:underline">{conn.name}</p>
     </div>
     <div class="flex items-center gap-1.5 mt-1 pl-0.5 text-xs text-[var(--pd-secondary-nav-text)] opacity-80">
       <span class="w-2 h-2 rounded-full {STATUS_DOT_CLASS[conn.status]}"></span>

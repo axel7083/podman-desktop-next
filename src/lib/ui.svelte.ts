@@ -43,7 +43,8 @@ class MockupUi {
     this.chrome = url.searchParams.get('chrome') !== 'off';
     const inspectParam = url.searchParams.get('inspect');
     this.inspect = inspectParam ? inspectParam === 'on' : load('pdn.inspect', false);
-    this.speed = load<1 | 5>('pdn.speed', 1);
+    const speedParam = url.searchParams.get('speed');
+    this.speed = speedParam === '5' ? 5 : speedParam === '1' ? 1 : load<1 | 5>('pdn.speed', 1);
     this.navWidth = load('pdn.navWidth', 200);
     this.pinned = load<string[]>('pdn.pinned', []);
     this.hidden = load<string[]>('pdn.hidden', []);

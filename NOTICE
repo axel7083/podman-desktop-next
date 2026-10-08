@@ -1,0 +1,9 @@
+podman-desktop-next (interactive mockup)
+
+This project contains markup, icons, color tokens and images copied or adapted
+from Podman Desktop (https://github.com/podman-desktop/podman-desktop) and its
+extensions, Copyright (C) Red Hat, Inc. and contributors, licensed under the
+Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
+
+Adapted files keep a header comment naming their Podman Desktop source.
+Asset provenance is listed in docs/assets.md.

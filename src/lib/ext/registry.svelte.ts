@@ -23,8 +23,11 @@ import { clearWorld, loadWorld, toast, world } from '#lib/world.svelte.ts';
 const modules = import.meta.glob<{ default: MockExtension }>('/src/extensions/*/index.ts', { eager: true });
 
 /** All known mock extensions (templates excluded), sorted builtin-first then by name. */
+/** `?template=on` also loads `src/extensions/_template` (smoke test of every contribution point). */
+const includeTemplate = browser && new URLSearchParams(location.search).get('template') === 'on';
+
 export const ALL_EXTENSIONS: MockExtension[] = Object.entries(modules)
-  .filter(([path]) => !/\/extensions\/_/.test(path))
+  .filter(([path]) => !/\/extensions\/_/.test(path) || (includeTemplate && path.includes('/_template/')))
   .map(([, mod]) => mod.default)
   .toSorted((a, b) => Number(!!b.builtin) - Number(!!a.builtin) || a.displayName.localeCompare(b.displayName));
 

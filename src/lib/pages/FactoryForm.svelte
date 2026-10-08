@@ -6,7 +6,6 @@
  */
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 import { Button, Checkbox, Dropdown, FormPage, Input, LinearProgress } from '@podman-desktop/ui-svelte';
-import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import Contribution from '#lib/components/Contribution.svelte';
@@ -80,7 +79,7 @@ function openResult(): void {
 <FormPage title={factory.label} inProgress={running} breadcrumbLeftPart="Resources" breadcrumbRightPart={factory.label} onclose={cancel} onbreadcrumbClick={cancel}>
   {#snippet icon()}<AppIcon icon={factory.ext.icon} size="40px" />{/snippet}
   {#snippet content()}
-    <div class="px-5 pb-5 min-w-full">
+    <div class="px-5 pb-5 min-w-full max-w-[960px]">
       <Contribution ext={factory.ext} kind="connectionFactory" api="P12">
         <div class="bg-[var(--pd-content-card-bg)] py-6 px-8 rounded-lg space-y-5">
           {#if factory.description}<p class="text-[var(--pd-content-card-text)]">{factory.description}</p>{/if}
@@ -100,7 +99,7 @@ function openResult(): void {
                 {:else if f.type === 'file'}
                   <div class="flex gap-2">
                     <Input id="field-{f.id}" value={String(values[f.id] ?? '')} placeholder={f.placeholder} oninput={onInput.bind(undefined, f)} disabled={!!task} class="grow" />
-                    <Button type="secondary" onclick={browse.bind(undefined, f)} disabled={!!task}><Icon icon={faFolderOpen} /> Browse…</Button>
+                    <Button type="secondary" icon={faFolderOpen} onclick={browse.bind(undefined, f)} disabled={!!task}>Browse…</Button>
                   </div>
                 {:else}
                   <Input id="field-{f.id}" type={f.type === 'number' ? 'number' : 'text'} value={String(values[f.id] ?? '')} placeholder={f.placeholder} oninput={onInput.bind(undefined, f)} disabled={!!task} error={f.id === 'name' && nameTaken && !task ? 'A connection with this name already exists' : undefined} />
