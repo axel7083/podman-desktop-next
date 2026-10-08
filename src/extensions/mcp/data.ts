@@ -150,6 +150,7 @@ export interface InstalledServer {
   status: 'running' | 'stopped';
   clients: string[];
   containerId?: string;
+  readOnly?: boolean;
 }
 
 export const CLIENTS = [

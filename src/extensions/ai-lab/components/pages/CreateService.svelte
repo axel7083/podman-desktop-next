@@ -45,7 +45,7 @@ const backendOptions = $derived(
         { value: 'openvino', label: 'OpenVINO' },
         { value: 'whisper-cpp', label: 'whisper.cpp' },
       ].filter(o => m.backend === o.value)
-    : [{ value: 'vllm', label: 'Red Hat AI Inference (vLLM) · proposed' }],
+    : [{ value: 'vllm', label: 'Red Hat AI Inference (vLLM)' }],
 );
 const image = $derived((useGpu ? INFERENCE_IMAGES[backend]?.cuda : undefined) ?? INFERENCE_IMAGES[backend]?.cpu ?? '');
 const tooBig = $derived(!!m && backend === 'vllm' && !fitsGpu(m));

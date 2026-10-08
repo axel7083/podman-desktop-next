@@ -78,7 +78,7 @@ export function install(e: McpServerEntry, pkg: McpPackage, opts: { kubeconfig: 
         world.containers.push(c);
         containerId = c.id;
       }
-      (world.ext[MCP] as unknown as McpState).installed.push({ id, name: e.name, entry: e.name, kind: isOci ? 'container' : 'process', endpoint, status: 'running', clients: [], containerId });
+      (world.ext[MCP] as unknown as McpState).installed.push({ id, name: e.name, entry: e.name, kind: isOci ? 'container' : 'process', endpoint, status: 'running', clients: [], containerId, readOnly: opts.readOnly });
       onDone?.(id);
     },
   });

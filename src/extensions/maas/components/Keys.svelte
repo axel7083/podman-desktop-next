@@ -71,7 +71,6 @@ const columns = [
   new TableColumn<ApiKey, StatusCellData>('Status', { width: '70px', align: 'center', renderer: StatusCell, renderMapping: (k): StatusCellData => ({ status: k.status === 'active' ? 'RUNNING' : 'EXITED', icon: faKey }) }),
   new TableColumn<ApiKey, string>('Name', { width: '2fr', renderer: TableSimpleColumn, renderMapping: (k): string => k.name }),
   new TableColumn<ApiKey, string>('Subscription', { renderer: TableSimpleColumn, renderMapping: (k): string => k.subscription }),
-  new TableColumn<ApiKey, string>('Status', { renderer: TableSimpleColumn, renderMapping: (k): string => k.status }),
   new TableColumn<ApiKey, string>('Expires', { renderer: TableSimpleColumn, renderMapping: (k): string => k.expirationDate?.slice(0, 10) ?? 'never' }),
   new TableColumn<ApiKey, string>('Last used', { renderer: TableSimpleColumn, renderMapping: (k): string => k.lastUsedAt?.slice(0, 16).replace('T', ' ') ?? '–' }),
   new TableColumn<ApiKey, ActionsCellData>('Actions', {

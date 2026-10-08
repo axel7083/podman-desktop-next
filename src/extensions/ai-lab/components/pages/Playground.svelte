@@ -63,6 +63,10 @@ function onKey(e: KeyboardEvent): void {
   }
 }
 
+function toLocal(): void {
+  switchToLocal(id);
+}
+
 function close(): void {
   navigate(toolHref('playgrounds'));
 }
@@ -100,8 +104,9 @@ function render(text: string): string {
                   {#if m.tokens}<div class="mt-1 text-xs opacity-60">{m.tokens} tokens · {(m.ms ?? 0) / 1000}s</div>{/if}
                 </div>
               {:else if m.role === 'error'}
-                <div class="self-start max-w-[75%] rounded-md border border-[var(--pd-state-error)] px-3 py-2 text-sm text-[var(--pd-state-error)] flex gap-2" role="alert">
-                  <Icon icon={faCircleExclamation} /> <span>{m.content}</span>
+                <div class="self-start max-w-[75%] rounded-md border border-[var(--pd-state-error)] px-3 py-2 text-sm text-[var(--pd-state-error)] flex flex-col gap-2" role="alert">
+                  <div class="flex gap-2"><Icon icon={faCircleExclamation} /> <span>{m.content}</span></div>
+                  {#if m.content.startsWith('429')}<div><Button type="secondary" onclick={toLocal}>Switch to local AI Lab model</Button></div>{/if}
                 </div>
               {:else}
                 <div class="self-center text-xs text-[var(--pd-content-text)] opacity-80">{m.content}</div>

@@ -60,7 +60,7 @@ function runLocally(): void {
       <span>Size</span><span>{humanSize(img.size)}</span>
     </div>
     <div class="mt-3 flex flex-wrap gap-2">
-      <Button icon={faUpload} onclick={push} type={pushed ? 'secondary' : 'primary'}>Push to quay.io</Button>
+      <Button icon={faUpload} onclick={push} type={pushed ? 'secondary' : 'primary'}>{pushed ? 'Push again' : 'Push to quay.io'}</Button>
       {#if rhoai}
         <Button icon={faCloudArrowUp} onclick={deploy} type={pushed ? 'primary' : 'secondary'} disabled={!pushed}>Deploy to OpenShift AI</Button>
         <Button icon={faTag} type="secondary" onclick={register} disabled={!pushed}>Register in model registry</Button>

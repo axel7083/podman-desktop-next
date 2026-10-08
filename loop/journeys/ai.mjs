@@ -59,6 +59,8 @@ export async function journey(t) {
   await page.locator('a', { hasText: 'ModelCar' }).first().click();
   await page.getByRole('button', { name: 'Push to quay.io' }).click();
   await waitTask('Pushing quay.io/acme-ai/modelcar-granite-3.1-8b-instruct-w4a16:1.0 completed');
+  await page.getByRole('button', { name: 'Register in model registry' }).click();
+  await waitTask('Registering acme-granite v1.0 completed');
   await t.shot('modelcar-tab-pushed');
   await page.getByRole('button', { name: 'Deploy to OpenShift AI' }).click();
   await page.getByRole('button', { name: 'Apply' }).waitFor();
@@ -111,7 +113,7 @@ export async function journey(t) {
     await page.waitForTimeout(2200);
   }
   await t.shot('maas-quota-429');
-  await page.getByRole('button', { name: 'Switch to local AI Lab model' }).first().click();
+  await page.getByRole('alert').getByRole('button', { name: 'Switch to local AI Lab model' }).last().click();
   await page.waitForTimeout(600);
   await t.shot('maas-switched-local');
   await t.open('/c/openshell-gateway/kaiden-workspaces', fast);

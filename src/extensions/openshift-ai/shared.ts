@@ -36,7 +36,7 @@ export function isvc(name: string, namespace: string, storageUri: string, state:
       },
     },
     {
-      state: ready ? 'running' : state === 'loading' ? 'starting' : 'degraded',
+      state: ready ? 'running' : state === 'loading' ? 'updating' : 'degraded',
       url: ready ? url : undefined,
       conditions: [
         { type: 'PredictorReady', status: ready ? 'True' : 'False', reason: extra.reason },

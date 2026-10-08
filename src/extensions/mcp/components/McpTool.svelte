@@ -23,6 +23,7 @@ import ClientDialog from './ClientDialog.svelte';
 import InstallDialog from './InstallDialog.svelte';
 
 const icon = 'icons/podman-desktop.mcp.png';
+const WRITE = /create|update|delete|exec|run|install|scale/;
 const serverId = $derived(page.url.searchParams.get('server'));
 // svelte-ignore state_referenced_locally
 let tab = $state(page.url.searchParams.get('tab') ?? 'installed');
@@ -113,7 +114,8 @@ function deploy(): void {
         <Card title="Tools ({currentEntry?.totalTools})">
           <ul class="divide-y divide-[var(--pd-content-divider)]" aria-label="MCP server tools">
             {#each currentEntry?.tools ?? [] as t (t.name)}
-              <li class="py-1.5 flex gap-4"><span class="w-60 shrink-0 font-mono text-xs text-[var(--pd-content-card-header-text)]">{t.name}</span><span class="text-xs">{t.description}</span></li>
+              {@const off = current?.readOnly && WRITE.test(t.name)}
+              <li class="py-1.5 flex gap-4 items-center" class:opacity-50={off}><span class="w-60 shrink-0 font-mono text-xs text-[var(--pd-content-card-header-text)]">{t.name}</span><span class="text-xs grow">{t.description}</span>{#if off}<Chip label="Disabled (read-only)" />{/if}</li>
             {/each}
           </ul>
         </Card>

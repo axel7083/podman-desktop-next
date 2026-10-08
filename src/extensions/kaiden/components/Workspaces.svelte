@@ -37,7 +37,7 @@ $effect(() => {
 });
 
 function phase(w: Workspace): string {
-  return w.phase === 'Ready' ? 'RUNNING' : w.phase === 'Provisioning' ? 'STARTING' : w.phase === 'Error' ? 'DEGRADED' : 'EXITED';
+  return w.phase === 'Ready' ? 'RUNNING' : w.phase === 'Provisioning' ? 'UPDATING' : w.phase === 'Error' ? 'DEGRADED' : 'EXITED';
 }
 
 const columns = $derived([
@@ -121,6 +121,7 @@ function start(): void {
             <Checkbox checked={mcp.includes(m)} onclick={toggleMcp.bind(undefined, m)} title={m}>{m}</Checkbox>
           {/each}
         </div>
+        <div>Skills</div>
         <Checkbox checked={skill} onclick={toggleSkill} title="Skill rag-eval">Skill rag-eval (~/.agents/skills/rag-eval)</Checkbox>
       </div>
     {/snippet}

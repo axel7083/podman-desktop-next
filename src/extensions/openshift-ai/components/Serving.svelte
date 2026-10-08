@@ -27,7 +27,6 @@ function model(o: KubeObject): { runtime?: string; storageUri?: string } {
   kinds={['InferenceService']}
   columns={[
     { title: 'Model state', width: '1.4fr', value: state },
-    { title: 'Runtime', value: (o): string => model(o).runtime ?? '' },
     { title: 'Inference endpoint', width: '2.2fr', value: (o): string => String(o.status?.url ?? '–') },
-    { title: 'Storage URI', width: '2.2fr', value: (o): string => model(o).storageUri ?? '' },
+    { title: 'Storage URI', width: '2.6fr', value: (o): string => model(o).storageUri ?? '' },
   ]} />

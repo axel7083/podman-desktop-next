@@ -37,7 +37,7 @@ function build(): void {
       <p>Packages <b>{model.name}</b> as an OCI image whose files live under <span class="font-mono">/models</span>, ready for KServe <span class="font-mono">storageUri: oci://…</span>.</p>
       <label>Image name <Input class="mt-1" aria-label="Image name" bind:value={tag} /></label>
       <label>Base image <Dropdown class="mt-1" ariaLabel="Base image" bind:value={base} options={BASES} /></label>
-      <Checkbox checked={artifact} onclick={toggleArtifact} title="Push as OCI artifact">Store as a Podman OCI artifact instead (podman artifact add, P7)</Checkbox>
+      <Checkbox checked={artifact} onclick={toggleArtifact} title="Push as OCI artifact">Store as a Podman OCI artifact instead (podman artifact add)</Checkbox>
       <CodeBlock wrap code={file} label="Containerfile" maxHeight="14rem" />
     </div>
   {/snippet}

@@ -26,7 +26,7 @@ function patch(o: KubeObject, status: Record<string, unknown>): void {
 }
 
 function setState(o: KubeObject, run: boolean): void {
-  patch(o, { ...o.status, state: 'starting' });
+  patch(o, { ...o.status, state: 'updating' });
   runTask({
     name: `${run ? 'Starting' : 'Stopping'} workbench ${o.metadata.name}`,
     ext: 'redhat.openshift-ai',
@@ -55,7 +55,7 @@ const columns = $derived([
       const running = o.status?.state === 'running';
       return {
         buttons: [
-          { title: 'Start workbench', icon: faPlay, hidden: running, inProgress: o.status?.state === 'starting', onClick: (): void => setState(o, true) },
+          { title: 'Start workbench', icon: faPlay, hidden: running, inProgress: o.status?.state === 'updating', onClick: (): void => setState(o, true) },
           { title: 'Stop workbench', icon: faStop, hidden: !running, onClick: (): void => setState(o, false) },
           { title: 'Open workbench', icon: faArrowUpRightFromSquare, enabled: running, onClick: (): void => toast({ type: 'info', title: `Opening ${String(o.status?.url)}` }) },
         ],
