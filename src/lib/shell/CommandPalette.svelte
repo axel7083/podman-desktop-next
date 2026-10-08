@@ -29,6 +29,8 @@ interface PaletteItem {
   id: string;
   label: string;
   detail?: string;
+  /** Extra searchable text not shown (e.g. a container's full image reference). */
+  keywords?: string;
   category: Category;
   group: Group;
   icon?: IconRef;
@@ -87,12 +89,12 @@ const items: PaletteItem[] = $derived.by(() => {
   for (const c of world.containers) {
     const conn = conns.get(c.engineId);
     if (!conn) continue;
-    out.push({ id: `res:c:${c.id}`, group: 'Containers and images', label: c.name, detail: `container · ${conn.name}`, category: 'resource', icon: faCube, run: go(`/c/${c.engineId}/containers/${c.id}/summary`) });
+    out.push({ id: `res:c:${c.id}`, group: 'Containers and images', label: c.name, detail: `container · ${shortImage(c.image)} · ${conn.name}`, keywords: c.image, category: 'resource', icon: faCube, run: go(`/c/${c.engineId}/containers/${c.id}/summary`) });
   }
   for (const i of world.images) {
     const conn = conns.get(i.engineId);
     if (!conn) continue;
-    out.push({ id: `res:i:${i.id}`, group: 'Containers and images', label: `${shortImage(i.name)}:${i.tag}`, detail: `image · ${conn.name}`, category: 'resource', icon: faCube, run: go(`/c/${i.engineId}/images/${i.id}/summary`) });
+    out.push({ id: `res:i:${i.id}`, group: 'Containers and images', label: `${shortImage(i.name)}:${i.tag}`, detail: `image · ${conn.name}`, keywords: `${i.name}:${i.tag}`, category: 'resource', icon: faCube, run: go(`/c/${i.engineId}/images/${i.id}/summary`) });
   }
   for (const [connId, objects] of Object.entries(world.kube)) {
     const conn = conns.get(connId);
@@ -120,7 +122,7 @@ const groups = $derived.by(() => {
   const matched = items
     .filter(i => tab === 'all' || i.category === tab)
     .filter(i => {
-      const hay = `${i.label} ${i.detail ?? ''} ${i.ext?.displayName ?? ''}`.toLowerCase();
+      const hay = `${i.label} ${i.detail ?? ''} ${i.keywords ?? ''} ${i.ext?.displayName ?? ''}`.toLowerCase();
       return terms.every(t => hay.includes(t));
     });
   const cap = tab !== 'all' ? 60 : terms.length ? PER_GROUP_QUERY : PER_GROUP_IDLE;
@@ -131,6 +133,14 @@ const groups = $derived.by(() => {
 });
 
 const filtered = $derived(groups.flatMap(g => g.items));
+
+/** Provenance chip only when it adds information (not "Ansible … Ansible"). */
+function showProvenance(item: PaletteItem): boolean {
+  if (!item.ext) return false;
+  const ext = item.ext.displayName.toLowerCase();
+  const label = item.label.toLowerCase();
+  return !ext.includes(label) && !label.includes(ext);
+}
 
 $effect(() => {
   if (ui.paletteOpen) {
@@ -213,9 +223,9 @@ function onWindowKeydown(e: KeyboardEvent): void {
         </div>
         <ul class="max-h-[56vh] overflow-y-auto flex flex-col mt-1" aria-label="Results">
           {#each groups as g (g.group)}
-            <li class="px-1 pt-2 pb-0.5 flex items-baseline gap-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--pd-nav-group-header)]" role="presentation">
+            <li class="px-1 pt-2 pb-0.5 flex items-baseline gap-2 text-sm font-semibold text-[var(--pd-nav-group-header)]" role="presentation">
               {g.group}
-              {#if g.more}<span class="normal-case tracking-normal font-normal text-[var(--pd-table-body-text)]">+{g.more} more{query ? '' : ' – type to filter'}</span>{/if}
+              {#if g.more}<span class="font-normal text-[var(--pd-table-body-text)]">+{g.more} more{query ? '' : ' – type to filter'}</span>{/if}
             </li>
             {#each g.items as item (item.id)}
               {@const i = filtered.indexOf(item)}
@@ -230,7 +240,7 @@ function onWindowKeydown(e: KeyboardEvent): void {
                     <span class="truncate">{item.label}</span>
                     {#if item.detail && item.detail !== item.ext?.displayName}<span class="text-xs text-[var(--pd-table-body-text)] truncate">{item.detail}</span>{/if}
                     <span class="grow"></span>
-                    {#if item.ext}
+                    {#if item.ext && showProvenance(item)}
                       <span class="flex items-center gap-1 text-xs text-[var(--pd-table-body-text)] shrink-0" title="Contributed by {item.ext.displayName}">
                         <AppIcon icon={item.ext.icon} size="12px" />{item.ext.displayName}
                       </span>

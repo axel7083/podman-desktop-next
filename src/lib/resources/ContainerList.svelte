@@ -168,7 +168,8 @@ const nameColumn = new TableColumn<Row, NameCellData>('Name', {
 
 const imageColumn = new TableColumn<Row, string>('Image', {
   // single line + ellipsis (TextCell) so long image names never run into Uptime
-  width: 'minmax(0, 3fr)',
+  // floor so ~30 chars of an image reference stay visible at 1280px
+  width: 'minmax(12rem, 3fr)',
   renderer: TextCell,
   renderMapping: (r): string => (isGroup(r) ? (r.details ?? []).join(' · ') : shortImage(r.image)),
   comparator: (a, b): number => (isGroup(a) ? '' : a.image).localeCompare(isGroup(b) ? '' : b.image),
@@ -201,19 +202,29 @@ const actionsColumn = new TableColumn<Row, ActionsCellData>('Actions', {
   },
 });
 
+/** Fixed width from the longest value/header (~7px per 12px char + cell padding), 80–160px. */
+function contributedWidth(title: string, values: string[]): string {
+  const longest = Math.max(title.length, ...values.map(v => v.length));
+  return `${Math.min(160, Math.max(80, Math.ceil(longest * 7 + 16)))}px`;
+}
+
 const columns = $derived([
   statusColumn,
   nameColumn,
   imageColumn,
   uptimeColumn,
   // contributed columns only when a container in the current (filtered) list has a value
-  // (no empty MODEL/AGENT columns); minmax(0, …) lets them give up width first
+  // (no empty MODEL/AGENT columns). Values often live on grouped child rows only, so the
+  // column is sized to its longest value (each table row is its own grid, so max-content
+  // would misalign) and capped at 160px so it never starves Image.
   ...registry.columns
-    .filter(c => c.target === 'container' && visible.some(x => !!c.value(x)))
+    .filter(c => c.target === 'container')
+    .map(c => ({ c, values: visible.map(x => c.value(x) ?? '').filter(Boolean) }))
+    .filter(({ values }) => values.length > 0)
     .map(
-      c =>
+      ({ c, values }) =>
         new TableColumn<Row, string>(c.title, {
-          width: `minmax(0, ${c.width ?? '1fr'})`,
+          width: contributedWidth(c.title, values),
           renderer: TextCell,
           renderMapping: (r): string => (isGroup(r) ? '' : (c.value(r) ?? '')),
         }),

@@ -66,6 +66,17 @@ function countIn(list: Finding[], sev: Severity): number {
   return list.filter(f => f.severity === sev && f.vexStatus !== 'not_affected' && f.vexStatus !== 'will_not_fix').length;
 }
 
+// headline uses the same (VEX-filtered) counts as the severity pills so they always add up
+const counted = $derived(SEVERITIES.reduce((n, sev) => n + count(sev), 0));
+const excluded = $derived(all.length - counted);
+
+function headlineText(): string {
+  if (scanning) return 'Scanning…';
+  if (all.length === 0) return 'No issues found';
+  const base = `${plural(counted, 'finding')} from ${plural(checkers.length, 'checker')}`;
+  return excluded > 0 ? `${base} · ${excluded} excluded by VEX` : base;
+}
+
 const COLLAPSE_ABOVE = 3;
 const expandedOverride = new SvelteMap<string, boolean>();
 
@@ -111,7 +122,7 @@ function openAdvisory(f: Finding): void {
         <Icon icon={faShieldHalved} size="lg" />
         <div class="grow">
           <div class="font-semibold text-[var(--pd-content-card-header-text)]">
-            {scanning ? 'Scanning…' : all.length === 0 ? 'No issues found' : `${plural(all.length, 'finding')} from ${plural(checkers.length, 'checker')}`}
+            {headlineText()}
           </div>
           <div class="text-sm">Merged across providers; VEX "not affected" and "will not fix" findings are excluded from counts.</div>
         </div>

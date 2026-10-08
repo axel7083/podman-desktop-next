@@ -18,6 +18,8 @@ export interface NameCellData {
 export interface StatusCellData {
   status: string;
   icon: IconDefinition | Component | string;
+  /** Human state shown as tooltip / accessible label (e.g. "Hibernating"). */
+  label?: string;
 }
 
 export interface ActionSpec {
