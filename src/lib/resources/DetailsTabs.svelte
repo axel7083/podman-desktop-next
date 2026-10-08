@@ -67,11 +67,11 @@ function go(id: string): void {
       class="pb-1 border-b-[3px] whitespace-nowrap {selectedOverflow ? 'border-[var(--pd-tab-highlight)]' : 'border-transparent hover:border-[var(--pd-tab-hover)]'}">
       <button
         bind:this={anchor}
-        class="px-4 py-2 flex items-center gap-1.5 {selectedOverflow ? 'text-[var(--pd-tab-text-highlight)]' : 'text-[var(--pd-tab-text)]'}"
+        class="px-4 py-2 inline whitespace-nowrap {selectedOverflow ? 'text-[var(--pd-tab-text-highlight)]' : 'text-[var(--pd-tab-text)]'}"
         onclick={toggle}
         aria-label="More tabs">
         {selectedOverflow ? selectedOverflow.label : `More (${overflow.length})`}
-        <Icon icon={faChevronDown} size="xs" />
+        <span class="inline-block ml-1 align-middle"><Icon icon={faChevronDown} size="xs" /></span>
       </button>
     </div>
     <Popover {open} {anchor} placement="bottom-start" onclose={close} class="w-56">

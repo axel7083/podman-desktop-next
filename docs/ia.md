@@ -110,7 +110,9 @@ enabled. Each names where it is implemented.
 8. **Container groups**: one row format for every grouper — title = group name
    (never truncated by a chip, no "(type)" suffix), line 2 = chip (extension icon
    + short label, `GrouperDef.chip`: "Quarkus Dev Services", "Compose", "Kind",
-   "Pod") + container count + details. Contributed columns appear only when a
+   "Pod") + container count; grouper details ("Quarkus 3.20", the
+   Testcontainers command) sit in the otherwise empty Image column so line 2
+   never truncates. Contributed columns appear only when a
    container of the connection has a value.
 9. **Image Security tab**: summary first (merged severity counts + one row per
    checker with its counts or "Passed" and its headline; click jumps to the

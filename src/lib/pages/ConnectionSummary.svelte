@@ -204,7 +204,7 @@ const tiles = $derived([
                 <span class="text-xl font-semibold text-[var(--pd-content-card-header-text)] tabular-nums">{t.count ?? '–'}</span>
                 <span class="text-sm text-[var(--pd-content-card-text)] truncate">{t.label}</span>
               </span>
-              {#if t.ext}<span class="ml-auto self-start"><AppIcon icon={t.ext.icon} size="12px" title="From {t.ext.displayName}" /></span>{/if}
+              {#if t.ext && t.icon !== t.ext.icon}<span class="ml-auto self-start"><AppIcon icon={t.ext.icon} size="12px" title="From {t.ext.displayName}" /></span>{/if}
             </button>
           {/each}
         </div>

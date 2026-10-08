@@ -152,7 +152,8 @@ const nameColumn = new TableColumn<Row, NameCellData>('Name', {
       return {
         title: r.groupName,
         chip: { label: r.chip, icon: r.ext ? r.icon : undefined, ext: r.ext },
-        sub: [`${plural(r.allCount, 'container')}${filtered > 0 ? ` (${filtered} filtered)` : ''}`, ...(r.details ?? [])],
+        // details go to the (otherwise empty) Image column so line 2 never truncates
+        sub: [`${plural(r.allCount, 'container')}${filtered > 0 ? ` (${filtered} filtered)` : ''}`],
         href: r.podId ? `/c/${conn.id}/pods/${r.podId}/summary` : undefined,
       };
     }
@@ -165,7 +166,7 @@ const nameColumn = new TableColumn<Row, NameCellData>('Name', {
 const imageColumn = new TableColumn<Row, string>('Image', {
   width: '3fr',
   renderer: TableSimpleColumn,
-  renderMapping: (r): string => (isGroup(r) ? '' : shortImage(r.image)),
+  renderMapping: (r): string => (isGroup(r) ? (r.details ?? []).join(' · ') : shortImage(r.image)),
   comparator: (a, b): number => (isGroup(a) ? '' : a.image).localeCompare(isGroup(b) ? '' : b.image),
 });
 
