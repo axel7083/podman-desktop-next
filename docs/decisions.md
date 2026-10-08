@@ -23,3 +23,10 @@ Autonomous choices made while building the mockup. Revisit at checkpoints.
 | D15 | Monaco/xterm replaced by a read-only `<pre>` and a scripted fake terminal. | Static mockup, no heavy deps. |
 | D16 | `?welcome=off` suppresses the first-visit picker (journeys, shared links). | Deterministic screenshots. |
 | D17 | Factory wizard is a full FormPage at `/settings/create/<factory>` with inline progress; the task continues in the background if the user leaves. | PD's connection creation pattern. |
+
+## Wave: rhel
+
+| # | Decision | Why |
+|---|---|---|
+| R1 | **feat(shell)** `FormField.visible`, `FactoryDef.validate` → `FactoryIssue{field, level, message, suggestion, fix}` rendered inline by `FactoryForm` (errors disable *Create*, `fix` = one-click patch), and `?<fieldId>=` URL prefill. Files: `src/lib/ext/types.ts`, `src/lib/pages/FactoryForm.svelte`, `_template`. | R4 needs the real "provider hyperv is not supported" branch as an inline error + suggestion, conditional fields (activation key, compose) and Image Builder → wizard hand-off. Generic for every factory. |
+| R2 | **feat(shell)** `Finding.actions` (row buttons) and `CheckerDef.summary` (headline per checker); `vexStatus` widened with Red Hat `fix_state` values (`will_not_fix`, `fix_deferred`, `out_of_support_scope`). Files: `types.ts`, `src/lib/details/SecurityTab.svelte`. | One-click "Rebuild on hardened image", Pyxis grade headline, "27 → 6 actionable" VEX headline. |

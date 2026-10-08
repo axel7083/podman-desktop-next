@@ -58,7 +58,15 @@ const extension: MockExtension = {
         label: 'Create example service',
         providerId: 'example',
         kind: 'service',
-        fields: [{ id: 'name', label: 'Name', type: 'text', default: 'example-2', required: true }],
+        fields: [
+          { id: 'name', label: 'Name', type: 'text', default: 'example-2', required: true },
+          { id: 'tls', label: 'Enable TLS', type: 'checkbox', default: false },
+          // `visible` hides a field until it applies; `?cert=…` in the URL prefills it.
+          { id: 'cert', label: 'Certificate', type: 'file', visible: (v): boolean => v.tls === true },
+        ],
+        // Inline validation: errors block "Create"; `fix` is a one-click suggestion.
+        validate: v =>
+          v.tls && !v.cert ? [{ field: 'cert', level: 'error', message: 'A certificate is required with TLS', fix: { label: 'Disable TLS', values: { tls: false } } }] : [],
         steps: () => [
           { label: 'Pulling quay.io/example/service:1.0', ms: 1500 },
           { label: 'Starting service', ms: 800 },
@@ -109,6 +117,7 @@ const extension: MockExtension = {
         id: 'example-checker',
         label: 'Example checker',
         durationMs: 800,
+        summary: (_image, findings) => `${findings.length} finding(s)`,
         check: image => [
           {
             id: 'EX-1',
@@ -120,6 +129,7 @@ const extension: MockExtension = {
             fixedIn: '3.0.15',
             vexStatus: 'affected',
             advisoryUrl: 'https://access.redhat.com/security/cve/CVE-2025-0001',
+            actions: [{ label: 'Rebuild', run: (img): void => toast({ type: 'info', title: `Rebuilding ${img.name}` }) }],
           },
         ],
       },

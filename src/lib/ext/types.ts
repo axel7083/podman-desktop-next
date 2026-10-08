@@ -131,9 +131,24 @@ export interface FormField {
   placeholder?: string;
   description?: string;
   required?: boolean;
+  /** Show the field only when this returns true (e.g. activation key when "register" is checked). */
+  visible?: (values: FormValues) => boolean;
 }
 
 export type FormValues = Record<string, string | number | boolean>;
+
+/**
+ * Inline validation result of a factory wizard (P12): errors block "Create",
+ * warnings don't. `fix` is a one-click suggestion that patches the values.
+ */
+export interface FactoryIssue {
+  /** Field the message is rendered under; omitted = form-level banner. */
+  field?: string;
+  level: 'error' | 'warning' | 'info';
+  message: string;
+  suggestion?: string;
+  fix?: { label: string; values: FormValues };
+}
 
 /**
  * "Create …" wizard shown on the provider card in Settings › Resources and in
@@ -151,6 +166,8 @@ export interface FactoryDef {
   steps: (values: FormValues) => TaskStep[];
   /** Connection that appears in the primary nav when the task completes. */
   createConnection: (values: FormValues) => ConnectionDef;
+  /** Inline validation (P12): errors disable "Create". */
+  validate?: (values: FormValues) => FactoryIssue[];
   /** Optional world seeding for the new connection (e.g. kube nodes). */
   onCreated?: (world: World, conn: ConnectionDef, values: FormValues) => void;
 }
@@ -270,10 +287,13 @@ export interface Finding {
   package?: string;
   installed?: string;
   fixedIn?: string;
-  vexStatus?: 'affected' | 'not_affected' | 'fixed' | 'under_investigation';
+  /** CSAF product status, plus Red Hat `fix_state` values (`will_not_fix`, `fix_deferred`, `out_of_support_scope`). */
+  vexStatus?: 'affected' | 'not_affected' | 'fixed' | 'under_investigation' | 'will_not_fix' | 'fix_deferred' | 'out_of_support_scope';
   advisoryUrl?: string;
   ruleId?: string;
   description?: string;
+  /** Remediation actions rendered on the finding row (e.g. "Rebuild on hardened image"). */
+  actions?: { label: string; run: (image: ContainerImage) => void }[];
 }
 
 /** Image checker: one section per provider in the image "Security" tab (P5, P6). */
@@ -285,6 +305,8 @@ export interface CheckerDef {
   /** Simulated duration of a scan, in ms (scaled by the speed control). */
   durationMs?: number;
   check: (image: ContainerImage) => Finding[];
+  /** One-line headline shown under the checker title (e.g. "Health grade C · 9.8 grade A available"). */
+  summary?: (image: ContainerImage, findings: Finding[]) => string | undefined;
 }
 
 /** Cluster add-on on Kubernetes connections (P13: install/uninstall/status/endpoints). */

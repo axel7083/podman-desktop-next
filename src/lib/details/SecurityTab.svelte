@@ -96,6 +96,8 @@ function openAdvisory(f: Finding): void {
           {#if c.description}<p class="text-sm mb-2">{c.description}</p>{/if}
           {#if Array.isArray(results.get(key))}
             {@const list = findingsOf(key)}
+            {@const headline = c.summary?.(image, list)}
+            {#if headline}<p class="mb-2 font-semibold text-[var(--pd-content-card-header-text)]" aria-label="{c.label} summary">{headline}</p>{/if}
             {#if list.length === 0}
               <p class="text-[var(--pd-state-success)]">Passed – no findings.</p>
             {:else}
@@ -110,8 +112,11 @@ function openAdvisory(f: Finding): void {
                       <td class="py-1.5 pr-2"><div class="text-[var(--pd-table-body-text-highlight)]">{f.cve ?? f.ruleId ?? f.id}</div><div class="text-xs">{f.title}</div></td>
                       <td class="py-1.5 pr-2 text-sm">{f.package ?? ''}{f.installed ? ` ${f.installed}` : ''}</td>
                       <td class="py-1.5 pr-2 text-sm">{f.fixedIn ?? '—'}</td>
-                      <td class="py-1.5 pr-2 text-sm">{f.vexStatus?.replace('_', ' ') ?? '—'}</td>
-                      <td class="py-1.5 text-right">
+                      <td class="py-1.5 pr-2 text-sm">{f.vexStatus?.replaceAll('_', ' ') ?? '—'}</td>
+                      <td class="py-1.5 text-right whitespace-nowrap">
+                        {#each f.actions ?? [] as a (a.label)}
+                          <Button type="secondary" class="mr-2" onclick={a.run.bind(undefined, image)}>{a.label}</Button>
+                        {/each}
                         {#if f.advisoryUrl}
                           <button class="text-[var(--pd-link)]" title="Open advisory" aria-label="Open advisory" onclick={openAdvisory.bind(undefined, f)}>
                             <Icon icon={faArrowUpRightFromSquare} />
