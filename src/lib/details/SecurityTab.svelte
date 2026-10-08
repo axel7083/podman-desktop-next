@@ -54,7 +54,7 @@ const all = $derived(checkers.flatMap(c => findingsOf(`${image.id}:${c.ext.id}:$
 const scanning = $derived(checkers.some(c => results.get(`${image.id}:${c.ext.id}:${c.id}`) === 'scanning'));
 
 function count(sev: Severity): number {
-  return all.filter(f => f.severity === sev && f.vexStatus !== 'not_affected').length;
+  return all.filter(f => f.severity === sev && f.vexStatus !== 'not_affected' && f.vexStatus !== 'will_not_fix').length;
 }
 
 function openCatalog(): void {
@@ -78,7 +78,7 @@ function openAdvisory(f: Finding): void {
         <div class="font-semibold text-[var(--pd-content-card-header-text)]">
           {scanning ? 'Scanning…' : all.length === 0 ? 'No issues found' : `${all.length} finding${all.length === 1 ? '' : 's'} from ${checkers.length} checker${checkers.length > 1 ? 's' : ''}`}
         </div>
-        <div class="text-sm">Merged across providers; VEX "not affected" findings are excluded from counts.</div>
+        <div class="text-sm">Merged across providers; VEX "not affected" and "will not fix" findings are excluded from counts.</div>
       </div>
       {#each SEVERITIES as sev (sev)}
         <span class="rounded-sm px-2 py-0.5 text-sm font-semibold capitalize {count(sev) ? SEV_CLASS[sev] : 'bg-[var(--pd-label-bg)] text-[var(--pd-label-text)] opacity-60'}">{count(sev)} {sev}</span>

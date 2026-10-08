@@ -125,7 +125,10 @@ function openResult(): void {
               {:else}
                 <label for="field-{f.id}" class="block text-base font-semibold text-[var(--pd-content-card-header-text)]">{f.label}</label>
                 {#if f.type === 'select'}
-                  <Dropdown id="field-{f.id}" value={String(values[f.id] ?? '')} options={f.options ?? []} onChange={onSelect.bind(undefined, f)} disabled={!!task} />
+                  <!-- re-keyed: ui-svelte Dropdown keeps its own value after a pick, so programmatic changes (fix, prefill) must remount it -->
+                  {#key values[f.id]}
+                    <Dropdown id="field-{f.id}" value={String(values[f.id] ?? '')} options={f.options ?? []} onChange={onSelect.bind(undefined, f)} disabled={!!task} />
+                  {/key}
                 {:else if f.type === 'slider'}
                   <div class="flex items-center gap-3">
                     <input id="field-{f.id}" type="range" min={f.min} max={f.max} value={Number(values[f.id])} oninput={onInput.bind(undefined, f)} disabled={!!task} class="grow accent-[var(--pd-button-primary-bg)]" />
