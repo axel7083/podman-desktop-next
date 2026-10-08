@@ -51,6 +51,26 @@ extension's `package.json`).
 | `podman-desktop.skills.png` | `podman-desktop/extensions/skills/builtin/skills.cdix/icon.png` |
 | `podman-desktop.svg` | `podman-desktop/buildResources/icon.svg` |
 
+Appdev wave icons (downloaded from the URLs verified in `docs/research/<id>.md`; upstream project logos):
+
+| File (`static/icons/`) | Source URL |
+|---|---|
+| `redhat.quarkus.png` | https://design.jboss.org/quarkus/logo/final/PNG/quarkus_icon_rgb_256px_default.png (square icon; the dossier's quarkus-logo.svg is a wordmark) |
+| `podman-desktop.testcontainers.svg` | https://raw.githubusercontent.com/testcontainers/testcontainers-java/main/docs/logo.svg |
+| `redhat.streams-kafka.svg` | https://raw.githubusercontent.com/cncf/artwork/main/projects/strimzi/icon/color/strimzi-icon-color.svg |
+| `redhat.apicurio-registry.svg` | https://raw.githubusercontent.com/cncf/artwork/main/projects/apicurio-registry/icon/color/apicurio-registry-icon-color.svg |
+| `redhat.debezium.png` | https://raw.githubusercontent.com/debezium/debezium.github.io/develop/assets/images/color_debezium_64px.png |
+| `redhat.keycloak.svg` | https://raw.githubusercontent.com/cncf/artwork/main/projects/keycloak/icon/color/keycloak-icon-color.svg |
+| `redhat.datagrid.png` | https://github.com/infinispan.png (Infinispan org avatar; the dossier's infinispan-logo.png is a wordmark) |
+| `redhat.amq-broker.svg` | https://raw.githubusercontent.com/apache/activemq-website/main/src/assets/img/activemq_logo_icon.svg |
+| `redhat.jboss-eap.png` | https://design.jboss.org/wildfly/logo/final/wildfly_icon_256px.png (square WildFly icon) |
+| `redhat.mta.svg` | https://raw.githubusercontent.com/konveyor/community/main/brand/logo/konveyor-logo-konveyor.svg |
+| `redhat.cryostat.svg` | https://raw.githubusercontent.com/cryostatio/cryostat-web/main/src/app/assets/cryostat_icon_rgb_default.svg |
+| `redhat.kaoto.svg` | https://raw.githubusercontent.com/KaotoIO/kaoto/main/packages/ui/src/assets/logo-kaoto.svg |
+| `podman-desktop.devcontainers.png` | https://raw.githubusercontent.com/devcontainers/devcontainers.github.io/gh-pages/img/devcontainers-logo.png |
+| `redhat.rhdh-local.png` | https://raw.githubusercontent.com/kadel/podman-desktop-extension-rhdh-local/main/packages/backend/icon.png |
+| `podman-desktop.debug-shell.png` | https://github.com/containers.png |
+
 Other assets:
 
 | File | Source | Licence |
