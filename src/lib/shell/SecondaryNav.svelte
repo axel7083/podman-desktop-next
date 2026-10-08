@@ -13,7 +13,7 @@ import Contribution from '#lib/components/Contribution.svelte';
 import ExtBadge from '#lib/components/ExtBadge.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { coreResourcesOf, href, KUBE_KINDS, STATUS_DOT_CLASS, STATUS_LABEL } from '#lib/nav.ts';
+import { coreResourcesOf, href, KUBE_KINDS, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
 import { world } from '#lib/world.svelte.ts';
 
 import SecondaryNavItem from './SecondaryNavItem.svelte';
@@ -64,7 +64,7 @@ function count(id: string): number | undefined {
     </div>
     <div class="flex items-center gap-1.5 mt-1 pl-0.5 text-xs text-[var(--pd-secondary-nav-text)] opacity-80">
       <span class="w-2 h-2 rounded-full {STATUS_DOT_CLASS[conn.status]}"></span>
-      <span class="truncate">{conn.extensionDisabled ? 'Extension disabled' : STATUS_LABEL[conn.status]} · {conn.providerName}</span>
+      <span class="truncate">{conn.extensionDisabled ? 'Extension disabled' : statusLabel(conn)} · {conn.providerName}</span>
     </div>
   </a>
 

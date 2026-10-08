@@ -11,7 +11,7 @@ import NetworkIcon from '#lib/images/NetworkIcon.svelte';
 import PodIcon from '#lib/images/PodIcon.svelte';
 import SecretIcon from '#lib/images/SecretIcon.svelte';
 import VolumeIcon from '#lib/images/VolumeIcon.svelte';
-import { podActions, volumeActions } from '#lib/resources/actions.ts';
+import { kubeActions, podActions, volumeActions } from '#lib/resources/actions.ts';
 import { cleanKube, kubeStatus, toYaml } from '#lib/resources/kube.ts';
 import { humanAge, humanSize, world } from '#lib/world.svelte.ts';
 
@@ -104,6 +104,7 @@ const podContainers = $derived(pod ? world.containers.filter(c => pod.containerI
     {base}
     {tab}
     ctx={{ target: 'kube-resource', conn, resource: kubeObj }}
+    actions={kubeActions(conn, kubeObj, true)}
     inspect={`apiVersion: ${kubeObj.apiVersion}${toYaml(cleanKube(kubeObj)).replace(/^\napiVersion: .*$/m, '')}`}
     inspectLanguage="yaml"
     inspectLabel="YAML"

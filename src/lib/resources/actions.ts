@@ -25,6 +25,7 @@ import type { ActionsCellData, ActionSpec } from '#lib/table/types.ts';
 import {
   type Container,
   type ContainerImage,
+  type KubeObject,
   deleteContainer,
   deleteImage,
   deletePod,
@@ -212,6 +213,19 @@ export function volumeActions(v: Volume, inUse: boolean, detailed = false): Acti
       ...contributed('volume', conn, v, 'row'),
     ],
     menu: contributed('volume', conn, v, 'kebab'),
+    detailed,
+  };
+}
+
+/**
+ * Contributed actions on a Kubernetes object (P4 Kubernetes menus):
+ * `row` → inline buttons, `kebab` → overflow; on details pages `details` too.
+ * The caller adds its own core actions (e.g. Delete).
+ */
+export function kubeActions(conn: ConnectionView, o: KubeObject, detailed = false): ActionsCellData {
+  return {
+    buttons: [...contributed('kube-resource', conn, o, 'row'), ...(detailed ? contributed('kube-resource', conn, o, 'details') : [])],
+    menu: contributed('kube-resource', conn, o, 'kebab'),
     detailed,
   };
 }

@@ -19,7 +19,7 @@ import AccountIcon from '#lib/images/AccountIcon.svelte';
 import DashboardIcon from '#lib/images/DashboardIcon.svelte';
 import PuzzleIcon from '#lib/images/PuzzleIcon.svelte';
 import SettingsIcon from '#lib/images/SettingsIcon.svelte';
-import { appPath, connectionHome, GROUPS, href, navigate, STATUS_DOT_CLASS, STATUS_LABEL } from '#lib/nav.ts';
+import { appPath, connectionHome, GROUPS, href, navigate, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
 import { ui } from '#lib/ui.svelte.ts';
 import { world } from '#lib/world.svelte.ts';
 
@@ -56,7 +56,7 @@ function connEntry(c: ConnectionView): NavEntry {
     href: connectionHome(c),
     icon: c.icon,
     dot: c.extensionDisabled ? undefined : STATUS_DOT_CLASS[c.status],
-    status: c.extensionDisabled ? 'Extension disabled' : STATUS_LABEL[c.status],
+    status: c.extensionDisabled ? 'Extension disabled' : statusLabel(c),
     hint: c.hint,
     hintTooltip: c.hintTooltip,
     ext: c.ext,

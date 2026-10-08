@@ -105,6 +105,12 @@ export interface ConnectionDef {
   resources?: string[];
   /** Child connection (e.g. a Docker context pointing at a Podman machine). */
   parentId?: string;
+  /**
+   * Remote connection (OCM cluster, remote context…): the shell says
+   * "Not connected" / "Connect" instead of "Stopped" / "Start". Pair with
+   * `startHandlers` (world) to run the real connect flow.
+   */
+  remote?: boolean;
 }
 
 /** Runtime view of a connection, as consumed by the shell. */
@@ -325,6 +331,14 @@ export interface AddonDef {
   when: (conn: ConnectionView) => boolean;
   installSteps: TaskStep[];
   endpoints?: (conn: ConnectionView) => { label: string; url: string }[];
+  /** Shown on the card and confirmed before install (e.g. "Authentication disabled"). */
+  warning?: string;
+  /** Install is disabled with this explanation (e.g. unsupported architecture). */
+  disabledReason?: (conn: ConnectionView) => string | undefined;
+  /** Called once the install task succeeds (seed objects, endpoints…). */
+  onInstalled?: (conn: ConnectionView) => void;
+  /** Called when uninstalled. */
+  onUninstalled?: (conn: ConnectionView) => void;
 }
 
 /** Authentication provider listed in Accounts (P16 scopes). */

@@ -15,7 +15,7 @@ import type { ExtensionMeta, IconRef } from '#lib/ext/types.ts';
 import ArrowDownIcon from '#lib/images/ArrowDownIcon.svelte';
 import ArrowUpIcon from '#lib/images/ArrowUpIcon.svelte';
 import EnterIcon from '#lib/images/EnterIcon.svelte';
-import { connectionHome, coreResourcesOf, navigate } from '#lib/nav.ts';
+import { connectionHome, coreResourcesOf, navigate, startVerb } from '#lib/nav.ts';
 import { ui } from '#lib/ui.svelte.ts';
 import { shortImage, startConnection, stopConnection, world } from '#lib/world.svelte.ts';
 
@@ -64,7 +64,7 @@ const items: PaletteItem[] = $derived.by(() => {
       out.push({ id: `go:${c.id}:${s.id}`, label: `${c.name} › ${s.label}`, category: 'goto', icon: s.icon ?? s.ext.icon, ext: s.ext, run: go(`/c/${c.id}/${s.id}`) });
     }
     if (c.status === 'stopped') {
-      out.push({ id: `cmd:start:${c.id}`, label: `Start ${c.name}`, category: 'command', icon: faPlay, run: (): void => startConnection(c.id, c.name) });
+      out.push({ id: `cmd:start:${c.id}`, label: `${startVerb(c)} ${c.name}`, category: 'command', icon: faPlay, run: (): void => startConnection(c.id, c.name) });
     } else if (c.status === 'started') {
       out.push({ id: `cmd:stop:${c.id}`, label: `Stop ${c.name}`, category: 'command', icon: faStop, run: (): void => stopConnection(c.id, c.name) });
     }

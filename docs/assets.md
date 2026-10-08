@@ -135,3 +135,17 @@ Reference screenshots (`references/`):
 | `podman-desktop.local-registry.png` | https://github.com/project-zot.png |
 | `podman-desktop.trivy.png` | https://github.com/aquasecurity.png |
 | `podman-desktop.k3d.png` | https://github.com/k3d-io.png |
+### Wave: openshift
+
+| File (`static/icons/`) | Source |
+|---|---|
+| `redhat.openshift-cluster-manager.svg`, `redhat.openshift-cli-pack.svg` | https://cdn.simpleicons.org/redhatopenshift (Red Hat OpenShift mark) |
+| `redhat.olm.png` | https://github.com/operator-framework.png |
+| `redhat.openshift-virtualization.png` | https://github.com/kubevirt.png |
+| `redhat.quay.png` | https://github.com/quay.png |
+| `redhat.acs-image-check.png` | https://github.com/stackrox.png |
+| `redhat.openshift-pipelines-gitops.svg` | https://cdn.simpleicons.org/tekton |
+| `argo-cd.svg` | https://cdn.simpleicons.org/argo |
+| `redhat.service-interconnect.png` | https://github.com/skupperproject.png |
+| `containers.kubernetes-mcp-server.png` | https://github.com/containers.png |
+| `redhat.openshift-lightspeed.png` | `ext-redhat-lightspeed/packages/extension/icon.png` |

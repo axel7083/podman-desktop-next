@@ -89,3 +89,20 @@ Autonomous choices made while building the mockup. Revisit at checkpoints.
 | AI9 | MaaS quota: each RAG prompt counts ~28k tokens (retrieved manual chunks) so the 412k/500k hourly quota hits HTTP 429 after ~3 prompts; the toast offers "Switch to local AI Lab model". | Makes journey 4 demonstrable in seconds. |
 | AI10 | `kubernetes-mcp-server` is not pre-installed (journey 5 installs it); podman-mcp-server (process) and GitHub (remote) are. | The install is the journey's highlight. |
 | AI11 | Connection `details` must not reuse core row labels (`Type`, `Status`, `Provider`…): duplicate keys break ConnectionSummary's keyed each. | Found by the loop (each_key_duplicate). |
+## Wave: openshift
+
+| # | Decision | Why |
+|---|---|---|
+| O1 | **Shell:** `ConnectionDef.remote` + `statusLabel()/startVerb()` ("Not connected" / "Connect") and `world.startHandlers` (extension replaces the generic start, e.g. `oc login --web` task). Files: types.ts, nav.ts, world.svelte.ts, ConnectionSummary, ConnectionStoppedScreen, Dashboard, StatusBar, SecondaryNav, PrimaryNav, CommandPalette. | OCM clusters and the Sandbox are remote: "Stopped/Start" was wrong copy and there was no hook for a real connect flow. |
+| O2 | **Shell:** contributed `kube-resource` menus rendered in `KubeResourceList` rows (row/kebab) and on the generic kube details header (details/kebab) via `kubeActions()` in actions.ts. | P4 menus were declared but never rendered for CRDs (Rerun, Sync, Start VM, Ask Lightspeed). |
+| O3 | **Shell:** `AddonDef.warning` (shown + confirm before install), `disabledReason`, `onInstalled/onUninstalled`; endpoints are links. CLI Tools says "Install vX" for missing tools; Registries dedupes by server preferring the entry with credentials. | minc console "auth disabled, local use only" warning; add-ons must seed cluster objects; Quay's quay.io robot replaced the suggested quay.io row instead of duplicating it. |
+| O4 | Only *ready* OCM clusters become connections (ocp-prod connected, ocp-dev not); hibernating/installing ones live in TOOLS › OpenShift clusters. | Keeps the Kubernetes group at 6 (4 + More) instead of 8. |
+| O5 | Extension sections appear only when the cluster **serves the CRD** (`CustomResourceDefinition` objects in `world.kube[conn]`, seeded by the cluster owner on connect) – not by connection type. | P2 `when` on capabilities discovered at connect time; ocp-dev sections pop in after `oc login`. |
+| O6 | Feature extensions seed their CRs into clusters they don't own (e.g. PipelineRuns into ocp-dev at seed); they stay invisible until the CRD appears. | Lets each extension own its data while the cluster owner owns discovery. |
+| O7 | Cross-extension imports allowed only from a dependency's / companion's `data.ts` (OCM → cli-pack, Quay → ACS gate, Lightspeed → OCM logs). | Stand-in for the P5 pre-push hook and CLI helper APIs; never shell → extension. |
+| O8 | OpenShift CLI pack: featured tools in Settings › CLI Tools, the full pack + skew banner in a Settings section rather than a TOOLS item. | Avoids a nav item for a settings-like concern. |
+| O9 | Skupper objects of the Podman site are stored as KubeObjects on the Podman connection, so one `KubeResourceList` serves both sides. | Skupper system mode uses the same CR schema. |
+| O10 | Quay "Rebuild on latest UBI 9" keeps the image id (new digest) so the Security tab rescans in place. | Avoids a dead details URL mid-journey. |
+| O11 | Developer Sandbox sign-up / phone verification and OpenShift Local preset switch are not mocked (connection exists at launch). | Time; supporting journeys only. |
+| O12 | The Red Hat account is generic (jdoe persona, org 18833012); RHEL wave extends it (e.g. Subscription tab). | Shared extension. |
+| O13 | Intermediate states driven by timers (VM Provisioning → Running, tasks) do not survive a reload (D13); the journey navigates in-app for those steps. | Static mockup. |

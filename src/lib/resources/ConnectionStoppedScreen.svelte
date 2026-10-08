@@ -6,6 +6,7 @@ import { Button, EmptyScreen } from '@podman-desktop/ui-svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
 import EngineIcon from '#lib/images/ResourcesIcon.svelte';
+import { startVerb, statusLabel } from '#lib/nav.ts';
 import { startConnection } from '#lib/world.svelte.ts';
 
 interface Props {
@@ -33,8 +34,8 @@ function enable(): void {
 {:else}
   <EmptyScreen
     icon={EngineIcon}
-    title={busy ? `${conn.name} is ${conn.status}…` : `${conn.name} is not running`}
-    message="Start the {conn.kind === 'kubernetes' ? 'cluster' : 'connection'} to see its {kind}.">
-    <Button icon={faPlay} inProgress={busy} disabled={busy} onclick={start}>Start {conn.name}</Button>
+    title={busy ? `${conn.name} is ${statusLabel(conn).toLowerCase()}…` : `${conn.name} is ${conn.remote ? 'not connected' : 'not running'}`}
+    message="{startVerb(conn)} {conn.remote ? 'to' : 'the'} {conn.kind === 'kubernetes' ? 'cluster' : 'connection'} to see its {kind}.">
+    <Button icon={faPlay} inProgress={busy} disabled={busy} onclick={start}>{startVerb(conn)} {conn.remote ? 'to ' : ''}{conn.name}</Button>
   </EmptyScreen>
 {/if}
