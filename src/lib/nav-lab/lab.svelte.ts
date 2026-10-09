@@ -422,8 +422,8 @@ export function describe(t: LabTarget): TargetInfo {
     case "node": {
       const n = findNode(t.nodeId);
       return {
-        title: n?.node.label ?? "?",
-        icon: n?.root.icon ?? n?.node.icon ?? faBorderAll,
+        title: n && n.node.label === "Overview" ? `${n.root.label} · Overview` : (n?.node.label ?? "?"),
+        icon: n?.node.icon ?? n?.root.icon ?? faBorderAll,
         connId: c?.id,
         crumb: [c?.name ?? "", ...(n?.path ?? [])],
       };

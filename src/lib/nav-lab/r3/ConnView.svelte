@@ -35,6 +35,7 @@ const PROMO_TEXT: Record<string, [string, string, string]> = {
   bootc: ['No bootable images', 'Turn a container image into a bootable OS: build qcow2, raw, ISO or AMI disk images from a Containerfile.', 'containers.github.io/bootc'],
   'ai-lab': ['No AI models', 'Run open models locally, try recipes and chat with them in playgrounds, then serve them with an OpenAI-compatible API.', 'podman-desktop.io/docs/ai-lab'],
   'kube-dashboard': ['No Kubernetes dashboard', 'See workloads, events and metrics of this cluster at a glance.', 'podman-desktop.io/extensions'],
+  'openshift-console': ['No OpenShift Console', 'Install the OpenShift web console on this local cluster to browse workloads, logs and events in your browser.', 'github.com/openshift/console'],
   helm: ['No Helm releases', 'Install charts and manage releases and revisions on this cluster.', 'helm.sh'],
 };
 
@@ -43,13 +44,12 @@ function openExt(e: LabExtension): void {
   const tree = TREE_PROVIDERS.find(p => p.extId === e.id && p.connIds.includes(c.id));
   if (tree) onopen({ kind: 'node', connId: c.id, nodeId: treeRoot(tree, c.id).id }, {});
   else if (sec) onopen({ kind: 'list', connId: c.id, sectionId: sec.id }, {});
-  else if (e.id === 'openshift-local' || e.id === 'sandbox') onopen({ kind: 'connection', connId: e.id }, {});
   else onopen({ kind: 'tool', toolId: e.id }, {});
 }
 </script>
 
 {#snippet kv(k: string, v: string)}
-  <tr><td class="pt-1.5 pr-6 w-32 text-[var(--pd-content-sub-header)]">{k}</td><td class="pt-1.5 wrap-anywhere">{v}</td></tr>
+  <tr><td class="pt-1.5 pr-6 w-32 text-[var(--pd-table-body-text)]">{k}</td><td class="pt-1.5 wrap-anywhere">{v}</td></tr>
 {/snippet}
 
 {#snippet actions()}

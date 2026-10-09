@@ -1,5 +1,5 @@
 <script lang="ts">
-/** Bootable containers extension sections (Dashboard, Images, Disk Images, Examples) in its card style. */
+/** Bootable containers extension sections (Overview, Images, Disk Images, Examples) in its card style. */
 import { faArrowCircleDown, faCircleInfo, faCompactDisc, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
@@ -10,7 +10,7 @@ import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
 import Head from './Head.svelte';
 import RowsTable from './RowsTable.svelte';
-import type { FoundNode } from './trees.ts';
+import { type FoundNode, OVERVIEW_ICON } from './trees.ts';
 
 interface Props {
   f: FoundNode;
@@ -19,7 +19,7 @@ interface Props {
 
 let { f, onopen }: Props = $props();
 
-const section = $derived(f.node === f.root ? 'Dashboard' : f.node.label);
+const section = $derived(f.node === f.root ? 'Overview' : f.node.label);
 let search = $state('');
 let arch = $state<Record<string, string>>({});
 
@@ -73,7 +73,7 @@ const disks = $derived<LabRow[]>(
 {/snippet}
 
 <div data-testid="bootc-view" class="flex flex-col h-full min-h-0">
-  <Head icon={f.provider.icon} title={section === 'Dashboard' ? 'Bootable containers' : section} connId={f.connId} onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})} sub="Bootable containers" search={section === 'Images' ? search : undefined} {actions} />
+  <Head icon={f.node === f.root ? f.provider.icon : section === 'Overview' ? OVERVIEW_ICON : f.node.icon} title={f.node === f.root ? f.provider.label : section} connId={f.connId} onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})} provenance="Bootable containers" placeholder="Filter bootc images" search={section === 'Images' ? search : undefined} {actions} />
   <div class="flex flex-col flex-1 min-h-0 overflow-auto">
     {#if section === 'Images'}
       <div class="flex flex-1 px-2"><RowsTable kind="p13-bootc-images" rows={images} cols={[['Age', 'age', '100px'], ['Size', 'size', '90px']]} /></div>

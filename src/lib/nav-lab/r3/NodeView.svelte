@@ -62,7 +62,8 @@ function toggle(): void {
       status={st}
       connId={f.connId}
       onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})}
-      sub="{[...f.path].join(' › ') || f.provider.label} · {e?.name}"
+      sub={f.path.length > 1 ? f.path.slice(1).join(' › ') : undefined}
+      provenance={e?.name}
       views={[['summary', 'Summary'], ['inspect', 'Inspect']]}
       {view}
       onview={(v): void => {
@@ -74,17 +75,17 @@ function toggle(): void {
     {:else}
       <div class="flex-1 min-h-0 overflow-auto px-2 py-2 text-[13px] leading-6">
         <dl class="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-x-6 px-3 pt-2">
-          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-content-sub-header)]">Name</dt><dd class="truncate">{f.node.label}</dd></div>
-          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-content-sub-header)]">Detail</dt><dd class="truncate">{f.node.detail ?? '—'}</dd></div>
-          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-content-sub-header)]">Path</dt><dd class="truncate">{[...f.path, f.node.label].join(' › ')}</dd></div>
-          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-content-sub-header)]">Provided by</dt><dd class="flex items-center gap-1 truncate"><AppIcon icon={e?.icon} size="12px" />{e?.name}</dd></div>
+          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-table-body-text)]">Name</dt><dd class="truncate">{f.node.label}</dd></div>
+          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-table-body-text)]">Detail</dt><dd class="truncate">{f.node.detail ?? '—'}</dd></div>
+          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-table-body-text)]">Path</dt><dd class="truncate">{[...f.path, f.node.label].join(' › ')}</dd></div>
+          <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-table-body-text)]">Provided by</dt><dd class="flex items-center gap-1 truncate"><AppIcon icon={e?.icon} size="12px" />{e?.name}</dd></div>
         </dl>
         {#if f.node.children?.length}
           <div class="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">{f.node.children.length} items</div>
           {#each f.node.children as ch (ch.id)}
             <button type="button" class="w-full flex items-center gap-2 h-6 px-3 text-left hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => open(ch)}>
               {#if ch.status}<span class="w-1.5 h-1.5 rounded-full shrink-0 {STATUS_DOT[live.status[ch.id] ?? ch.status]}"></span>{:else}<span class="w-4 flex justify-center text-[11px] opacity-70"><AppIcon icon={ch.icon} size="xs" /></span>{/if}
-              <span class="truncate">{ch.label}</span><span class="text-xs text-[var(--pd-content-sub-header)]">{ch.detail ?? ''}</span>
+              <span class="truncate">{ch.label}</span><span class="text-xs text-[var(--pd-table-body-text)]">{ch.detail ?? ''}</span>
             </button>
           {/each}
         {/if}

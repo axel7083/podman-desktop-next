@@ -30,6 +30,7 @@ export const EXTENSIONS: LabExtension[] = [
   E('mcp', 'MCP servers', 'podman-desktop.mcp.png', 'Run and wire MCP servers'),
   E('kube-dashboard', 'Kubernetes dashboard', 'podman-desktop.kubernetes-dashboard.png', 'Workloads, events and metrics of a cluster'),
   E('helm', 'Helm', 'podman-desktop.helm.png', 'Charts, releases and revisions'),
+  E('openshift-console', 'OpenShift Console', 'redhat.openshift-cluster-manager.svg', 'Install the OpenShift web console on this local cluster'),
   E('openshift-local', 'OpenShift Local', 'redhat.openshift-local.png', 'A local OpenShift cluster (CRC)'),
   E('sandbox', 'Developer Sandbox', 'redhat.redhat-sandbox.png', 'Free hosted OpenShift for 30 days'),
   E('minc', 'MicroShift in a container', 'minc-org.minc.png', 'Lightweight OpenShift in a container'),
@@ -101,14 +102,19 @@ export function visibleConns(): LabConnection[] {
   return CONNECTIONS.filter(connVisible);
 }
 
-/** Promotion cards on a connection summary: related extensions per product. */
+/**
+ * Promotion cards on a connection summary: related extensions per product.
+ * PD does not compete with OpenShift: no "connect to an OpenShift cluster"
+ * promotion anywhere; local Kubernetes / MicroShift clusters only get the
+ * OpenShift Console add-on (installed on that cluster).
+ */
 export function promotionsFor(c: LabConnection): LabExtension[] {
   const p = c.product.toLowerCase();
   let ids: string[];
   if (p.includes('podman')) ids = ['bootc', 'quadlet', 'ai-lab', 'mcp'];
   else if (p.includes('docker')) ids = ['ai-lab', 'mcp', 'grype'];
-  else if (p.includes('openshift') || p.includes('sandbox') || p.includes('microshift')) ids = ['openshift-local', 'sandbox', 'helm', 'pipelines', 'kube-dashboard'];
-  else if (c.group === 'Kubernetes') ids = ['kube-dashboard', 'helm', 'openshift-local', 'sandbox'];
+  else if (p.includes('openshift') || p.includes('sandbox')) ids = ['helm', 'pipelines', 'kube-dashboard'];
+  else if (c.group === 'Kubernetes') ids = ['openshift-console', 'kube-dashboard', 'helm'];
   else ids = ['insights', 'aap'];
   return ids.map(ext).filter((e): e is LabExtension => !!e);
 }

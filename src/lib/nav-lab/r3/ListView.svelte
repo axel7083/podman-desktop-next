@@ -39,10 +39,11 @@ let filter = $state('all');
 const icon = $derived(s.ext?.icon ?? s.icon);
 const all = $derived(resourcesOf(c.id, s.id).filter(r => !live.deleted.includes(r.id)));
 const tabs = $derived<[string, string][]>(
-  s.id === 'containers' || s.id === 'pods' ? [['all', 'All'], ['running', 'Running'], ['stopped', 'Stopped']] : s.id === 'images' ? [['all', 'All'], ['used', 'Used'], ['unused', 'Unused']] : [],
+  s.id === 'containers' || s.id === 'pods' ? [['all', 'All'], ['running', 'Running'], ['stopped', 'Stopped']] : s.id === 'images' || s.id === 'volumes' ? [['all', 'All'], ['used', 'Used'], ['unused', 'Unused']] : [],
 );
 
 function used(r: LabResource): boolean {
+  if (r.sectionId === 'volumes') return hash(r.name) % 3 !== 0;
   return imageInfo(r).usedBy.length > 0;
 }
 
@@ -191,7 +192,7 @@ const modern = $derived(lab.table !== 'classic');
 {/snippet}
 
 <div data-testid="list-view" class="flex flex-col h-full min-h-0">
-  <Head {icon} title={s.label} connId={c.id} onconn={(): void => onopen({ kind: 'connection', connId: c.id }, {})} sub={s.ext ? s.ext.name : undefined} bind:search {actions} filters={modern && tabs.length ? seg : undefined} />
+  <Head {icon} title={s.label} connId={c.id} onconn={(): void => onopen({ kind: 'connection', connId: c.id }, {})} provenance={s.ext?.name} bind:search {actions} filters={modern && tabs.length ? seg : undefined} />
   {#if tabs.length && !modern}
     <div class="flex items-center gap-1 px-4 pt-2 shrink-0 border-b border-[var(--pd-content-divider)]">
       {#each tabs as [id, label] (id)}
@@ -203,9 +204,9 @@ const modern = $derived(lab.table !== 'classic');
     {#if rows.length}
       <RowsTable kind="p13-{s.id}" {rows} {cols} />
     {:else if all.length && modern}
-      <div class="flex items-center gap-2 px-4 py-3 text-xs text-[var(--pd-content-sub-header)]">
+      <div class="flex items-center gap-2 px-4 py-3 text-xs text-[var(--pd-table-body-text)]">
         No {noun} match “{search || filter}”.
-        <button type="button" class="text-[var(--pd-link)] hover:underline" onclick={(): void => { search = ''; filter = 'all'; }}>Clear filters</button>
+        <button type="button" class="hover:text-[var(--pd-link)] hover:underline" onclick={(): void => { search = ''; filter = 'all'; }}>Clear filters</button>
       </div>
     {:else if all.length}
       <FilteredEmptyScreen {icon} kind={noun} searchTerm={search || filter} onResetFilter={(): void => { search = ''; filter = 'all'; }} />

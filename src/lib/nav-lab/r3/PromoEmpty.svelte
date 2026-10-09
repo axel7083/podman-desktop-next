@@ -43,7 +43,7 @@ const inst = $derived(isInstalled(extId));
       <div class="flex flex-col w-72 p-4 gap-2 rounded-lg bg-[var(--pd-content-card-bg)] text-left">
         <div class="flex items-center gap-2"><AppIcon icon={e.icon} size="28px" /><span class="text-base font-semibold text-[var(--pd-content-card-header-text)]">{cardTitle ?? e.name}</span></div>
         <p class="text-[13px] text-[var(--pd-content-card-text)] flex-1">{e.description}.</p>
-        {#if info}<div class="text-xs text-[var(--pd-content-card-text)]">More information: <a class="text-[var(--pd-link)] hover:underline" href="https://{info}" target="_blank" rel="noreferrer">{info}</a></div>{/if}
+        {#if info}<div class="text-xs text-[var(--pd-content-card-text)]">More information: <a class="hover:text-[var(--pd-link)] hover:underline" href="https://{info}" target="_blank" rel="noreferrer">{info}</a></div>{/if}
         <div class="pt-2">
           {#if inst}
             <Button icon={faPlus} onclick={(): void => (onaction ? onaction() : lab.openCreate(`${actionLabel} · ${e.name}`))}>{actionLabel}</Button>

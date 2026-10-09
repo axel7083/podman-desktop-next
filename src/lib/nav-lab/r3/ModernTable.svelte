@@ -18,13 +18,20 @@ interface Props {
   /** Text columns: [title, key in `row.cols`, width, numeric?]. */
   cols: [string, string, string, boolean?][];
   variant: 'modern' | 'grid';
+  /** Initial sort column ('' = keep the given order). */
+  initialSort?: string;
+  /** Column keys rendered in monospace (versions, digests…). */
+  mono?: string[];
+  /** Hide the row checkbox / bulk bar (read-only results). */
+  readonly?: boolean;
 }
 
-let { rows, cols, variant }: Props = $props();
+let { rows, cols, variant, initialSort = '__name', mono = [], readonly = false }: Props = $props();
 
 const grid = $derived(variant === 'grid');
 
-let sortKey = $state('__name');
+// svelte-ignore state_referenced_locally
+let sortKey = $state(initialSort);
 let sortDir = $state<1 | -1>(1);
 const hidden = new SvelteSet<string>();
 const collapsed = new SvelteSet<string>();
@@ -62,6 +69,7 @@ function val(r: LabRow, key: string): string {
 }
 
 function cmp(a: LabRow, b: LabRow): number {
+  if (!sortKey) return 0;
   const c = allCols.find(x => x.key === sortKey);
   const d = c?.numeric ? num(val(a, sortKey)) - num(val(b, sortKey)) : val(a, sortKey).localeCompare(val(b, sortKey));
   return d * sortDir;
@@ -119,7 +127,7 @@ function click(e: MouseEvent, f: Flat): void {
   highlight = f.row.name;
   root?.focus();
   if (f.group) return toggleGroup(f.row);
-  if (e.ctrlKey || e.metaKey || selMode) return toggleSel(f.row);
+  if (!readonly && (e.ctrlKey || e.metaKey || selMode)) return toggleSel(f.row);
   f.row.open?.();
 }
 
@@ -182,6 +190,7 @@ function resize(e: PointerEvent, c: Col): void {
 }
 
 function tone(st: string): string {
+  if (/^(CRITICAL|HIGH|MEDIUM|LOW|NEGLIGIBLE)$/.test(st)) return `sev-${st.toLowerCase()}`;
   return st === 'RUNNING' || st === 'USED' ? 'running' : st === 'DEGRADED' ? 'degraded' : st === 'CREATED' ? 'created' : 'stopped';
 }
 
@@ -236,6 +245,7 @@ function subOf(r: LabRow): string[] {
         <span class="cb">
           <input
             type="checkbox"
+            disabled={readonly}
             aria-label="Select all"
             checked={leaves.length > 0 && leaves.every(r => selected.has(r.name))}
             onchange={(e): void => {
@@ -313,7 +323,7 @@ function subOf(r: LabRow): string[] {
           <span class="flex items-center justify-center">{@render dot(r)}</span>
         {:else}
           <span class="cb">
-            <input type="checkbox" data-testid="mt-check" aria-label="Select {r.title}" checked={selected.has(r.name)} onclick={(e): void => e.stopPropagation()} onchange={(): void => toggleSel(r)} />
+            <input type="checkbox" disabled={readonly} data-testid="mt-check" aria-label="Select {r.title}" checked={selected.has(r.name)} onclick={(e): void => e.stopPropagation()} onchange={(): void => toggleSel(r)} />
           </span>
         {/if}
         {#each shown as c (c.key)}
@@ -330,7 +340,7 @@ function subOf(r: LabRow): string[] {
               {/each}
             </span>
           {:else}
-            <span class="cell" class:num={c.numeric} class:mono={grid && (c.numeric || /id|size/i.test(c.key))} title={r.cols[c.key]}>{r.cols[c.key] ?? ''}</span>
+            <span class="cell" class:num={c.numeric} class:mono={(grid && (c.numeric || /id|size/i.test(c.key))) || mono.includes(c.key)} title={r.cols[c.key]}>{r.cols[c.key] ?? ''}</span>
           {/if}
         {/each}
         {@render acts(r)}
@@ -338,7 +348,7 @@ function subOf(r: LabRow): string[] {
     {/if}
   {/each}
   {#if !flat.length}
-    <div class="px-4 py-3 text-xs text-[var(--pd-content-sub-header)]">No rows match the column filters.</div>
+    <div class="px-4 py-3 text-xs text-[var(--pd-table-body-text)]">No rows match the column filters.</div>
   {/if}
 </div>
 
@@ -380,7 +390,7 @@ function subOf(r: LabRow): string[] {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--pd-table-header-text, var(--pd-content-sub-header));
+  color: var(--pd-table-header-text, var(--pd-table-body-text));
 }
 .grid-v .head {
   height: 24px;
@@ -495,7 +505,7 @@ function subOf(r: LabRow): string[] {
   font-weight: 600;
 }
 .muted {
-  color: var(--pd-content-sub-header);
+  color: var(--pd-table-body-text);
   font-size: 12px;
 }
 .kind {
@@ -520,7 +530,7 @@ function subOf(r: LabRow): string[] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--pd-content-sub-header);
+  color: var(--pd-table-body-text);
 }
 .num {
   text-align: right;
@@ -538,6 +548,25 @@ function subOf(r: LabRow): string[] {
 }
 .dot.degraded {
   background: var(--pd-status-degraded);
+}
+.dot.sev-critical {
+  background: var(--pd-status-dead);
+}
+.dot.sev-high {
+  background: var(--pd-status-degraded);
+}
+.dot.sev-medium {
+  background: var(--pd-status-starting);
+}
+.dot.sev-low {
+  background: var(--pd-status-stopped);
+}
+.dot.sev-negligible {
+  background: transparent;
+  border: 1.5px solid var(--pd-status-stopped);
+}
+.cb input:disabled {
+  visibility: hidden;
 }
 .dot.created {
   background: transparent;
@@ -625,7 +654,7 @@ function subOf(r: LabRow): string[] {
   padding-right: 6px;
   font-size: 10.5px;
   font-variant-numeric: tabular-nums;
-  color: var(--pd-content-sub-header);
+  color: var(--pd-table-body-text);
   background: var(--pd-content-card-bg, transparent);
   width: 100%;
 }
@@ -642,7 +671,7 @@ function subOf(r: LabRow): string[] {
   outline: none;
 }
 .fin::placeholder {
-  color: var(--pd-content-sub-header);
+  color: var(--pd-table-body-text);
   opacity: 0.6;
 }
 .fin:focus {

@@ -118,7 +118,7 @@ function kubeYaml(): string[] {
 </script>
 
 {#snippet row(k: string, v: string | number | undefined)}
-  <tr><td class="pt-1.5 pr-6 w-40 align-top whitespace-nowrap text-[var(--pd-content-sub-header)]">{k}</td><td class="pt-1.5 wrap-anywhere text-[var(--pd-details-card-text)]">{v ?? '—'}</td></tr>
+  <tr><td class="pt-1.5 pr-6 w-40 align-top whitespace-nowrap text-[var(--pd-table-body-text)]">{k}</td><td class="pt-1.5 wrap-anywhere text-[var(--pd-details-card-text)]">{v ?? '—'}</td></tr>
 {/snippet}
 
 {#snippet card(title: string, body: import('svelte').Snippet)}
@@ -131,7 +131,7 @@ function kubeYaml(): string[] {
 {#snippet resRow(r: LabResource, detail: string)}
   <button type="button" class="w-full flex items-center gap-2 h-8 px-1 text-left rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => openRes(r)}>
     <span class="w-2 h-2 rounded-full shrink-0 {STATUS_DOT[resStatus(r)] ?? STATUS_DOT.running}"></span>
-    <span class="truncate text-[var(--pd-link)]">{r.name}</span><span class="text-xs text-[var(--pd-content-sub-header)] truncate">{detail}</span>
+    <span class="truncate text-[var(--pd-table-body-text-highlight)]">{r.name}</span><span class="text-xs text-[var(--pd-table-body-text)] truncate">{detail}</span>
   </button>
 {/snippet}
 
@@ -185,7 +185,7 @@ function kubeYaml(): string[] {
     status={deleted ? 'deleted' : st}
     connId={c.id}
     onconn={(): void => onopen({ kind: 'connection', connId: c.id }, {})}
-    sub={s.ext ? `${s.label} · ${s.ext.name}` : undefined}
+    provenance={s.ext?.name}
     {views}
     {view}
     onview={(v): void => {
@@ -233,7 +233,7 @@ function kubeYaml(): string[] {
               {@render row('Name', res.name)}
               {@render row('ID', `${(h * 2654435761).toString(16)}${(h * 97).toString(16)}`.padEnd(64, '0').slice(0, 64))}
               {@render row('Engine', `${c.product} · ${c.name}`)}
-              <tr><td class="pt-1.5 pr-6 text-[var(--pd-content-sub-header)]">Image</td><td class="pt-1.5">{#if image}<button type="button" class="text-[var(--pd-link)] hover:underline" onclick={(): void => openRes(image)}>{ci.image}</button>{:else}{ci.image}{/if}</td></tr>
+              <tr><td class="pt-1.5 pr-6 text-[var(--pd-table-body-text)]">Image</td><td class="pt-1.5">{#if image}<button type="button" class="hover:text-[var(--pd-link)] hover:underline" onclick={(): void => openRes(image)}>{ci.image}</button>{:else}{ci.image}{/if}</td></tr>
               {@render row('Command', ci.command)}
               {@render row('Created', `${res.age} ago`)}
               {@render row('Started', up ? `${res.age} ago` : '—')}
@@ -243,7 +243,7 @@ function kubeYaml(): string[] {
           {/snippet}
           {#snippet net()}
             <table class="w-full"><tbody>
-              <tr><td class="pt-1.5 pr-6 w-40 text-[var(--pd-content-sub-header)]">Ports</td><td class="pt-1.5">{#each ci.ports as p, i (p)}{#if i > 0}, {/if}<a class="text-[var(--pd-link)] hover:underline" href="http://localhost:{p}" target="_blank" rel="noreferrer">{p}</a> → 8080/tcp{:else}<span class="opacity-60">none</span>{/each}</td></tr>
+              <tr><td class="pt-1.5 pr-6 w-40 text-[var(--pd-table-body-text)]">Ports</td><td class="pt-1.5">{#each ci.ports as p, i (p)}{#if i > 0}, {/if}<a class="hover:text-[var(--pd-link)] hover:underline" href="http://localhost:{p}" target="_blank" rel="noreferrer">{p}</a> → 8080/tcp{:else}<span class="opacity-60">none</span>{/each}</td></tr>
               {@render row('Networks', ci.networks.join(', '))}
               {@render row('Mounts', ci.mounts.join(', '))}
               {@render row('CPU', up ? `${ci.cpu.at(-1)}%` : '0%')}
@@ -275,7 +275,7 @@ function kubeYaml(): string[] {
             </tbody></table>
           {/snippet}
           {#snippet usedBy()}
-            {#each im.usedBy as u (u.id)}{@render resRow(u, resStatus(u))}{:else}<div class="text-[var(--pd-content-sub-header)]">Not used by any container.</div>{/each}
+            {#each im.usedBy as u (u.id)}{@render resRow(u, resStatus(u))}{:else}<div class="text-[var(--pd-table-body-text)]">Not used by any container.</div>{/each}
           {/snippet}
           {@render card('Details', details)}
           {@render card(`Used by (${im.usedBy.length})`, usedBy)}
@@ -293,7 +293,7 @@ function kubeYaml(): string[] {
           {/snippet}
           {#snippet ctrs()}
             {#each names as n (n)}
-              <div class="flex items-center gap-2 h-8"><span class="w-2 h-2 rounded-full {up ? STATUS_DOT.running : STATUS_DOT.exited}"></span>{n}<span class="text-xs text-[var(--pd-content-sub-header)]">{n.endsWith('infra') ? 'localhost/podman-pause:5.6' : `quay.io/acme/${res.name}:1.0`}</span></div>
+              <div class="flex items-center gap-2 h-8"><span class="w-2 h-2 rounded-full {up ? STATUS_DOT.running : STATUS_DOT.exited}"></span>{n}<span class="text-xs text-[var(--pd-table-body-text)]">{n.endsWith('infra') ? 'localhost/podman-pause:5.6' : `quay.io/acme/${res.name}:1.0`}</span></div>
             {/each}
           {/snippet}
           {@render card('Details', details)}
@@ -318,7 +318,7 @@ function kubeYaml(): string[] {
           {@render card('Details', details)}
           {#if s.id === 'deployments'}
             {@const pods = relatedPods(res)}
-            {#snippet podList()}{#each pods as p (p.id)}{@render resRow(p, p.sub)}{:else}<div class="text-[var(--pd-content-sub-header)]">No pods.</div>{/each}{/snippet}
+            {#snippet podList()}{#each pods as p (p.id)}{@render resRow(p, p.sub)}{:else}<div class="text-[var(--pd-table-body-text)]">No pods.</div>{/each}{/snippet}
             {@render card(`Pods (${pods.length})`, podList)}
           {/if}
           {@render card('Conditions', conds)}
@@ -333,7 +333,7 @@ function kubeYaml(): string[] {
               {@render row('Info', res.sub)}
               {#if res.group}{@render row('Group', res.group)}{/if}
             </tbody></table>
-            {#if s.ext}<div class="flex items-center gap-1.5 pt-2 text-xs text-[var(--pd-content-sub-header)]"><AppIcon icon={s.ext.icon} size="12px" />Provided by {ext(s.ext.id)?.name ?? s.ext.name}</div>{/if}
+            {#if s.ext}<div class="flex items-center gap-1.5 pt-2 text-xs text-[var(--pd-table-body-text)]"><AppIcon icon={s.ext.icon} size="12px" />Provided by {ext(s.ext.id)?.name ?? s.ext.name}</div>{/if}
           {/snippet}
           {@render card('Details', details)}
         {/if}

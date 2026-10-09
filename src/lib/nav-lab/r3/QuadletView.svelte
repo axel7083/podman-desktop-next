@@ -41,7 +41,7 @@ function journal(): void {
 {/snippet}
 
 {#snippet row(k: string, v: string)}
-  <tr><td class="pt-1.5 pr-6 w-44 align-top text-[var(--pd-content-sub-header)]">{k}</td><td class="pt-1.5 wrap-anywhere">{v}</td></tr>
+  <tr><td class="pt-1.5 pr-6 w-44 align-top text-[var(--pd-table-body-text)]">{k}</td><td class="pt-1.5 wrap-anywhere">{v}</td></tr>
 {/snippet}
 
 <div data-testid="quadlet-view" class="flex flex-col h-full min-h-0">
@@ -52,6 +52,7 @@ function journal(): void {
     connId={f.connId}
     onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})}
     sub={svc}
+    provenance="Podman Quadlet"
     views={[['summary', 'Summary'], ['source', 'Source'], ['status', 'systemctl status']]}
     {view}
     onview={(v): void => {
@@ -59,7 +60,7 @@ function journal(): void {
     }}
     {actions} />
   {#if view === 'source'}
-    <div class="flex items-center gap-2 h-8 px-4 shrink-0 text-xs text-[var(--pd-content-sub-header)] border-b border-[var(--pd-content-divider)]">
+    <div class="flex items-center gap-2 h-8 px-4 shrink-0 text-xs text-[var(--pd-table-body-text)] border-b border-[var(--pd-content-divider)]">
       <span class="font-mono">{n.data?.path}</span><span class="opacity-60">· podman-systemd.unit(5)</span>
     </div>
     <CodeView lines={quadletIni(n.label)} lang="ini" numbered testid="quadlet-source" />

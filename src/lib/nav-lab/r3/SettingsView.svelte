@@ -39,7 +39,7 @@ const TOOLS: [string, string, string, string, string, string?][] = [
                 <div class="text-xs text-[var(--pd-content-card-text)] opacity-80">Registered by {by}</div>
                 <div class="flex items-center gap-3">
                   <span class="px-2 py-1 rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)] font-mono text-xs">{name.toLowerCase()} {ver}</span>
-                  {#if update}<button type="button" class="text-[var(--pd-link)] hover:underline text-xs">Update available ({update})</button>{/if}
+                  {#if update}<button type="button" class="hover:text-[var(--pd-link)] hover:underline text-xs">Update available ({update})</button>{/if}
                 </div>
               </div>
             </div>
@@ -50,7 +50,7 @@ const TOOLS: [string, string, string, string, string, string?][] = [
           <div class="text-lg font-semibold text-[var(--pd-details-empty-header)]">No authentication providers</div>
           <div class="pt-1 text-[var(--pd-details-empty-sub-header)]">Install an extension to sign in to Red Hat, GitHub or a cloud provider.</div>
         </div>
-        <ExtCards ids={['sandbox', 'openshift-local', 'rhel', 'aap']} />
+        <ExtCards ids={['rhel', 'aap']} />
       {:else}
         <div class="flex flex-col gap-2 max-w-3xl">
           <div class="text-base font-semibold text-[var(--pd-content-header)] pb-2">{page}</div>

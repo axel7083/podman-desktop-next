@@ -46,6 +46,6 @@ let build = $state(false);
         <Button icon={faPlay} onclick={(): void => lab.openCreate('Play custom YAML')}>Play custom YAML</Button>
       </div>
     </div>
-    <div class="flex items-center gap-2 pt-3 text-xs text-[var(--pd-content-sub-header)]"><AppIcon icon="icons/podman-desktop.podman.png" size="12px" />Runs `podman kube play` on this connection.</div>
+    <div class="flex items-center gap-2 pt-3 text-xs text-[var(--pd-table-body-text)]"><AppIcon icon="icons/podman-desktop.podman.png" size="12px" />Runs `podman kube play` on this connection.</div>
   </div>
 </div>

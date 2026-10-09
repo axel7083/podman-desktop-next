@@ -13,7 +13,7 @@ const catalog = $derived(EXTENSIONS.filter(e => !isInstalled(e.id) && match(e.na
 </script>
 
 <div class="flex flex-col h-full min-h-0">
-  <Head icon={faPuzzlePiece} title="Extensions" sub="{installed.length} installed · {catalog.length} in the catalog" bind:search />
+  <Head icon={faPuzzlePiece} title="Extensions" sub="{installed.length} installed · {catalog.length} in the catalog" placeholder="Filter extensions" bind:search />
   <div class="flex-1 min-h-0 overflow-auto p-5 flex flex-col gap-4 text-[13px]">
     {#if catalog.length}<ExtCards ids={catalog.map(e => e.id)} title="Available extensions" />{/if}
     <ExtCards ids={installed.map(e => e.id)} title="Installed" />

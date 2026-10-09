@@ -4,18 +4,35 @@
  * clicking a node opens it in a tab (`{ kind: 'node', nodeId }`).
  */
 import {
-  faBolt,
+  faBook,
   faBoxArchive,
+  faCircleInfo,
   faClockRotateLeft,
   faComments,
   faCube,
+  faFileCode,
   faFileLines,
+  faHardDrive,
   faMessage,
-  faRobot,
   faServer,
+  faWrench,
 } from '@fortawesome/free-solid-svg-icons';
+import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
 import type { IconRef } from '#lib/ext/types.ts';
+import ImageIcon from '#lib/images/ImageIcon.svelte';
+import NetworkIcon from '#lib/images/NetworkIcon.svelte';
+import PodIcon from '#lib/images/PodIcon.svelte';
+import VolumeIcon from '#lib/images/VolumeIcon.svelte';
+
+/**
+ * Icon rule: an extension root uses the extension logo; every child uses a
+ * semantic icon (the core resource icon when it is one: Images, Pods…).
+ * Every dashboard / overview, in the tree and in tabs, uses `OVERVIEW_ICON`.
+ */
+export const OVERVIEW_ICON: IconRef = faCircleInfo;
+
+const overview = (detail = ''): Raw => ({ label: 'Overview', icon: OVERVIEW_ICON, detail });
 
 export interface TreeNode {
   id: string;
@@ -53,18 +70,20 @@ const MCP_SERVERS: [string, string[], string[], string[]][] = [
   ['postgres', ['query', 'list_tables'], ['postgres://orders-db/orders'], ['explain-query']],
 ];
 
-const mcp = (): Raw[] =>
-  MCP_SERVERS.map(([name, tools, resources, prompts], i) => ({
+const mcp = (): Raw[] => [
+  overview(),
+  ...MCP_SERVERS.map(([name, tools, resources, prompts], i) => ({
     label: name,
     icon: faServer,
     status: i === 3 ? 'stopped' : 'running',
     detail: `${tools.length} tools`,
     children: [
-      { label: 'Tools', icon: faBolt, detail: String(tools.length), children: tools.map(t => ({ label: t, icon: faBolt })) },
+      { label: 'Tools', icon: faWrench, detail: String(tools.length), children: tools.map(t => ({ label: t, icon: faWrench })) },
       { label: 'Resources', icon: faFileLines, detail: String(resources.length), children: resources.map(r => ({ label: r, icon: faFileLines })) },
       { label: 'Prompts', icon: faMessage, detail: String(prompts.length), children: prompts.map(p => ({ label: p, icon: faMessage })) },
     ],
-  }));
+  })),
+];
 
 const HELM: [string, string, number][] = [
   ['kafka-ui', 'kafka-ui-0.7.6', 3],
@@ -103,16 +122,19 @@ export function quadletService(file: string): string {
   return type === 'container' || type === 'kube' ? `${base}.service` : `${base}-${type}.service`;
 }
 
+const QUADLET_ICON: Record<string, IconRef> = { container: ContainerIcon, pod: PodIcon, kube: faFileCode, volume: VolumeIcon, network: NetworkIcon, image: ImageIcon };
+
 const quadlets = (): Raw[] =>
   QUADLETS.map(([name, status]) => ({
     label: name,
-    icon: 'icons/podman-desktop.quadlet.png',
+    icon: QUADLET_ICON[name.split('.')[1]] ?? faFileCode,
     status,
     detail: quadletService(name),
     data: { type: `.${name.split('.')[1]}`, service: quadletService(name), path: `~/.config/containers/systemd/${name}` },
   }));
 
 const aiLab = (): Raw[] => [
+  overview(),
   {
     label: 'Models',
     icon: faCube,
@@ -125,11 +147,11 @@ const aiLab = (): Raw[] => [
   },
   {
     label: 'Services',
-    icon: faRobot,
+    icon: faServer,
     detail: '2',
     children: [
-      { label: 'granite inference', icon: faRobot, status: 'running', detail: ':35000' },
-      { label: 'whisper inference', icon: faRobot, status: 'stopped', detail: ':35001' },
+      { label: 'granite inference', icon: faServer, status: 'running', detail: ':35000' },
+      { label: 'whisper inference', icon: faServer, status: 'stopped', detail: ':35001' },
     ],
   },
   {
@@ -144,10 +166,10 @@ const aiLab = (): Raw[] => [
 ];
 
 const bootc = (): Raw[] => [
-  { label: 'Dashboard', icon: 'icons/redhat.bootc.png', detail: '' },
-  { label: 'Images', icon: 'icons/redhat.bootc.png', detail: '3' },
-  { label: 'Disk Images', icon: 'icons/redhat.bootc.png', detail: '2' },
-  { label: 'Examples', icon: 'icons/redhat.bootc.png', detail: '6' },
+  overview(),
+  { label: 'Images', icon: ImageIcon, detail: '3' },
+  { label: 'Disk Images', icon: faHardDrive, detail: '2' },
+  { label: 'Examples', icon: faBook, detail: '6' },
 ];
 
 export const TREE_PROVIDERS: TreeProvider[] = [
@@ -173,7 +195,7 @@ export function treeRoot(p: TreeProvider, connId: string): TreeNode {
   let root = cache.get(key);
   if (!root) {
     const children = withIds(key, p.build(connId));
-    root = { id: key, label: p.label, icon: p.icon, detail: String(children.length), children };
+    root = { id: key, label: p.label, icon: p.icon, detail: String(children.filter(x => x.label !== 'Overview').length), children };
     cache.set(key, root);
   }
   return root;

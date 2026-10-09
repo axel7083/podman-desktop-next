@@ -80,7 +80,7 @@ const rows = $derived(
 {/snippet}
 
 <div data-testid="quadlet-list" class="flex flex-col h-full min-h-0">
-  <Head icon={f.provider.icon} title="Quadlets" connId={f.connId} onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})} sub="Podman Quadlet" bind:search {actions} filters={modern ? seg : undefined} />
+  <Head icon={f.provider.icon} title="Quadlets" connId={f.connId} onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})} provenance="Podman Quadlet" bind:search {actions} filters={modern ? seg : undefined} />
   {#if !modern}
   <div class="flex items-center gap-1 px-4 pt-2 shrink-0 border-b border-[var(--pd-content-divider)]">
     {#each TABS as [id, label] (id)}

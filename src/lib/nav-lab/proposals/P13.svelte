@@ -5,12 +5,16 @@
  * search inline), PD tables for lists (Quadlets included), PD details tabs,
  * logs / terminals / TTY as side-by-side panes in the bottom panel, Grype scan
  * tabs, Ctrl+F inside code views. One left panel: the connection switcher, a
- * filter, then the selected connection as a tree (resource types ▸ resources,
- * contributed sections with their extension logo, extension sub-trees) and its
- * Extensions pages. Right-click a tree item for its actions. Lab toggle
+ * filter, then the selected connection as a tree. Placement rule: core
+ * resources first (Overview, Containers, Pods, Images, Volumes, Networks / the
+ * Kubernetes kinds), then an EXTENSIONS sub-header holding every extension
+ * contribution, one entry per extension with its logo (Compose included):
+ * extensions with resources on this connection first, then extension tool
+ * pages. Extension sub-tree children use semantic icons; every overview uses
+ * the Overview icon. Right-click a tree item for its actions. Lab toggle
  * "Install: Vanilla | All extensions" switches what is installed.
  */
-import { faChevronDown, faChevronRight, faCircleInfo, faEllipsisVertical, faMagnifyingGlass, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronRight, faEllipsisVertical, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import { untrack } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -20,6 +24,7 @@ import {
   conn as findConn,
   FEW_TABS,
   type LabResource,
+  type LabSection,
   type LabTarget,
   MANY_TABS,
   PANEL_SESSIONS,
@@ -37,6 +42,7 @@ import { extPagesFor, labConns } from '../r2/simple.ts';
 import TitleActions from '../r2/TitleActions.svelte';
 import ConnView from '../r3/ConnView.svelte';
 import ExtensionsView from '../r3/ExtensionsView.svelte';
+import FilterInput from '../r3/FilterInput.svelte';
 import { connVisible, isInstalled, sectionVisible, toolVisible } from '../r3/exts.ts';
 import HomeDashboard from '../r3/HomeDashboard.svelte';
 import KubePlayView from '../r3/KubePlayView.svelte';
@@ -45,7 +51,7 @@ import ScanView from '../r3/ScanView.svelte';
 import SettingsView from '../r3/SettingsView.svelte';
 import { connActions, isUp, live, type MenuItem, openMenu, resActions, resStatus } from '../r3/live.svelte.ts';
 import NodeView from '../r3/NodeView.svelte';
-import { TREE_PROVIDERS, type TreeNode, treeRoot } from '../r3/trees.ts';
+import { OVERVIEW_ICON, TREE_PROVIDERS, type TreeNode, treeRoot } from '../r3/trees.ts';
 import BottomPanel from '../ui/BottomPanel.svelte';
 import Content from '../ui/Content.svelte';
 import TabStrip from '../ui/TabStrip.svelte';
@@ -88,7 +94,14 @@ const f = $derived(filter.trim().toLowerCase());
 const open1 = $derived(c ? (expanded[c.id] ?? []) : []);
 const trees = $derived(c ? TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) && isInstalled(p.extId)) : []);
 const sections = $derived(c ? c.sections.filter(s => sectionVisible(s) && !trees.some(p => p.replaces.includes(s.id))) : []);
-const pages = $derived(extPagesFor(c).filter(t => !trees.some(p => p.extId === t.id) && (!f || t.name.toLowerCase().includes(f))));
+/** Core resources (no extension) first; extension-contributed sections go under EXTENSIONS. */
+const coreSections = $derived(sections.filter(s => !s.ext));
+const extSections = $derived(sections.filter(s => !!s.ext));
+const extS = $derived(extSections.filter(s => !f || rows(s.id).length > 0));
+const extT = $derived(c ? trees.filter(p => !f || nodeMatches(treeRoot(p, c.id))) : []);
+const pages = $derived(
+  extPagesFor(c).filter(t => !trees.some(p => p.extId === t.id) && !extSections.some(s => s.ext?.id === t.id) && (!f || t.name.toLowerCase().includes(f))),
+);
 const activeKind = $derived(wb.activeTarget?.kind);
 const sessions = $derived.by(() => {
   void lab.install;
@@ -218,6 +231,17 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
   {/if}
 {/snippet}
 
+{#snippet sectionRows(s: LabSection)}
+  {@const list = rows(s.id)}
+  {@const sOpen = open1.includes(s.id) || !!f}
+  {@render row(0, s.label, { key: s.id, chevron: list.length > 0, open: sOpen, target: { kind: 'list', connId: c!.id, sectionId: s.id }, icon: s.ext?.icon ?? s.icon, count: f ? list.length : s.count - live.deleted.filter(id => id.startsWith(`${c!.id}/${s.id}/`)).length })}
+  {#if sOpen}
+    {#each list.slice(0, 40) as r (r.id)}
+      {@render row(1, r.name, { target: { kind: 'resource', connId: c!.id, sectionId: s.id, resId: r.id }, status: resStatus(r), dim: r.group })}
+    {/each}
+  {/if}
+{/snippet}
+
 {#snippet titleLeft()}<TitleActions side="left" dashboard={false} active={activeKind} onopen={(t): void => open(t)} />{/snippet}
 {#snippet titleRight()}<TitleActions side="right" active={activeKind} onopen={(t): void => open(t)} />{/snippet}
 
@@ -228,29 +252,21 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
         <SimpleSwitcher selected={c.id} onselect={select} onmanage={(): void => open({ kind: 'settings' })} />
       </div>
       <div class="px-2 pb-2 shrink-0">
-        <label class="flex items-center gap-2 h-7 px-2 rounded-md border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-bg)] text-[var(--pd-input-field-icon)]">
-          <AppIcon icon={faMagnifyingGlass} size="xs" />
-          <input class="flex-1 min-w-0 bg-transparent outline-none text-[var(--pd-input-field-focused-text)] placeholder:text-[var(--pd-input-field-placeholder-text)]" placeholder="Filter {c.name}" bind:value={filter} />
-        </label>
+        <FilterInput testid="tree-filter" placeholder="Filter {c.name}" bind:value={filter} />
       </div>
       <div role="tree" aria-label="{c.name} resources" data-testid="p13-tree" class="flex-1 min-h-0 overflow-auto pb-2 text-base">
-        {#if !f}{@render row(0, 'Overview', { target: { kind: 'connection', connId: c.id }, icon: faCircleInfo })}{/if}
-        {#each sections.filter(s => !f || rows(s.id).length > 0) as s (s.id)}
-          {@const list = rows(s.id)}
-          {@const sOpen = open1.includes(s.id) || !!f}
-          {@render row(0, s.label, { key: s.id, chevron: list.length > 0, open: sOpen, target: { kind: 'list', connId: c.id, sectionId: s.id }, icon: s.ext?.icon ?? s.icon, count: f ? list.length : s.count - live.deleted.filter(id => id.startsWith(`${c.id}/${s.id}/`)).length })}
-          {#if sOpen}
-            {#each list.slice(0, 40) as r (r.id)}
-              {@render row(1, r.name, { target: { kind: 'resource', connId: c.id, sectionId: s.id, resId: r.id }, status: resStatus(r), dim: r.group })}
-            {/each}
-          {/if}
+        {#if !f}{@render row(0, 'Overview', { target: { kind: 'connection', connId: c.id }, icon: OVERVIEW_ICON })}{/if}
+        {#each coreSections.filter(s => !f || rows(s.id).length > 0) as s (s.id)}
+          {@render sectionRows(s)}
         {/each}
-        {#each trees as p (p.id)}
-          {@const root = treeRoot(p, c.id)}
-          {#if !f || nodeMatches(root)}{@render nodeRows(root, 0)}{/if}
-        {/each}
-        {#if pages.length}
-          <div class="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Extensions</div>
+        {#if extS.length || extT.length || pages.length}
+          <div data-testid="tree-extensions" class="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Extensions</div>
+          {#each extS as s (s.id)}
+            {@render sectionRows(s)}
+          {/each}
+          {#each extT as p (p.id)}
+            {@render nodeRows(treeRoot(p, c.id), 0)}
+          {/each}
           {#each pages as t (t.id)}
             {@render row(0, t.name, { target: { kind: 'tool', toolId: t.id }, icon: t.icon })}
           {/each}
