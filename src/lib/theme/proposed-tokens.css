@@ -25,6 +25,10 @@
   --pd-severity-high-text: #1c1917;
   --pd-severity-medium-bg: #fbbf24;
   --pd-severity-medium-text: #1c1917;
+  /* one tab style: Button type="tab" strips (NavPage, palette) match DetailsPage tabs –
+     neutral unselected text, highlight text + accent underline when selected (overrides) */
+  --pd-button-tab-text: var(--pd-tab-text);
+  --pd-button-tab-text-selected: var(--pd-tab-text-highlight);
 }
 .light {
   --pd-nav-group-header: #5c5c5c;
@@ -46,4 +50,8 @@
   --pd-severity-high-text: #1c1917;
   --pd-severity-medium-bg: #fbbf24;
   --pd-severity-medium-text: #1c1917;
+  /* one tab style: Button type="tab" strips (NavPage, palette) match DetailsPage tabs –
+     neutral unselected text, highlight text + accent underline when selected (overrides) */
+  --pd-button-tab-text: var(--pd-tab-text);
+  --pd-button-tab-text-selected: var(--pd-tab-text-highlight);
 }

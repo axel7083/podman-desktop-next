@@ -20,6 +20,7 @@ Binding rules for every screen. Source: mockup plan §5, PD renderer markup and
 | `--pd-nav-hint-bg` / `--pd-nav-hint-text` | `#36363d` / `#d4d4d8` | `#e4e4e4` / `#222222` | Hint chips (WSL, context, OCM) (proposed) |
 | `--pd-contribution-badge-bg` | `#27272a` | `#ffffff` | Extension badge backdrop (proposed) |
 | `--pd-severity-{critical,high,medium}-{bg,text}` | `#b91c1c`/white · `#f97316`/`#1c1917` · `#fbbf24`/`#1c1917` | same | One severity ramp for checker pills; low/info use `--pd-label-*` (proposed) |
+| `--pd-button-tab-text` / `-selected` | `var(--pd-tab-text)` / `var(--pd-tab-text-highlight)` | same | Override: every tab strip uses neutral unselected text, accent only on the underline |
 | `--pd-code-block-*`, `--pd-content-card-inset-surface` | see proposed-tokens.css | see proposed-tokens.css | Code/log and inset surfaces with light-theme contrast (proposed) |
 | `--pdn-mockup-bg` / `--pdn-mockup-text` | lime / near-black | same | Mockup pill (not product) |
 | `--pdn-inspect-outline` | lime | dark lime | Inspect overlay (not product) |

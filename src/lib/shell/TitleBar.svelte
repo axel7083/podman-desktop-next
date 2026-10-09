@@ -79,7 +79,7 @@ const controls = [
             onclick={noop}
             title={control.name}
             aria-label={control.name}
-            class="h-[25px] w-[25px] cursor-pointer text-[var(--pd-titlebar-text)] hover:rounded-full hover:bg-[var(--pd-titlebar-hover-bg)] flex place-items-center justify-center">
+            class="h-[25px] w-[25px] cursor-pointer text-[color:var(--pd-global-nav-icon)] hover:rounded-full hover:bg-[var(--pd-titlebar-hover-bg)] flex place-items-center justify-center">
             <Icon size="0.875x" icon={control.icon} />
           </button>
         {/each}

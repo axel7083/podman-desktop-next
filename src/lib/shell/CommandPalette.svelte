@@ -49,6 +49,14 @@ let query = $state('');
 let tab = $state<Category | 'all'>('all');
 let selected = $state(0);
 let input = $state<HTMLInputElement>();
+/** Width of the title-bar search field: the palette input replaces it exactly (Scaling rule 11). */
+let fieldWidth = $state(340);
+
+$effect(() => {
+  if (!ui.paletteOpen) return;
+  const field = document.getElementById('Search button');
+  if (field) fieldWidth = Math.round(field.getBoundingClientRect().width);
+});
 
 const items: PaletteItem[] = $derived.by(() => {
   const out: PaletteItem[] = [];
@@ -203,10 +211,10 @@ function onWindowKeydown(e: KeyboardEvent): void {
     the top, centred in the window): the palette input sits exactly over that field,
     replacing it in place, and the results open below it.
   -->
-  <div class="fixed inset-x-0 top-[6px] z-50 pointer-events-none" role="dialog" aria-label="Command palette">
+  <div class="fixed inset-x-0 top-[5px] z-50 pointer-events-none" role="dialog" aria-label="Command palette">
     <div class="flex justify-center items-start">
-      <div class="pointer-events-auto bg-[var(--pd-content-card-bg)] w-[700px] max-w-[calc(100vw-24px)] max-h-fit shadow-lg px-2 pb-2 rounded-md shadow-[var(--pd-input-field-stroke)] text-base">
-        <div class="w-full h-[26px] flex flex-row gap-2 items-center px-3 border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-focused-bg)] rounded-md">
+      <div class="pointer-events-auto bg-[var(--pd-content-card-bg)] w-[700px] max-w-[calc(100vw-24px)] max-h-fit shadow-lg px-2 pb-2 rounded-md border border-[var(--pd-modal-border)] text-base">
+        <div style:width="{fieldWidth}px" class="mx-auto max-w-full h-[26px] flex flex-row gap-2 items-center px-3 border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-focused-bg)] rounded-md">
           <Icon icon={faMagnifyingGlass} class="text-[var(--pd-input-field-placeholder-text)]" />
           <input
             bind:this={input}
