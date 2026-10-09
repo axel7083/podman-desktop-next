@@ -59,3 +59,8 @@ type keeps a slot).
 - Screens are reviewed at 1440×900 (plus containers at 1280×800); smaller windows
   are untested.
 - No keyboard-only or screen-reader pass beyond labels and landmarks.
+- Minor polish left open by `loop/reviews/everything-4.md` (all axes 4): palette Tools
+  row cut by the footer, detached split chevron in Settings › Resources, white "All"
+  status pill on Extensions (dark), ocp-dev login progress shown in four places,
+  Console/Endpoint not links and raw extension ids in Details, no sort carets on
+  table headers, three stacked surfaces on the welcome page.
