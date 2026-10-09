@@ -25,16 +25,16 @@ Legend for **In P13**:
 | RHEL VMs | yes | yes | Connection type (VMs & services) |
 | Grype | no | yes | Image / container ⋮ "Scan vulnerabilities" → Scan tab; image Check card |
 | Layers explorer | no | yes | Image details view "Layers" |
-| Kubernetes dashboard | no | partial (entry, promo and menu only) | Kubernetes connection views: Workloads / Events / Metrics (tree EXTENSIONS or Overview cards) |
+| Kubernetes dashboard | no | **yes** (v3 r2: Overview dashboard, grouped kinds) | Kubernetes connection views: Workloads / Events / Metrics (tree EXTENSIONS or Overview cards) |
 | Kreate | no | tool | Kubernetes resource ⋮ "Create from…", tool page with YAML templates; Kubernetes connection promo |
-| RHEL Lightspeed | yes | tool | Bottom panel tool window (chat), "Ask Lightspeed" on errors / logs; RHEL connection promo |
-| Image checker for OpenShift | yes (`openshift-checker`) | partial (Check section always shown) | Image Check view checker section (installed only); Vanilla: Check promo |
+| RHEL Lightspeed | yes | **yes** (v3 r2: bottom-panel chat) | Bottom panel tool window (chat), "Ask Lightspeed" on errors / logs; RHEL connection promo |
+| Image checker for OpenShift | yes (`openshift-checker`) | **yes** (v3 r2: Check view, push gates) | Image Check view checker section (installed only); Vanilla: Check promo |
 | Red Hat extension pack | no | tool (as "Services catalog" icon) | Extensions catalog pack card (installs its members) |
 | Kubernetes contexts | yes (`kube-context`) | no | Settings › Kubernetes (contexts table) + connection switcher actions (rename, set current, delete) |
 | Minikube | no | no | Connection type (Kubernetes) + create connection; Kubernetes promo |
 | Lima | no | no | Connection type (Engines / Kubernetes, macOS) + create connection |
 | PostgreSQL | yes | no | Connection type (VMs & services) with Databases / Roles; Podman promo |
-| Red Hat authentication (SSO) | yes | no | Accounts (sign in), status bar account; gates RHEL / sandbox / registries |
+| Red Hat authentication (SSO) | yes | **yes** (v3 r2: Accounts, registries, keys) | Accounts (sign in), status bar account; gates RHEL / sandbox / registries |
 | GitHub account | no | no | Accounts (sign in); MCP github server, ghcr.io registry credentials |
 | IBM Cloud account | no | no | Accounts (sign in); IBM Cloud registry / clusters as connections |
 | Skills (agent skills) | no | no | Tree EXTENSIONS next to MCP (skills per agent) or tool page; AI promo |
@@ -75,6 +75,35 @@ Present in both with real surfaces: podman, docker, compose, kind, kubectl-cli, 
 helm, openshift-local, sandbox, minc, apple-container, wslc, rhel-registration, rhel-vms,
 lightspeed-insights, pipelines-gitops, openshift-virtualization, olm, service-interconnect,
 openshift-ai, streams-kafka, keycloak, aap, hummingbird.
+
+## Done in v3 round 2
+
+Click paths: [p13-red-hat-flows.md](p13-red-hat-flows.md).
+
+- **No generic placeholder page left**: every extension tool page renders its own
+  collection (`r3/tool-cfg.ts`: MTA analyses, Image Builder blueprints, Konflux components,
+  Quay repositories, TAS signatures, TPA SBOMs, Conforma policies, Cryostat targets, Edge
+  Manager devices, Satellite hosts, Helm charts, Kreate templates, Dev containers, Ansible,
+  Kaoto, Developer Hub, Services catalog, Apicurio, Debezium, AI Lab, MCP, Lightspeed, AI
+  Inference Server, ModelCar, MaaS, Grype); the bootc tool page is the bootc extension.
+- **Bootable containers**: Overview (get started, resources), bootc Images (base, version,
+  size, lint), Disk images (status, Boot in RHEL VM, Run on OpenShift Virtualization,
+  Download), Examples (PD examples + RHEL presets, arch, More details, Pull image), Build disk
+  image modal → task → Disk images.
+- **Kubernetes**: PD Kubernetes extension structure (Overview dashboard, Nodes, Compute /
+  Config / Network / Storage / Access Control folders, Namespaces), realistic data per kind,
+  details Summary / YAML / Events, namespace multi-select remembered per cluster.
+- New `EXTENSIONS` with real surfaces: **Red Hat Authentication**, **RHEL Lightspeed**,
+  **Image checker for OpenShift**, **Quay**, **Trusted Artifact Signer**, **AI Inference
+  Server**, **ModelCar**, **Image Builder**; existing ones gain flows: RHEL (RHEL Podman
+  machine wizard), RHEL VMs (boot a bootc disk), OpenShift Virtualization (VMs on minc /
+  OpenShift Local), OpenShift AI (InferenceService), OpenShift Console add-on, Operators
+  (OLM catalog), Developer Sandbox (deploy target).
+- Every Red Hat extension has product / docs / repository links (`r3/ext-links.ts`) in a
+  Resources card and on the Extensions page.
+
+Still missing: Kubernetes contexts, Minikube, Lima, PostgreSQL, GitHub / IBM Cloud accounts,
+Skills, the Red Hat extension pack card, the v1-only checkers of section B.
 
 ## Priority
 
