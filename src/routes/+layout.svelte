@@ -42,6 +42,10 @@ $effect(() => {
 });
 </script>
 
+{#if path.startsWith('/nav-lab')}
+  <!-- Nav lab (throwaway): full viewport, outside the shell -->
+  {@render children()}
+{:else}
 <main class="flex flex-col w-screen h-screen overflow-hidden">
   <TitleBar />
   <div class="flex flex-row w-full h-full min-h-0 overflow-hidden">
@@ -67,3 +71,4 @@ $effect(() => {
 <Welcome />
 <ConfirmHost />
 <DialogHost />
+{/if}
