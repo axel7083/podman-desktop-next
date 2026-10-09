@@ -6,6 +6,12 @@
     "date": "2026-10-09T09:23:03.201Z"
   },
   {
+    "id": "v2",
+    "kind": "release",
+    "ref": "62f954f3ee32cc140dfceab4b7f7b480ccd6f247",
+    "date": "2026-10-09T19:45:37.457Z"
+  },
+  {
     "id": "next",
     "kind": "preview",
     "ref": "62f954f3ee32cc140dfceab4b7f7b480ccd6f247",

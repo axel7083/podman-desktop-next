@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["../chunks/ClPDVzdu.js","../chunks/DfxJg_Rd.js","./payload.DSmR2FwN.js","../chunks/DKyQ9auQ.js","../chunks/BniozlBH.js","../chunks/Sc-_5Iig.js"])))=>i.map(i=>d[i]);
+import{set_payload as e}from"./payload.DSmR2FwN.js";import{t}from"../chunks/BaNbYf_w.js";var n;function r(r){e(r),n??=t(()=>import(`../chunks/ClPDVzdu.js`),__vite__mapDeps([0,1,2,3,4,5]),import.meta.url)}async function i(...e){return(await n).start(...e)}async function a(...e){return(await n).load_css(...e)}export{r as init,a as load_css,i as start};

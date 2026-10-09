@@ -1,0 +1,1 @@
+import{n as e}from"../chunks/Dd_uD5pT.js";import{n as t}from"../chunks/BniozlBH.js";import{t as n}from"../chunks/yYqsT3u-.js";import"../chunks/CG020vl5.js";var r=e({load:()=>i}),i=()=>{n(307,t(`/settings/[section]`,{section:`resources`}))};export{r as universal};
