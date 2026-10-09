@@ -6,7 +6,7 @@ import { page } from '$app/state';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import type { NameCellData } from '#lib/table/types.ts';
 import { runTask, toast } from '#lib/world.svelte.ts';
@@ -25,7 +25,7 @@ interface Props {
 let { conn }: Props = $props();
 
 let searchTerm = $state('');
-const artifactId = $derived(page.url.searchParams.get('artifact'));
+const artifactId = $derived(appUrl().searchParams.get('artifact'));
 const data = $derived(registryData(conn.id));
 const rows = $derived(data.artifacts.filter(a => `${a.groupId}/${a.artifactId} ${a.name}`.toLowerCase().includes(searchTerm.toLowerCase())));
 const selected = $derived(artifactId ? data.artifacts.find(a => a.artifactId === artifactId) : undefined);

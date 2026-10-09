@@ -6,7 +6,7 @@ import { page } from '$app/state';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import type { NameCellData } from '#lib/table/types.ts';
 import { toast } from '#lib/world.svelte.ts';
@@ -25,8 +25,8 @@ interface Props {
 let { conn }: Props = $props();
 
 let searchTerm = $state('');
-const kind = $derived(page.url.searchParams.get('kind') ?? 'all');
-const ref = $derived(page.url.searchParams.get('entity'));
+const kind = $derived(appUrl().searchParams.get('kind') ?? 'all');
+const ref = $derived(appUrl().searchParams.get('entity'));
 const entities = $derived(hub(conn.id).entities);
 const all = $derived(entities.filter(e => kind === 'all' || e.kind === kind));
 const rows = $derived(all.filter(e => `${e.name} ${e.description ?? ''} ${e.owner ?? ''}`.toLowerCase().includes(searchTerm.toLowerCase())));

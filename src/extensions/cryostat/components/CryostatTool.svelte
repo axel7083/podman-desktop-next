@@ -7,7 +7,7 @@ import { faArrowUpRightFromSquare, faBoxArchive, faChartLine, faFileLines, faSto
 import { Button, NavPage, Tab } from '@podman-desktop/ui-svelte';
 import { page } from '$app/state';
 
-import { href, navigate } from '#lib/nav.ts';
+import { href, navigate, appUrl } from '#lib/nav.ts';
 import type { ActionsCellData, NameCellData } from '#lib/table/types.ts';
 import { humanAge, timeAgo, humanSize, toast, world } from '#lib/world.svelte.ts';
 
@@ -46,7 +46,7 @@ const TABS = [
 ];
 
 let searchTerm = $state('');
-const tab = $derived(page.url.searchParams.get('tab') ?? 'targets');
+const tab = $derived(appUrl().searchParams.get('tab') ?? 'targets');
 const server = $derived(world.containers.find(c => c.name === 'cryostat' && c.labels['com.docker.compose.project'] === 'cryostat'));
 const term = $derived(searchTerm.toLowerCase());
 

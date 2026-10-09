@@ -99,8 +99,8 @@ export async function journey(t) {
   // 13. Welcome scenario picker
   await t.open('/', { welcome: 'on' });
   await page.getByRole('link', { name: 'Show welcome' }).click().catch(() => undefined);
-  await page.evaluate(() => localStorage.removeItem('pdn.scenarios'));
-  await page.goto(page.url().replace(/scenario=[^&]*&?/, '').replace(/welcome=off&?/, ''));
+  await page.evaluate(() => localStorage.removeItem('pdn:dev:scenarios'));
+  await page.goto(page.url().replace(/scenario=[^&#]*&?/, '').replace(/welcome=off&?/, ''));
   await page.getByRole('dialog', { name: 'Welcome' }).waitFor();
   await t.shot('welcome');
 }

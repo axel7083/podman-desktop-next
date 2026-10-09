@@ -9,6 +9,7 @@
 import { faCloudDownload, faPuzzlePiece } from '@fortawesome/free-solid-svg-icons';
 import { Button, FilteredEmptyScreen, NavPage } from '@podman-desktop/ui-svelte';
 import { page } from '$app/state';
+import { appUrl } from '#lib/nav.ts';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import Badge from '#lib/components/Badge.svelte';
@@ -19,9 +20,9 @@ import { SCENARIOS } from '#lib/scenarios.ts';
 import { ui } from '#lib/ui.svelte.ts';
 import { plural } from '#lib/util.ts';
 
-let searchTerm = $state(page.url.searchParams.get('q') ?? '');
-let screen = $state<'installed' | 'catalog'>(page.url.searchParams.get('tab') === 'catalog' ? 'catalog' : 'installed');
-let category = $state<string>(page.url.searchParams.get('category') ?? 'all');
+let searchTerm = $state(appUrl().searchParams.get('q') ?? '');
+let screen = $state<'installed' | 'catalog'>(appUrl().searchParams.get('tab') === 'catalog' ? 'catalog' : 'installed');
+let category = $state<string>(appUrl().searchParams.get('category') ?? 'all');
 let status = $state<'all' | 'enabled' | 'disabled'>('all');
 
 function matches(e: MockExtension): boolean {

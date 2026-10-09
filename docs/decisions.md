@@ -18,7 +18,7 @@ Autonomous choices made while building the mockup. Revisit at checkpoints.
 | D10 | Connection order: Podman first, then provider, then name; status never reorders the nav. | Stable muscle memory. |
 | D11 | Group cap = 4 visible (+ pinned), rest in "More (n)" popover; selected item always visible. | Plan rule 1 (pinned / regular / more tiers). |
 | D12 | Connection overview is `/c/<conn>` with `?tab=` for tabs (the path segment after the connection is the resource). | Avoids route clash with `/c/<conn>/<resource>`. |
-| D13 | World persisted per scenario key in localStorage (`pdn.world.<key>`), enabled set per key (`pdn.enabled.<key>`). In-progress tasks become *canceled* on reload. | Timers cannot resume. |
+| D13 | World persisted per scenario key in localStorage (`pdn:<version>:world.<key>`), enabled set per key (`pdn:<version>:enabled.<key>`). In-progress tasks become *canceled* on reload. | Timers cannot resume. |
 | D14 | `_template` extension is type-checked but only loaded with `?template=on`; the `template` journey uses it as the smoke test of every contribution point. | Template stays honest. |
 | D15 | Monaco/xterm replaced by a read-only `<pre>` and a scripted fake terminal. | Static mockup, no heavy deps. |
 | D16 | `?welcome=off` suppresses the first-visit picker (journeys, shared links). | Deterministic screenshots. |

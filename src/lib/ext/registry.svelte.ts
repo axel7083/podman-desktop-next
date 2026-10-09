@@ -19,6 +19,7 @@ import type {
 } from '#lib/ext/types.ts';
 import { parseScenarioParam, scenarioContext, scenarioKey } from '#lib/scenarios.ts';
 import { clearWorld, loadWorld, toast, world } from '#lib/world.svelte.ts';
+import { storageKey } from '#lib/version.ts';
 
 const modules = import.meta.glob<{ default: MockExtension }>('/src/extensions/*/index.ts', { eager: true });
 
@@ -195,7 +196,7 @@ class Registry {
   /** Initialise from URL (`?scenario=`) or storage. Returns true on first visit. */
   init(url: URL): boolean {
     const fromUrl = parseScenarioParam(url.searchParams.get('scenario'));
-    const stored = load<ScenarioId[]>('pdn.scenarios');
+    const stored = load<ScenarioId[]>(storageKey('scenarios'));
     const firstVisit = !fromUrl && !stored;
     this.applyScenarios(fromUrl ?? stored ?? ['community']);
     this.ready = true;
@@ -214,8 +215,8 @@ class Registry {
    */
   private applyScenarios(ids: ScenarioId[]): void {
     this.scenarios = ids;
-    save('pdn.scenarios', ids);
-    const overrides = load<{ on: string[]; off: string[] }>(`pdn.overrides.${this.key}`) ?? { on: [], off: [] };
+    save(storageKey('scenarios'), ids);
+    const overrides = load<{ on: string[]; off: string[] }>(storageKey(`overrides.${this.key}`)) ?? { on: [], off: [] };
     const set = new Set([...this.preset, ...overrides.on]);
     overrides.off.forEach(id => set.delete(id));
     this.enabled = ALL_EXTENSIONS.map(e => e.id).filter(id => set.has(id));
@@ -225,7 +226,7 @@ class Registry {
 
   /** Persist the difference between the enabled set and the preset. */
   private saveOverrides(): void {
-    save(`pdn.overrides.${this.key}`, {
+    save(storageKey(`overrides.${this.key}`), {
       on: this.enabled.filter(id => !this.preset.includes(id)),
       off: this.preset.filter(id => !this.enabled.includes(id)),
     });
@@ -286,7 +287,7 @@ class Registry {
   /** Wipe the simulated world and re-seed every enabled extension. */
   resetWorld(): void {
     clearWorld();
-    if (browser) localStorage.removeItem(`pdn.world.${this.key}`);
+    if (browser) localStorage.removeItem(storageKey(`world.${this.key}`));
     loadWorld(this.key);
     this.seedMissing();
   }

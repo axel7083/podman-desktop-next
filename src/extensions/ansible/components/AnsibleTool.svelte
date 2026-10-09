@@ -9,7 +9,7 @@ import { Button, NavPage } from '@podman-desktop/ui-svelte';
 import { page } from '$app/state';
 
 import { openDialog } from '#lib/dialog.svelte.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 
 import EnvironmentsTab from './EnvironmentsTab.svelte';
 import ProjectsTab from './ProjectsTab.svelte';
@@ -24,9 +24,9 @@ const TABS = [
   { id: 'rulebooks', label: 'Rulebooks' },
 ];
 
-const tab = $derived(page.url.searchParams.get('tab') ?? 'projects');
-const runParam = $derived(page.url.searchParams.get('run') ?? undefined);
-const newParam = $derived(page.url.searchParams.get('new') ?? undefined);
+const tab = $derived(appUrl().searchParams.get('tab') ?? 'projects');
+const runParam = $derived(appUrl().searchParams.get('run') ?? undefined);
+const newParam = $derived(appUrl().searchParams.get('new') ?? undefined);
 
 function setTab(id: string): void {
   navigate(`/tools/ansible?tab=${id}`);

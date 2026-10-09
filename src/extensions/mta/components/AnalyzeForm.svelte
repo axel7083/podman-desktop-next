@@ -7,13 +7,13 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import { cancelTask, world } from '#lib/world.svelte.ts';
 
 import TaskLog from '../../_appdev/TaskLog.svelte';
 import { type Analysis, PROJECTS, SOURCES, startAnalysis, TARGETS } from '../data.ts';
 
-const initialProject = PROJECTS.find(p => p.name === page.url.searchParams.get('project')) ?? PROJECTS[0];
+const initialProject = PROJECTS.find(p => p.name === appUrl().searchParams.get('project')) ?? PROJECTS[0];
 
 let input = $state(initialProject.path);
 let source = $state('eap7');
@@ -65,7 +65,7 @@ function openReport(): void {
 
 function finished(a: Analysis): void {
   // only take the user to the report if they are still watching the wizard
-  if (page.url.pathname.endsWith('/tools/mta') && page.url.searchParams.get('view') === 'analyze') navigate(`/tools/mta?report=${a.id}`);
+  if (appUrl().pathname.endsWith('/tools/mta') && appUrl().searchParams.get('view') === 'analyze') navigate(`/tools/mta?report=${a.id}`);
 }
 
 function run(): void {

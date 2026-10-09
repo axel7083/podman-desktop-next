@@ -6,11 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Podman Desktop · next (mockup)</title>
     <script>
-      // apply theme before first paint (URL param > stored > dark)
+      // apply theme before first paint (URL param > stored > dark).
+      // Storage is namespaced per version (`pdn:<version>:theme`, see src/lib/version.ts); the
+      // deployed version is the last path segment (`/podman-desktop-next/v1/`), `dev` at the root.
       (function () {
         try {
           var p = new URLSearchParams(location.search).get('theme');
-          var t = p || localStorage.getItem('pdn.theme') || 'dark';
+          var seg = location.pathname.split('/').filter(Boolean);
+          var v = seg.length > 1 ? seg[seg.length - 1] : 'dev';
+          var t = p || JSON.parse(localStorage.getItem('pdn:' + v + ':theme') || '"dark"');
           document.documentElement.className = t === 'light' ? 'light' : 'dark';
         } catch (e) {}
       })();

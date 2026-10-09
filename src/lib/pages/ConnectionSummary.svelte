@@ -15,7 +15,7 @@ import ListItemButtonIcon from '#lib/components/ListItemButtonIcon.svelte';
 import { confirm, withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { AddonDef, ConnectionView, Contributed, ResourceContext } from '#lib/ext/types.ts';
-import { coreResourcesOf, href, KUBE_KINDS, navigate, startVerb, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
+import { coreResourcesOf, href, KUBE_KINDS, navigate, startVerb, STATUS_DOT_CLASS, statusLabel, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import DetailsTabs from '#lib/resources/DetailsTabs.svelte';
 import { deleteConnection, restartConnection, runTask, startConnection, stopConnection, toast, world } from '#lib/world.svelte.ts';
@@ -26,7 +26,7 @@ interface Props {
 
 let { conn }: Props = $props();
 
-const tab = $derived(page.url.searchParams.get('tab') ?? 'summary');
+const tab = $derived(appUrl().searchParams.get('tab') ?? 'summary');
 const ctx: ResourceContext = $derived({ target: 'connection', conn, resource: conn });
 const extTabs = $derived(conn.extensionDisabled ? [] : registry.tabsFor(ctx));
 const addons = $derived(conn.extensionDisabled ? [] : registry.addonsFor(conn));

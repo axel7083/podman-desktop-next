@@ -3,6 +3,7 @@
 import { faArrowsRotate, faExternalLinkSquareAlt } from '@fortawesome/free-solid-svg-icons';
 import { EmptyScreen, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
 import { page } from '$app/state';
+import { appUrl } from '#lib/nav.ts';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
@@ -23,7 +24,7 @@ let { conn }: Props = $props();
 
 const { jobs, templates } = store();
 let searchTerm = $state('');
-const jobParam = $derived(page.url.searchParams.get('job'));
+const jobParam = $derived(appUrl().searchParams.get('job'));
 const selected = $derived(jobParam ? jobs.find(j => String(j.id) === jobParam) : undefined);
 const filtered = $derived(jobs.filter(j => `${j.id} ${j.name}`.toLowerCase().includes(searchTerm.toLowerCase())));
 

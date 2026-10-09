@@ -16,7 +16,7 @@ export async function journey(t) {
   await page.getByRole('table').waitFor();
   await t.shot('nav-section');
 
-  await page.goto(page.url().replace(/\/c\/kind-dev\/[^?]*/, '/c/kind-dev').replace(/\?.*/, '') + '?tab=addons&template=on&inspect=on&chrome=off');
+  await t.open('/c/kind-dev', { tab: 'addons', template: 'on', inspect: 'on' });
   await page.getByRole('button', { name: 'Install' }).first().click();
   // add-ons with a `confirm` text ask first
   const confirm = page.getByRole('dialog').getByRole('button', { name: 'Install', exact: true });

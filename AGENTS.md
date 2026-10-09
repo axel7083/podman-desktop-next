@@ -15,7 +15,7 @@ and the screenshot loop.
 pnpm install
 pnpm dev                    # http://localhost:5173/?scenario=community
 pnpm check                  # svelte-check, must stay at 0 errors
-pnpm build                  # static site in build/ (BASE_PATH=/repo for Pages)
+pnpm build                  # static site in build/ (BASE_PATH=/podman-desktop-next/<id> on Pages)
 node loop/run-all.mjs       # all journeys, dark + light → loop/runs/<ts>/
 node loop/run-all.mjs community template   # selected journeys
 ```
@@ -23,6 +23,13 @@ node loop/run-all.mjs community template   # selected journeys
 URL parameters: `?scenario=openshift+rhel` (or `everything`), `&theme=dark|light`,
 `&chrome=off` (hide the lime Mockup pill), `&inspect=on`, `&welcome=off`,
 `&template=on` (load `src/extensions/_template`).
+
+Routing is hash-based (`router: { type: 'hash' }`, for GitHub Pages): mockup params
+live in the document query, the route and its params in the hash
+(`/?scenario=rhel#/c/rhel10-dev?tab=advisor`). Read route params with `appUrl()` from
+`#lib/nav.ts`, never `page.url.searchParams`; build links with `href()` / `navigate()`.
+Storage keys go through `storageKey()` (`#lib/version.ts`, prefix `pdn:<version>:`).
+Versioned publishing: README "Versions & publishing".
 
 Imports use the `#lib/*` subpath alias (SvelteKit 3 replaced `$lib`), with the
 file extension: `import { world } from '#lib/world.svelte.ts'`.

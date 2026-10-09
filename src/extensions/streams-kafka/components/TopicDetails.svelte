@@ -7,7 +7,7 @@ import { page } from '$app/state';
 import AppIcon from '#lib/components/AppIcon.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { href, navigate } from '#lib/nav.ts';
+import { href, navigate, appUrl } from '#lib/nav.ts';
 import { runTask } from '#lib/world.svelte.ts';
 
 import { findTopicSchema, latest } from '../../apicurio-registry/data.ts';
@@ -23,7 +23,7 @@ interface Props {
 
 let { conn, topic }: Props = $props();
 
-const tab = $derived(page.url.searchParams.get('tab') ?? 'messages');
+const tab = $derived(appUrl().searchParams.get('tab') ?? 'messages');
 const schema = $derived(registry.isEnabled('redhat.apicurio-registry') ? findTopicSchema(topic.name) : undefined);
 const partitions = $derived(
   Array.from({ length: Math.min(topic.partitionCount, 6) }, (_, p) => {

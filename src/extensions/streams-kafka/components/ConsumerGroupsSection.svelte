@@ -7,7 +7,7 @@ import { page } from '$app/state';
 import AppIcon from '#lib/components/AppIcon.svelte';
 import { confirm } from '#lib/confirm.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
 import { runTask } from '#lib/world.svelte.ts';
@@ -25,7 +25,7 @@ interface Props {
 let { conn }: Props = $props();
 
 let searchTerm = $state('');
-const groupId = $derived(page.url.searchParams.get('group'));
+const groupId = $derived(appUrl().searchParams.get('group'));
 const all = $derived(cluster(conn.id).groups);
 const rows = $derived(all.filter(g => g.groupId.toLowerCase().includes(searchTerm.toLowerCase())));
 const selected = $derived(groupId ? all.find(g => g.groupId === groupId) : undefined);

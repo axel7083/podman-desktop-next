@@ -6,7 +6,7 @@ import { page } from '$app/state';
 
 import Dialog from '#lib/components/Dialog.svelte';
 import { withConfirmation } from '#lib/confirm.svelte.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import type { ActionsCellData } from '#lib/table/types.ts';
 import { humanAge, timeAgo } from '#lib/world.svelte.ts';
@@ -18,13 +18,13 @@ const list = $derived(ai().playgrounds);
 const all = $derived(providers());
 
 // svelte-ignore state_referenced_locally
-let open = $state(!!page.url.searchParams.get('new'));
+let open = $state(!!appUrl().searchParams.get('new'));
 let name = $state('acme-support playground');
 // svelte-ignore state_referenced_locally
-let providerId = $state(page.url.searchParams.get('provider') ?? all[0]?.id ?? '');
+let providerId = $state(appUrl().searchParams.get('provider') ?? all[0]?.id ?? '');
 const provider = $derived(all.find(p => p.id === providerId));
 // svelte-ignore state_referenced_locally
-let modelName = $state(page.url.searchParams.get('new') ?? '');
+let modelName = $state(appUrl().searchParams.get('new') ?? '');
 
 $effect(() => {
   if (provider && !provider.models.includes(modelName)) modelName = provider.models[0] ?? '';

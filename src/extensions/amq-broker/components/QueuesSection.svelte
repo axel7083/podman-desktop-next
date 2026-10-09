@@ -5,7 +5,7 @@ import { EmptyScreen, FilteredEmptyScreen, NavPage, Table, TableColumn, TableRow
 import { page } from '$app/state';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
@@ -24,7 +24,7 @@ interface Props {
 let { conn }: Props = $props();
 
 let searchTerm = $state('');
-const queueName = $derived(page.url.searchParams.get('queue'));
+const queueName = $derived(appUrl().searchParams.get('queue'));
 const data = $derived(broker(conn.id));
 const all = $derived(data.queues);
 const rows = $derived(all.filter(q => `${q.name} ${q.address}`.toLowerCase().includes(searchTerm.toLowerCase())));

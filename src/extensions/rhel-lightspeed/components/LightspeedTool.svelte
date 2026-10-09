@@ -8,7 +8,7 @@ import { onMount, tick } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import { later, toast, world } from '#lib/world.svelte.ts';
 
 import { allRegistrations } from '../../rhel-registration/store.ts';
@@ -32,9 +32,9 @@ const host = $derived(registered.find(c => world.containers.some(x => x.engineId
 
 onMount(() => {
   conversations();
-  const ask = page.url.searchParams.get('ask');
+  const ask = appUrl().searchParams.get('ask');
   if (ask) {
-    newConversation(page.url.searchParams.get('source') === 'advisor' ? 'Advisor recommendation' : undefined);
+    newConversation(appUrl().searchParams.get('source') === 'advisor' ? 'Advisor recommendation' : undefined);
     send(ask);
   }
 });

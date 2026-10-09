@@ -9,7 +9,7 @@ import { page } from '$app/state';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
 import KubeIcon from '#lib/images/KubeIcon.svelte';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
@@ -32,7 +32,7 @@ let selectedItemsNumber = $state(0);
 
 const releases = $derived(releasesOf(conn.id));
 const filtered = $derived(releases.filter(r => `${r.name} ${r.namespace} ${r.chart}`.toLowerCase().includes(searchTerm.toLowerCase())));
-const selectedKey = $derived(page.url.searchParams.get('release'));
+const selectedKey = $derived(appUrl().searchParams.get('release'));
 const selected = $derived(selectedKey ? releases.find(r => r.key === selectedKey) : undefined);
 
 function iconStatus(s: ReleaseStatus): string {

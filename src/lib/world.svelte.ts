@@ -8,6 +8,7 @@ import { browser } from '$app/env';
 import type { ConnectionDef, ConnectionStatus } from '#lib/ext/types.ts';
 import { ui } from '#lib/ui.svelte.ts';
 import { duration, timeAgo } from '#lib/util.ts';
+import { storageKey as versionedKey } from '#lib/version.ts';
 
 export { timeAgo };
 
@@ -250,7 +251,7 @@ export const toasts: Toast[] = $state([]);
 let storageKey = '';
 
 function storageKeyFor(scenarioKey: string): string {
-  return `pdn.world.${scenarioKey}`;
+  return versionedKey(`world.${scenarioKey}`);
 }
 
 /** Load the world of a scenario key (or start empty). */

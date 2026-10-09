@@ -3,6 +3,7 @@
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 import { Button, NavPage } from '@podman-desktop/ui-svelte';
 import { page } from '$app/state';
+import { appUrl } from '#lib/nav.ts';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
@@ -22,7 +23,7 @@ let { conn }: Props = $props();
 
 let searchTerm = $state('');
 let showInternal = $state(false);
-const topicName = $derived(page.url.searchParams.get('topic'));
+const topicName = $derived(appUrl().searchParams.get('topic'));
 const data = $derived(cluster(conn.id));
 const selected = $derived(topicName ? data.topics.find(t => t.name === topicName) : undefined);
 const all = $derived(data.topics.filter(t => showInternal || !t.internal));

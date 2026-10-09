@@ -7,6 +7,7 @@
 import { faBookOpen, faBrain, faCircleDown, faGaugeHigh, faGear, faHouse, faMessage, faRocket, faServer } from '@fortawesome/free-solid-svg-icons';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
+import { appUrl } from '#lib/nav.ts';
 
 import SecondaryNavItem from '#lib/shell/SecondaryNavItem.svelte';
 
@@ -23,8 +24,8 @@ import ServiceDetails from './pages/ServiceDetails.svelte';
 import Services from './pages/Services.svelte';
 import Tuning from './pages/Tuning.svelte';
 
-const p = $derived(page.url.searchParams.get('p') ?? 'dashboard');
-const id = $derived(page.url.searchParams.get('id') ?? '');
+const p = $derived(appUrl().searchParams.get('p') ?? 'dashboard');
+const id = $derived(appUrl().searchParams.get('id') ?? '');
 const st = $derived(ai());
 
 const NAV: { header?: string; id: string; label: string; icon: typeof faHouse; also?: string[]; count?: () => number }[] = [
@@ -72,8 +73,8 @@ const NAV: { header?: string; id: string; label: string; icon: typeof faHouse; a
     {:else if p === 'services'}
       <Services />
     {:else if p === 'create-service'}
-      {#key page.url.search}
-        <CreateService modelId={page.url.searchParams.get('model') ?? ''} backend={page.url.searchParams.get('backend') ?? ''} />
+      {#key appUrl().search}
+        <CreateService modelId={appUrl().searchParams.get('model') ?? ''} backend={appUrl().searchParams.get('backend') ?? ''} />
       {/key}
     {:else if p === 'service'}
       <ServiceDetails {id} />
@@ -81,7 +82,7 @@ const NAV: { header?: string; id: string; label: string; icon: typeof faHouse; a
       <Playgrounds />
     {:else if p === 'playground'}
       {#key id}
-        <Playground {id} switchTo={page.url.searchParams.get('switch') ?? ''} />
+        <Playground {id} switchTo={appUrl().searchParams.get('switch') ?? ''} />
       {/key}
     {:else if p === 'local-server'}
       <LocalServer />

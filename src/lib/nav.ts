@@ -4,6 +4,7 @@
 import { faCubes, faServer } from '@fortawesome/free-solid-svg-icons';
 import { goto } from '$app/navigation';
 import { asset, resolve } from '$app/paths';
+import { page } from '$app/state';
 import type { Component } from 'svelte';
 
 import type { ConnectionKind, ConnectionView, IconRef } from '#lib/ext/types.ts';
@@ -138,6 +139,17 @@ export function statusLabel(conn: { status: string; remote?: boolean }): string 
 /** Verb of the start action: "Connect" for remote connections. */
 export function startVerb(conn: { remote?: boolean }): string {
   return conn.remote ? 'Connect' : 'Start';
+}
+
+/**
+ * The in-app URL (route path + route query). With hash routing `page.url` is the
+ * document URL (`/v1/?scenario=x#/c/y?tab=z`): the route lives in the hash, while
+ * the real query only carries the mockup params (scenario, theme, chrome, …).
+ * Reactive when read inside `$derived` / templates.
+ */
+export function appUrl(): URL {
+  const route = page.url.hash.replace(/^#/, '') || '/';
+  return new URL(route.startsWith('/') ? route : `/${route}`, 'http://app.invalid');
 }
 
 /** Strip the base path from a pathname: `/base/c/x` → `/c/x`. */

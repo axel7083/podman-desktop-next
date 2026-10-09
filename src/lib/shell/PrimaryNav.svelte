@@ -21,7 +21,7 @@ import AccountIcon from '#lib/images/AccountIcon.svelte';
 import DashboardIcon from '#lib/images/DashboardIcon.svelte';
 import PuzzleIcon from '#lib/images/PuzzleIcon.svelte';
 import SettingsIcon from '#lib/images/SettingsIcon.svelte';
-import { appPath, connectionHome, GROUPS, href, navigate, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
+import { appPath, connectionHome, GROUPS, href, navigate, STATUS_DOT_CLASS, statusLabel, appUrl } from '#lib/nav.ts';
 import { ui } from '#lib/ui.svelte.ts';
 import { world } from '#lib/world.svelte.ts';
 
@@ -38,7 +38,7 @@ const EXPANDED_THRESHOLD = 70;
 const GROUP_CAP: Record<string, number> = { engines: 4, kubernetes: 4, vms: 3, tools: 4 };
 
 const expanded = $derived(ui.navWidth > EXPANDED_THRESHOLD);
-const path = $derived(appPath(page.url.pathname));
+const path = $derived(appPath(appUrl().pathname));
 
 interface NavEntry {
   id: string;

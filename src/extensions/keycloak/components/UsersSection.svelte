@@ -6,7 +6,7 @@ import { page } from '$app/state';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
 import { world } from '#lib/world.svelte.ts';
@@ -29,8 +29,8 @@ let { conn }: Props = $props();
 
 let searchTerm = $state('');
 let taskId = $state<string | undefined>();
-const realmName = $derived(page.url.searchParams.get('realm') ?? 'acme');
-const username = $derived(page.url.searchParams.get('user'));
+const realmName = $derived(appUrl().searchParams.get('realm') ?? 'acme');
+const username = $derived(appUrl().searchParams.get('user'));
 const data = $derived(server(conn.id));
 const realm = $derived(data.realms.find(r => r.realm === realmName));
 const all = $derived(realm?.users ?? []);

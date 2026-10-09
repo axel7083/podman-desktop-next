@@ -9,7 +9,7 @@ import { Button, Dropdown, Input, NavPage } from '@podman-desktop/ui-svelte';
 import Checkbox from '#lib/components/Checkbox.svelte';
 import { page } from '$app/state';
 
-import { href, navigate } from '#lib/nav.ts';
+import { href, navigate, appUrl } from '#lib/nav.ts';
 import { world } from '#lib/world.svelte.ts';
 
 import Card from '../../_appdev/Card.svelte';
@@ -32,7 +32,7 @@ const existing = $derived(project ? containerOf(project) : undefined);
 const configOptions = $derived(project ? [{ value: project.configPath, label: project.configPath }] : [{ value: '.devcontainer/devcontainer.json', label: '.devcontainer/devcontainer.json' }]);
 
 $effect(() => {
-  if (page.url.searchParams.get('open') === '1') {
+  if (appUrl().searchParams.get('open') === '1') {
     wizardOpen = true;
     wizard?.scrollIntoView({ block: 'nearest' });
   }
@@ -59,7 +59,7 @@ function browse(): void {
 function cancel(): void {
   wizardOpen = false;
   taskId = undefined;
-  if (page.url.searchParams.has('open')) navigate('/tools/devcontainers', true);
+  if (appUrl().searchParams.has('open')) navigate('/tools/devcontainers', true);
 }
 
 function start(): void {

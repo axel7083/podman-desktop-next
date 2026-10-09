@@ -24,6 +24,7 @@ import type { ConnectionView, Contributed, StatusItemDef } from '#lib/ext/types.
 import { connectionHome, GROUPS, navigate, STATUS_DOT_CLASS, startVerb, statusLabel } from '#lib/nav.ts';
 import { ui } from '#lib/ui.svelte.ts';
 import { startConnection, stopConnection, world } from '#lib/world.svelte.ts';
+import { MOCKUP_SHA, MOCKUP_VERSION } from '#lib/version.ts';
 
 const conns = $derived(registry.activeConnections);
 const running = $derived(conns.filter(c => c.status === 'started'));
@@ -189,7 +190,7 @@ const statusIcon: Record<string, typeof faCircleCheck> = {
       {/each}
     </div>
     <div class="flex flex-row-reverse gap-x-1.5 h-full place-self-end items-center">
-      <span class="px-1" title="Podman Desktop next (mockup)">v2.0.0-next</span>
+      <span class="px-1" title="Podman Desktop next (mockup {MOCKUP_VERSION}, commit {MOCKUP_SHA})">v2.0.0-next · {MOCKUP_VERSION}</span>
       <button
         bind:this={notifAnchor}
         class="relative px-1 py-px flex h-full items-center hover:bg-[var(--pd-statusbar-hover-bg)]"

@@ -14,7 +14,7 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 import Contribution from '#lib/components/Contribution.svelte';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { Contributed, FactoryDef, FactoryIssue, FormField, FormValues } from '#lib/ext/types.ts';
-import { connectionHome, navigate } from '#lib/nav.ts';
+import { connectionHome, navigate, appUrl } from '#lib/nav.ts';
 import { addDynamicConnection, cancelTask, runTask, world } from '#lib/world.svelte.ts';
 
 interface Props {
@@ -32,7 +32,7 @@ const nameTaken = $derived(registry.connections.some(c => c.id === String(values
 $effect.pre(() => {
   const init: FormValues = {};
   // `?<fieldId>=value` prefills the wizard (e.g. Image Builder → "Create machine from this compose")
-  const params = page.url.searchParams;
+  const params = appUrl().searchParams;
   for (const f of factory.fields) {
     const fromUrl = params.get(f.id);
     if (fromUrl !== null) init[f.id] = f.type === 'checkbox' ? fromUrl === 'true' : f.type === 'number' || f.type === 'slider' ? Number(fromUrl) : fromUrl;

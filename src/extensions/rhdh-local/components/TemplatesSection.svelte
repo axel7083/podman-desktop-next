@@ -5,7 +5,7 @@ import { Button, NavPage } from '@podman-desktop/ui-svelte';
 import { page } from '$app/state';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
 
 import Pill from '../../_appdev/Pill.svelte';
@@ -19,7 +19,7 @@ interface Props {
 let { conn }: Props = $props();
 
 let searchTerm = $state('');
-const templateName = $derived(page.url.searchParams.get('template'));
+const templateName = $derived(appUrl().searchParams.get('template'));
 const templates = $derived(hub(conn.id).templates);
 const rows = $derived(templates.filter(t => `${t.title} ${t.description} ${t.tags.join(' ')}`.toLowerCase().includes(searchTerm.toLowerCase())));
 const selected = $derived(templateName ? templates.find(t => t.name === templateName) : undefined);

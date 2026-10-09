@@ -10,7 +10,7 @@ import { page } from '$app/state';
 import { onMount } from 'svelte';
 
 import Dialog from '#lib/components/Dialog.svelte';
-import { href, navigate } from '#lib/nav.ts';
+import { href, navigate, appUrl } from '#lib/nav.ts';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import type { ActionsCellData, NameCellData } from '#lib/table/types.ts';
@@ -20,8 +20,8 @@ import { addEpel, advance, build, download } from '../actions.ts';
 import { type Blueprint, type Compose, type ComposeState, IMAGE_TYPES, type ImageType, ibMutable, ibStore, OPENSCAP_PROFILES } from '../data.ts';
 import ComposeStatusCell from './ComposeStatusCell.svelte';
 
-const tab = $derived(page.url.searchParams.get('tab') ?? 'blueprints');
-const selectedBp = $derived(page.url.searchParams.get('bp'));
+const tab = $derived(appUrl().searchParams.get('tab') ?? 'blueprints');
+const selectedBp = $derived(appUrl().searchParams.get('bp'));
 const blueprints = $derived(ibStore().blueprints);
 const composes = $derived(ibStore().composes);
 let searchTerm = $state('');

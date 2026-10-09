@@ -7,7 +7,7 @@ import { page } from '$app/state';
 import AppIcon from '#lib/components/AppIcon.svelte';
 import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import StatusCell from '#lib/table/StatusCell.svelte';
 import type { ActionsCellData, StatusCellData } from '#lib/table/types.ts';
@@ -24,9 +24,9 @@ import InstallDialog from './InstallDialog.svelte';
 
 const icon = 'icons/podman-desktop.mcp.png';
 const WRITE = /create|update|delete|exec|run|install|scale/;
-const serverId = $derived(page.url.searchParams.get('server'));
+const serverId = $derived(appUrl().searchParams.get('server'));
 // svelte-ignore state_referenced_locally
-let tab = $state(page.url.searchParams.get('tab') ?? 'installed');
+let tab = $state(appUrl().searchParams.get('tab') ?? 'installed');
 let searchTerm = $state('');
 let installing = $state<McpServerEntry>();
 let adding = $state<InstalledServer>();

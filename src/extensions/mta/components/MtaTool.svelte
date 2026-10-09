@@ -5,14 +5,15 @@
  * otherwise the projects list.
  */
 import { page } from '$app/state';
+import { appUrl } from '#lib/nav.ts';
 
 import { findAnalysis } from '../data.ts';
 import AnalyzeForm from './AnalyzeForm.svelte';
 import MtaProjects from './MtaProjects.svelte';
 import MtaReport from './MtaReport.svelte';
 
-const view = $derived(page.url.searchParams.get('view'));
-const analysis = $derived(findAnalysis(page.url.searchParams.get('report')));
+const view = $derived(appUrl().searchParams.get('view'));
+const analysis = $derived(findAnalysis(appUrl().searchParams.get('report')));
 </script>
 
 {#if view === 'analyze'}

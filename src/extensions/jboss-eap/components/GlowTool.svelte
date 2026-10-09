@@ -12,7 +12,7 @@ import { page } from '$app/state';
 import { tick } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
-import { href, navigate } from '#lib/nav.ts';
+import { href, navigate, appUrl } from '#lib/nav.ts';
 import { humanSize, world } from '#lib/world.svelte.ts';
 
 import Card from '../../_appdev/Card.svelte';
@@ -39,7 +39,7 @@ import {
 
 // start from the last scan (if any) so returning to the page keeps its settings
 const previous = glow().scan;
-let war = $state(page.url.searchParams.get('war') ?? previous?.war ?? DEFAULT_WAR);
+let war = $state(appUrl().searchParams.get('war') ?? previous?.war ?? DEFAULT_WAR);
 let serverVersion = $state<ServerVersion>(previous?.serverVersion ?? 'eap-8.1');
 let context = $state<GlowContext>(previous?.context ?? 'cloud');
 let addOns = $state<string[]>(previous ? [...previous.enabledAddOns] : []);

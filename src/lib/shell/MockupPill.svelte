@@ -1,10 +1,11 @@
 <script lang="ts">
 /**
  * Mockup chrome: a single lime pill holding Scenario, Theme, Inspect
- * integrations, Speed and Reset. Hidden with `?chrome=off`.
+ * integrations, Speed, Reset and the published-version switcher.
+ * Hidden with `?chrome=off`.
  */
 import { faChevronDown, faFlask } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown } from '@podman-desktop/ui-svelte';
 import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
@@ -16,8 +17,31 @@ import type { ScenarioId } from '#lib/ext/types.ts';
 import { navigate } from '#lib/nav.ts';
 import { ALL_SCENARIO_IDS, SCENARIOS, scenarioLabel } from '#lib/scenarios.ts';
 import { ui } from '#lib/ui.svelte.ts';
+import { fetchVersions, MOCKUP_SHA, MOCKUP_VERSION, type VersionEntry, versionUrl } from '#lib/version.ts';
 
 let open = $state(false);
+/** Published versions; stays empty (switcher hidden) outside GitHub Pages. */
+let versions = $state<VersionEntry[]>([]);
+
+$effect(() => {
+  fetchVersions()
+    .then(v => (versions = v))
+    .catch(() => undefined);
+});
+
+function switchVersion(id: string): void {
+  if (id !== MOCKUP_VERSION) location.href = versionUrl(id);
+}
+
+function versionLabel(v: VersionEntry): string {
+  const kind = v.kind === 'release' ? '' : v.kind === 'preview' ? ' (preview)' : ' (PR preview)';
+  return `${v.id}${kind}`;
+}
+
+const versionOptions = $derived([
+  ...(versions.some(v => v.id === MOCKUP_VERSION) ? [] : [{ value: MOCKUP_VERSION, label: MOCKUP_VERSION }]),
+  ...versions.map(v => ({ value: v.id, label: versionLabel(v) })),
+]);
 let anchor = $state<HTMLButtonElement>();
 
 const isEverything = $derived(registry.scenarios.length === ALL_SCENARIO_IDS.length);
@@ -86,7 +110,7 @@ const segmentOn = 'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)]
   title="Mockup controls (not part of the product)"
   onclick={toggleOpen}>
   <Icon icon={faFlask} size="xs" />
-  <span class="truncate">Mockup · {scenarioLabel(registry.scenarios)}</span>
+  <span class="truncate">Mockup {MOCKUP_VERSION} · {scenarioLabel(registry.scenarios)}</span>
   {#if ui.inspect}<span class="rounded-full bg-[var(--pdn-mockup-text)] text-[var(--pdn-mockup-bg)] px-1 text-[9px]">INSPECT</span>{/if}
   <Icon icon={faChevronDown} size="xs" />
 </button>
@@ -133,6 +157,16 @@ const segmentOn = 'bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-text)]
     <SlideToggle id="inspect-toggle" checked={ui.inspect} onchange={onInspect} aria-label="Inspect integrations">
       Inspect integrations
     </SlideToggle>
+  </section>
+
+  <section aria-label="Version" class="flex items-center gap-3 text-sm">
+    <span class="font-semibold">Version</span>
+    {#if versions.length > 0}
+      <Dropdown class="w-40" ariaLabel="Mockup version" value={MOCKUP_VERSION} options={versionOptions} onChange={switchVersion} />
+    {:else}
+      <span>{MOCKUP_VERSION}</span>
+    {/if}
+    <span class="text-xs text-[var(--pd-content-sub-header)] font-mono" title="Build commit">{MOCKUP_SHA}</span>
   </section>
 
   <section aria-label="Reset" class="flex flex-wrap gap-2 pt-1 border-t border-[var(--pd-content-divider)] pt-3">

@@ -7,7 +7,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
-import { href } from '#lib/nav.ts';
+import { href, appUrl } from '#lib/nav.ts';
 import { shortImage, world } from '#lib/world.svelte.ts';
 
 import { bootInVm, buildDiskImage, fixLint } from '../actions.ts';
@@ -21,8 +21,8 @@ let { conn }: Props = $props();
 
 const images = $derived(world.images.filter(i => i.engineId === conn.id && isBootc(i)));
 const list = $derived(builds().filter(b => b.engineId === conn.id));
-let showForm = $state(!!page.url.searchParams.get('image'));
-let imageId = $state(page.url.searchParams.get('image') ?? '');
+let showForm = $state(!!appUrl().searchParams.get('image'));
+let imageId = $state(appUrl().searchParams.get('image') ?? '');
 let types = $state<BuildType[]>(['qcow2']);
 let arch = $state<'amd64' | 'arm64'>('amd64');
 let builder = $state(BUILDERS[0].value);

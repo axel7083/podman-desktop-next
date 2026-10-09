@@ -10,7 +10,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
-import { href, navigate } from '#lib/nav.ts';
+import { href, navigate, appUrl } from '#lib/nav.ts';
 import { toast } from '#lib/world.svelte.ts';
 
 import Card from '../../_appdev/Card.svelte';
@@ -43,7 +43,7 @@ interface Props {
 
 let { analysis }: Props = $props();
 
-const target = $derived(analysis.targets.includes(page.url.searchParams.get('target') ?? '') ? (page.url.searchParams.get('target') as string) : analysis.targets[0]);
+const target = $derived(analysis.targets.includes(appUrl().searchParams.get('target') ?? '') ? (appUrl().searchParams.get('target') as string) : analysis.targets[0]);
 const resolved = $derived(resolvedIncidents());
 const fixState = $derived(fixes());
 const rules = $derived(reportRules(analysis, target));

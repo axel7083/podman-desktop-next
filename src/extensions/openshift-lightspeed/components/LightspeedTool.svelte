@@ -10,7 +10,7 @@ import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
 import { registry } from '#lib/ext/registry.svelte.ts';
-import { navigate } from '#lib/nav.ts';
+import { navigate, appUrl } from '#lib/nav.ts';
 import { cleanKube, toYaml } from '#lib/resources/kube.ts';
 import { later, runTask, toast, world } from '#lib/world.svelte.ts';
 
@@ -18,7 +18,7 @@ import { LEDGER_WORKER_LOGS } from '../../ocm/data.ts';
 import { type Attachment, conversation, CRASH_ANSWER, CRASH_DOCS, GENERIC_ANSWER, hasOls, OLS_CONFIG, OLS_ID, type Turn } from '../data.ts';
 
 const clusters = $derived(registry.activeConnections.filter(c => c.kind === 'kubernetes' && c.status === 'started' && c.capabilities?.includes('openshift')));
-let selected = $state(page.url.searchParams.get('conn') ?? 'ocp-dev');
+let selected = $state(appUrl().searchParams.get('conn') ?? 'ocp-dev');
 const conn = $derived(registry.getConnection(selected));
 const installed = $derived(conn?.status === 'started' && hasOls(selected));
 const turns = conversation();
@@ -27,7 +27,7 @@ let query = $state('');
 let attachments = $state<Attachment[]>([]);
 
 $effect.pre(() => {
-  const about = page.url.searchParams.get('about');
+  const about = appUrl().searchParams.get('about');
   if (!about) return;
   const [kind, ns, name] = decodeURIComponent(about).split('~');
   const obj = (world.kube[selected] ?? []).find(o => o.kind === kind && (o.metadata.namespace ?? '_') === ns && o.metadata.name === name);

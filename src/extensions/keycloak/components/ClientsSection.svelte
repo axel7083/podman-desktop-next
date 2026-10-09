@@ -3,6 +3,7 @@
 import { faCopy, faRotate, faShieldHalved } from '@fortawesome/free-solid-svg-icons';
 import { Button, NavPage } from '@podman-desktop/ui-svelte';
 import { page } from '$app/state';
+import { appUrl } from '#lib/nav.ts';
 
 import type { ConnectionView } from '#lib/ext/types.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
@@ -24,8 +25,8 @@ let { conn }: Props = $props();
 
 let searchTerm = $state('');
 let showBuiltin = $state(false);
-const realmName = $derived(page.url.searchParams.get('realm') ?? 'acme');
-const clientId = $derived(page.url.searchParams.get('client'));
+const realmName = $derived(appUrl().searchParams.get('realm') ?? 'acme');
+const clientId = $derived(appUrl().searchParams.get('client'));
 const realms = $derived(server(conn.id).realms);
 const realm = $derived(realms.find(r => r.realm === realmName));
 const all = $derived((realm?.clients ?? []).filter(c => showBuiltin || !c.builtin));

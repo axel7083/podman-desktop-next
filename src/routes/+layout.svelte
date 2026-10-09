@@ -5,7 +5,7 @@ import { page } from '$app/state';
 import type { Snippet } from 'svelte';
 
 import { registry } from '#lib/ext/registry.svelte.ts';
-import { appPath, coreResourcesOf } from '#lib/nav.ts';
+import { appPath, coreResourcesOf, appUrl } from '#lib/nav.ts';
 import ConfirmHost from '#lib/shell/ConfirmHost.svelte';
 import CommandPalette from '#lib/shell/CommandPalette.svelte';
 import DialogHost from '#lib/shell/DialogHost.svelte';
@@ -30,7 +30,7 @@ const initialUrl = new URL(page.url.href);
 ui.init(initialUrl);
 if (registry.init(initialUrl) && initialUrl.searchParams.get('welcome') !== 'off') ui.welcomeOpen = true;
 
-const path = $derived(appPath(page.url.pathname));
+const path = $derived(appPath(appUrl().pathname));
 const conn = $derived(page.params.conn ? registry.getConnection(page.params.conn) : undefined);
 const inSettings = $derived(path.startsWith('/settings'));
 /** A connection with nothing but "Overview" (most VMs and services) needs no secondary nav. */

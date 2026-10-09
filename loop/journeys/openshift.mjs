@@ -11,7 +11,7 @@ export async function journey(t) {
     await page.getByText(new RegExp(`${text}.*completed`)).first().waitFor({ timeout });
     // wait until the world (with the task's side effects) is persisted
     await page.waitForFunction(
-      prefix => (JSON.parse(localStorage.getItem('pdn.world.openshift') ?? '{}').tasks ?? []).some(x => x.name.startsWith(prefix) && x.status === 'success'),
+      prefix => (JSON.parse(localStorage.getItem('pdn:dev:world.openshift') ?? '{}').tasks ?? []).some(x => x.name.startsWith(prefix) && x.status === 'success'),
       text,
       { timeout: 8000 },
     );
@@ -20,7 +20,7 @@ export async function journey(t) {
   /** Read the persisted world (ids are random). */
   const world = async () => {
     await page.waitForTimeout(450);
-    return page.evaluate(() => JSON.parse(localStorage.getItem('pdn.world.openshift') ?? '{}'));
+    return page.evaluate(() => JSON.parse(localStorage.getItem('pdn:dev:world.openshift') ?? '{}'));
   };
   const imageId = async (name, tag) => (await world()).images.find(i => i.name === name && i.tag === tag).id;
   const containerId = async name => (await world()).containers.find(c => c.name === name).id;
