@@ -2,8 +2,8 @@
 
 ## 1. Identity
 - **Display name:** Red Hat Advanced Developer Suite
-- **Extension id:** `redhat.rhads-pack` (proposed extension pack, like `/home/astefani/github/podman-desktop/ext-redhat-pack/`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-redhat-pack/icon.png`
+- **Extension id:** `redhat.rhads-pack` (proposed extension pack, like `../ext-redhat-pack/`)
+- **Icon:** `../ext-redhat-pack/icon.png`
 - **Description:** Trusted software supply chain on your laptop: dependency analytics, signing, SBOM analysis, policy and Developer Hub.
 
 ## 2. Real objects & fields

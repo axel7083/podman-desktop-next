@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Bootable Container
 - **Extension id:** `redhat.bootc` (real; `ext-bootc/packages/backend/package.json`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-bootc/packages/backend/icon.png` (+ frontend `ext-bootc/packages/frontend/src/lib/bootc-icon.png`)
+- **Icon:** `../ext-bootc/packages/backend/icon.png` (+ frontend `ext-bootc/packages/frontend/src/lib/bootc-icon.png`)
 - **Description:** Support for bootable OS containers (bootc) and generating disk images.
 
 ## 2. Real objects & fields

@@ -3,7 +3,7 @@
 ## 1. Identity
 - Display name: Red Hat AI Inference (formerly Red Hat AI Inference Server, RHAIIS; renamed in 3.4)
 - Extension id: `redhat.ai-inference-server` (proposed; no real Podman Desktop extension). Realistically a backend contributed into `redhat.ai-lab` (new `InferenceType` `vllm`) plus an InferenceProviderConnection.
-- Icon: https://raw.githubusercontent.com/vllm-project/vllm/main/docs/assets/logos/vllm-logo-only-light.png (verified 200 image/png); Red Hat alternative: `/home/astefani/github/podman-desktop/ext-redhat-account/icons/redhat-logo.svg`
+- Icon: https://raw.githubusercontent.com/vllm-project/vllm/main/docs/assets/logos/vllm-logo-only-light.png (verified 200 image/png); Red Hat alternative: `../ext-redhat-account/icons/redhat-logo.svg`
 - Description: Enterprise-supported vLLM container images for serving LLMs on NVIDIA/AMD/CPU/Spyre with an OpenAI-compatible API.
 
 ## 2. Real objects / fields / enums

@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** RHEL VMs
 - **Extension id:** `redhat.rhel-vms` (real; `ext-rhel/package.json`, provider id `rhel-vms`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-rhel/icon.png`
+- **Icon:** `../ext-rhel/icon.png`
 - **Description:** Create Red Hat Enterprise Linux VMs easily (macadam-managed, auto-registered).
 
 ## 2. Real objects & fields (`ext-rhel/src/extension.ts`, `package.json`)

@@ -2,7 +2,7 @@
 
 ## 1. Identity
 - **Display name:** Export as Ansible
-- **Extension id:** `redhat.ansible` (generator contribution; complements `/home/astefani/github/podman-desktop/ext-podman-quadlet/`)
+- **Extension id:** `redhat.ansible` (generator contribution; complements `../ext-podman-quadlet/`)
 - **Icon:** https://github.com/ansible.png
 - **Description:** Turn selected containers and pods into an Ansible playbook (containers.podman) that recreates them on any RHEL host — as plain containers or as Quadlet units.
 

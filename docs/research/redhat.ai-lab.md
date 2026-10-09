@@ -3,7 +3,7 @@
 ## 1. Identity
 - Display name: Podman AI Lab
 - Extension id: `redhat.ai-lab` (real: `publisher: "redhat"`, `name: "ai-lab"`, version `1.10.0-next` in packages/backend/package.json)
-- Icon: `/home/astefani/github/podman-desktop/ext-ai-lab/packages/backend/icon.png`
+- Icon: `../ext-ai-lab/packages/backend/icon.png`
 - Description: Run open models locally (llama.cpp / whisper.cpp / OpenVINO), try them in playgrounds, and start AI sample apps ("recipes") as pods.
 
 ## 2. Real objects / fields / enums
@@ -62,7 +62,7 @@ Source of truth: `packages/backend/src/assets/ai.json` (keys `version`, `recipes
 ```
 
 Sources:
-- /home/astefani/github/podman-desktop/ext-ai-lab/packages/backend/src/assets/ai.json, inference-images.json
-- /home/astefani/github/podman-desktop/ext-ai-lab/packages/shared/src/models/IInference.ts, IApplicationState.ts, IPlaygroundV2.ts
+- ../ext-ai-lab/packages/backend/src/assets/ai.json, inference-images.json
+- ../ext-ai-lab/packages/shared/src/models/IInference.ts, IApplicationState.ts, IPlaygroundV2.ts
 - https://github.com/containers/podman-desktop-extension-ai-lab
 - https://github.com/containers/ai-lab-recipes

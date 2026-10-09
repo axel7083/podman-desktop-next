@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** MicroShift (minc); add-on "OpenShift Console"
 - **Extension id:** `minc-org.minc` (real; `ext-minc/package.json`, v0.5.0-next)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-minc/icon.png` (also `logo.png`, `logo-dark.png`); console add-on: https://cdn.simpleicons.org/redhatopenshift
+- **Icon:** `../ext-minc/icon.png` (also `logo.png`, `logo-dark.png`); console add-on: https://cdn.simpleicons.org/redhatopenshift
 - **Description:** MicroShift in a single Podman container; optional upstream OpenShift Console add-on.
 
 ## 2. Real objects & fields

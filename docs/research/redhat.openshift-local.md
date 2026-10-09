@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Red Hat OpenShift Local
 - **Extension id:** `redhat.openshift-local` (real; `ext-crc/package.json`, v2.5.0-next)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-crc/icon.png` (fallback: https://cdn.simpleicons.org/redhatopenshift)
+- **Icon:** `../ext-crc/icon.png` (fallback: https://cdn.simpleicons.org/redhatopenshift)
 - **Description:** Run a single-node OpenShift, MicroShift or OKD cluster in a local VM.
 
 ## 2. Real objects & fields

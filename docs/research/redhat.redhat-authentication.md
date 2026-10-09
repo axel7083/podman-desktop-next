@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Red Hat Authentication (shown as "Red Hat account" in Accounts)
 - **Extension id:** `redhat.redhat-authentication` (real; `ext-redhat-account/package.json`, v1.3.0-next)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-redhat-account/icon.png`; status-bar glyph `ext-redhat-account/icons/redhat-logo.svg`
+- **Icon:** `../ext-redhat-account/icon.png`; status-bar glyph `ext-redhat-account/icons/redhat-logo.svg`
 - **Description:** Sign in with Red Hat SSO; configures registry.redhat.io and registers Podman machines with a RHEL subscription.
 
 ## 2. Real objects & fields (from `ext-redhat-account/src`)

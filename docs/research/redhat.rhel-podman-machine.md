@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** RHEL Podman machine (contribution of RHEL VMs; surfaced inside the Podman provider)
 - **Extension id:** `redhat.rhel-vms` (real ext, new `connectionFactories` entry); depends on `redhat.redhat-authentication` and built-in `podman-desktop.podman` (needs **P18** `createMachine`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-rhel/icon.png` (RHEL hat) badged on the Podman connection
+- **Icon:** `../ext-rhel/icon.png` (RHEL hat) badged on the Podman connection
 - **Description:** One-click Podman engine running RHEL 9/10 (WSL, Hyper-V or applehv), registered with your subscription.
 
 ## 2. Real objects & fields

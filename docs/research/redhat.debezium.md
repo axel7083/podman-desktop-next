@@ -52,4 +52,4 @@
 - https://github.com/debezium/debezium/tags
 - https://docs.redhat.com/en/documentation/red_hat_build_of_debezium/3.4.3/html-single/release_notes_for_red_hat_build_of_debezium_3.4.3/index
 - https://quay.io/repository/debezium/connect
-- /home/astefani/github/podman-desktop/ext-postgresql/packages/backend/src/managers/services.ts
+- ../ext-postgresql/packages/backend/src/managers/services.ts

@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Trusted Profile Analyzer
 - **Extension id:** `redhat.trusted-profile-analyzer` (proposed; RHADS)
-- **Icon:** https://github.com/guacsec.png (Trustify upstream); fallback `/home/astefani/github/podman-desktop/ext-redhat-account/icon.png`
+- **Icon:** https://github.com/guacsec.png (Trustify upstream); fallback `../ext-redhat-account/icon.png`
 - **Description:** Generate an SBOM for any local image, upload it to your organization's TPA and see vulnerabilities, VEX status and remediation per package URL.
 
 ## 2. Real objects & fields

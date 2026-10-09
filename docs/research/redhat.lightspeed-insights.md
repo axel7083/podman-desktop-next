@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Red Hat Lightspeed
 - **Extension id:** `redhat.lightspeed-insights` (new; logically part of `redhat.redhat-authentication` registration, R6/R8) — dependsOn `redhat.redhat-authentication` (scope `api.console`)
-- **Icon:** Red Hat Lightspeed product icon (console.redhat.com/insights); fallback `/home/astefani/github/podman-desktop/ext-redhat-account/icons/redhat-logo.svg`
+- **Icon:** Red Hat Lightspeed product icon (console.redhat.com/insights); fallback `../ext-redhat-account/icons/redhat-logo.svg`
 - **Description:** Advisor recommendations and CVE exposure for your registered RHEL VMs and RHEL Podman machines.
 
 ## 2. Real objects & fields

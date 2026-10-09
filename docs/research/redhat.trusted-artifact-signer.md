@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Trusted Artifact Signer
 - **Extension id:** `redhat.trusted-artifact-signer` (proposed; RHADS)
-- **Icon:** https://github.com/sigstore.png (Sigstore); fallback `/home/astefani/github/podman-desktop/ext-redhat-account/icon.png`
+- **Icon:** https://github.com/sigstore.png (Sigstore); fallback `../ext-redhat-account/icon.png`
 - **Description:** Keyless-sign images with your org's RHTAS (Fulcio + Rekor + TUF) on push, and show who signed what on every image.
 
 ## 2. Real objects & fields

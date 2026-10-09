@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Red Hat Dependency Analytics
 - **Extension id:** `redhat.dependency-analytics` (new for PD; reuses `@trustify-da/trustify-da-javascript-client`, formerly `@rhecosystemappeng/exhort-javascript-api`)
-- **Icon:** RHDA icon from the VS Code extension `redhat.fabric8-analytics` (marketplace asset); fallback `/home/astefani/github/podman-desktop/ext-redhat-account/icons/redhat-logo.svg`
+- **Icon:** RHDA icon from the VS Code extension `redhat.fabric8-analytics` (marketplace asset); fallback `../ext-redhat-account/icons/redhat-logo.svg`
 - **Description:** Application-dependency vulnerability report (npm, Maven, pip, Go) for images and projects, with Red Hat trusted-content remediations.
 
 ## 2. Real objects & fields

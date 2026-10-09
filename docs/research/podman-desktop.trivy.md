@@ -1,7 +1,7 @@
 # Trivy image checker — pinned (O8)
 
 ## 1. Identity
-- **Display name:** Trivy · **Extension id:** `podman-desktop.trivy` (proposed; sibling of `/home/astefani/github/podman-desktop/ext-grype/`) · **Icon:** https://github.com/aquasecurity.png
+- **Display name:** Trivy · **Extension id:** `podman-desktop.trivy` (proposed; sibling of `../ext-grype/`) · **Icon:** https://github.com/aquasecurity.png
 - **Description:** Vulnerability, misconfig and secret scan of local images with a digest-pinned Trivy.
 
 ## 2. Real objects & fields

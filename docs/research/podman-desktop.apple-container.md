@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Apple container
 - **Extension id:** `redhat.apple-container` (package `apple-container`, publisher `redhat`, v0.2.0-next; [podman-desktop/extension-apple-container](https://github.com/podman-desktop/extension-apple-container))
-- **Icon:** `/home/astefani/github/podman-desktop/ext-apple-container/icon.png`
+- **Icon:** `../ext-apple-container/icon.png`
 - **Description:** List/manage Apple containers on macOS (Apple silicon only).
 
 ## 2. Real objects & fields

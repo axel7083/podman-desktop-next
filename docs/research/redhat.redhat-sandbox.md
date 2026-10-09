@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Developer Sandbox
 - **Extension id:** `redhat.redhat-sandbox` (real; `ext-sandbox/package.json`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-sandbox/icon.png`
+- **Icon:** `../ext-sandbox/icon.png`
 - **Description:** Free 30-day shared OpenShift cluster on Red Hat infrastructure, provisioned with your Red Hat account.
 
 ## 2. Real objects & fields

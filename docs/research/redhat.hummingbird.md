@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Hummingbird (product: Red Hat Hardened Images, GA 2026)
 - **Extension id:** `redhat.hummingbird` (real; `ext-hummingbird/packages/extension/package.json`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-hummingbird/packages/extension/icon.png`
+- **Icon:** `../ext-hummingbird/packages/extension/icon.png`
 - **Description:** Catalog of minimal hardened images; detects local images/containers with a hardened alternative and clones them onto it.
 
 ## 2. Real objects & fields (`ext-hummingbird/packages/extension/src/lib`)

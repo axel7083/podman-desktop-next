@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Image Builder
 - **Extension id:** `redhat.image-builder` (new; no existing PD extension) — dependsOn `redhat.redhat-authentication` (scope `api.console`)
-- **Icon:** Red Hat product icon "Image Builder" (https://console.redhat.com/insights/image-builder favicon set); fallback `/home/astefani/github/podman-desktop/ext-redhat-account/icons/redhat-logo.svg`
+- **Icon:** Red Hat product icon "Image Builder" (https://console.redhat.com/insights/image-builder favicon set); fallback `../ext-redhat-account/icons/redhat-logo.svg`
 - **Description:** Build RHEL images (WSL, qcow2, ISO, AMI, vSphere…) from blueprints on console.redhat.com and use them locally.
 
 ## 2. Real objects & fields (`https://console.redhat.com/api/image-builder/v1/openapi.json`)

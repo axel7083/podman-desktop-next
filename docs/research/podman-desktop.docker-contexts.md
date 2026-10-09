@@ -2,8 +2,8 @@
 
 ## 1. Identity
 - **Display name:** Docker
-- **Extension id:** `podman-desktop.docker` (built-in, `/home/astefani/github/podman-desktop/podman-desktop/extensions/docker/`)
-- **Icon:** `/home/astefani/github/podman-desktop/podman-desktop/extensions/docker/packages/extension/icon.png`
+- **Extension id:** `podman-desktop.docker` (built-in, `../podman-desktop/extensions/docker/`)
+- **Icon:** `../podman-desktop/extensions/docker/packages/extension/icon.png`
 - **Description:** Every Docker context on your machine (Docker Desktop, Rancher Desktop, Colima, remote engines) shows up as its own connection.
 
 ## 2. Real objects & fields

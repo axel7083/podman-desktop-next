@@ -1,7 +1,7 @@
 # Local services catalog — Valkey, Grafana otel-lgtm (O10)
 
 ## 1. Identity
-- **Display name:** Services · **Extension id:** `podman-desktop.services` (proposed; generalizes `/home/astefani/github/podman-desktop/ext-postgresql/`) · **Icon:** https://github.com/valkey-io.png / https://github.com/grafana.png per entry
+- **Display name:** Services · **Extension id:** `podman-desktop.services` (proposed; generalizes `../ext-postgresql/`) · **Icon:** https://github.com/valkey-io.png / https://github.com/grafana.png per entry
 - **Description:** One-click local backing services that other extensions and your apps can discover.
 
 ## 2. Real objects & fields

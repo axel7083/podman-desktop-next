@@ -3,7 +3,7 @@
 ## 1. Identity
 - Display name: Red Hat AI Model Catalog
 - Extension id: `redhat.ai-model-catalog` (proposed). Feeds a unified catalog (R54) that merges AI Lab's `ai.json`, Hugging Face `RedHatAI` org, Red Hat validated ModelCar images and the OpenShift AI (AI hub / model registry) catalog of a connected cluster.
-- Icon: https://huggingface.co/front/assets/huggingface_logo-noborder.svg (verified 200 image/svg+xml). RedHatAI org avatar is only webp (`https://cdn-avatars.huggingface.co/v1/production/uploads/60466e4b4f40b01b66151416/cdABRow21BL0sl1vSVTPk.png`, served as image/webp); Red Hat logo alternative `/home/astefani/github/podman-desktop/ext-redhat-account/icons/redhat-logo.svg`.
+- Icon: https://huggingface.co/front/assets/huggingface_logo-noborder.svg (verified 200 image/svg+xml). RedHatAI org avatar is only webp (`https://cdn-avatars.huggingface.co/v1/production/uploads/60466e4b4f40b01b66151416/cdABRow21BL0sl1vSVTPk.png`, served as image/webp); Red Hat logo alternative `../ext-redhat-account/icons/redhat-logo.svg`.
 - Description: Browse Red Hat-optimized, quantized and validated open models and pull them for local (AI Lab / vLLM) or cluster (OpenShift AI) serving.
 
 ## 2. Real objects / fields / enums

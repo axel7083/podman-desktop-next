@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** OpenShift Lightspeed
 - **Extension id:** `redhat.openshift-lightspeed` (proposed; distinct from real `redhat.rhel-lightspeed` in ext-redhat-lightspeed)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-redhat-lightspeed/packages/extension/icon.png` (Lightspeed mark); MCP: https://github.com/containers.png
+- **Icon:** `../ext-redhat-lightspeed/packages/extension/icon.png` (Lightspeed mark); MCP: https://github.com/containers.png
 - **Description:** Ask OpenShift Lightspeed about the active cluster, with kubernetes-mcp-server giving agents scoped access to the same context.
 
 ## 2. Real objects & fields

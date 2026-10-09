@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Red Hat Ecosystem Catalog
 - **Extension id:** `redhat.catalog-checker` (new) — anonymous API
-- **Icon:** Red Hat Ecosystem Catalog icon (https://catalog.redhat.com favicon); fallback `/home/astefani/github/podman-desktop/ext-redhat-account/icons/redhat-logo.svg`
+- **Icon:** Red Hat Ecosystem Catalog icon (https://catalog.redhat.com favicon); fallback `../ext-redhat-account/icons/redhat-logo.svg`
 - **Description:** Health grade, freshness and newer tags for Red Hat base images; browse certified images.
 
 ## 2. Real objects & fields

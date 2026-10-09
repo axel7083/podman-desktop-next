@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Red Hat Security Data (VEX)
 - **Extension id:** `redhat.security-data-checker` (new) — no auth needed
-- **Icon:** Red Hat Product Security shield (https://access.redhat.com/security); fallback `/home/astefani/github/podman-desktop/ext-redhat-account/icons/redhat-logo.svg`
+- **Icon:** Red Hat Product Security shield (https://access.redhat.com/security); fallback `../ext-redhat-account/icons/redhat-logo.svg`
 - **Description:** Matches an image's RPM database against Red Hat's authoritative CVE/VEX data ("Not affected", "Fixed in RHSA-…").
 
 ## 2. Real objects & fields

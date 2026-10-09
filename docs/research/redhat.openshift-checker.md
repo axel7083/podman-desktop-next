@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** Red Hat OpenShift Checker
 - **Extension id:** `redhat.openshift-checker` (real; `ext-image-checker-openshift/podman-desktop-extension/package.json`, Go analyzer in `pkg/`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-image-checker-openshift/podman-desktop-extension/icon.png`
+- **Icon:** `../ext-image-checker-openshift/podman-desktop-extension/icon.png`
 - **Description:** Flags Containerfile directives that misbehave under OpenShift's restricted SCC (arbitrary UID, root group).
 
 ## 2. Real objects & fields

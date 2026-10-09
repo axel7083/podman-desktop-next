@@ -3,7 +3,7 @@
 ## 1. Identity
 - **Display name:** RHEL Lightspeed
 - **Extension id:** `redhat.rhel-lightspeed` (real; `ext-redhat-lightspeed/packages/extension/package.json`, name `rhel-lightspeed`)
-- **Icon:** `/home/astefani/github/podman-desktop/ext-redhat-lightspeed/packages/extension/icon.png`
+- **Icon:** `../ext-redhat-lightspeed/packages/extension/icon.png`
 - **Description:** Get help from RHEL Lightspeed (command-line assistant) inside Podman Desktop.
 
 ## 2. Real objects & fields

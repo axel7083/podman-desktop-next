@@ -3,7 +3,7 @@
 ## 1. Identity
 - Display name: ModelCar Builder
 - Extension id: `redhat.modelcar` (proposed; no real extension exists). Could equally ship inside `redhat.ai-lab` as a "Package as ModelCar" action on downloaded models; the mockup models it as a separate small extension that depends on AI Lab models + the Kubernetes/OpenShift AI connection.
-- Icon: `/home/astefani/github/podman-desktop/ext-ai-lab/packages/backend/icon.png` (reuse AI Lab icon; no official ModelCar logo exists)
+- Icon: `../ext-ai-lab/packages/backend/icon.png` (reuse AI Lab icon; no official ModelCar logo exists)
 - Description: Package model weights as an OCI "ModelCar" image, push to a registry, and deploy it on KServe / OpenShift AI with `storageUri: oci://...`.
 
 ## 2. Real objects / fields / enums

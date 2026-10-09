@@ -1,7 +1,7 @@
 # k3d (O9)
 
 ## 1. Identity
-- **Display name:** k3d · **Extension id:** `podman-desktop.k3d` (proposed; same shape as `/home/astefani/github/podman-desktop/ext-kind/`) · **Icon:** https://github.com/k3d-io.png
+- **Display name:** k3d · **Extension id:** `podman-desktop.k3d` (proposed; same shape as `../ext-kind/`) · **Icon:** https://github.com/k3d-io.png
 - **Description:** Lightweight k3s clusters in Podman containers, with built-in load balancer and registry.
 
 ## 2. Real objects & fields

@@ -3,7 +3,7 @@
 ## 1. Identity
 - Display name: Models-as-a-Service (Red Hat OpenShift AI)
 - Extension id: `redhat.maas` (proposed; the real Kaiden equivalent is `kaiden.openshift-ai` plus `kaiden.openai-compatible`)
-- Icon: https://raw.githubusercontent.com/openkaiden/kaiden/main/extensions/openshift-ai/icon_light.png (verified 200 image/png; dark variant `icon_dark.png`). Fallback local: `/home/astefani/github/podman-desktop/ext-ai-lab/packages/backend/icon.png`
+- Icon: https://raw.githubusercontent.com/openkaiden/kaiden/main/extensions/openshift-ai/icon_light.png (verified 200 image/png; dark variant `icon_dark.png`). Fallback local: `../ext-ai-lab/packages/backend/icon.png`
 - Description: Connect to your company's OpenShift AI MaaS gateway (or any OpenAI-compatible endpoint), mint API keys, browse subscribed models and track token quota.
 
 ## 2. Real objects / fields / enums
