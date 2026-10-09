@@ -15,6 +15,8 @@ const collapsed = new SvelteSet<string>();
 import { faCheck, faChevronDown, faChevronRight, faEllipsis, faEllipsisVertical, faPlay, faSortDown, faSortUp, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import AppIcon from '#lib/components/AppIcon.svelte';
 
+import LabIcon from '../ui/LabIcon.svelte';
+
 import { openMenu } from './live.svelte.ts';
 import type { LabRow } from './cells/types.ts';
 
@@ -58,7 +60,7 @@ const allCols = $derived<Col[]>([
 ]);
 const shown = $derived(allCols.filter(c => !hidden.has(c.key)));
 const template = $derived(
-  [grid ? '40px 20px' : '28px', ...shown.map(c => (widths[c.key] ? `${widths[c.key]}px` : c.width)), grid ? '96px' : '132px'].join(' '),
+  [grid ? '40px 20px' : readonly ? '12px' : '28px', ...shown.map(c => (widths[c.key] ? `${widths[c.key]}px` : c.width)), grid ? '96px' : '132px'].join(' '),
 );
 
 function num(v: string): number {
@@ -207,7 +209,7 @@ function subOf(r: LabRow): string[] {
 </script>
 
 {#snippet dot(r: LabRow)}
-  <span class="dot {tone(r.status)}" title={r.status}></span>
+  {#if r.status}<span class="dot {tone(r.status)}" title={r.status}></span>{/if}
 {/snippet}
 
 {#snippet acts(r: LabRow)}
@@ -249,15 +251,14 @@ function subOf(r: LabRow): string[] {
         <span class="gut">#</span><span></span>
       {:else}
         <span class="cb">
-          <input
+          {#if !readonly}<input
             type="checkbox"
-            disabled={readonly}
             aria-label="Select all"
             checked={leaves.length > 0 && leaves.every(r => selected.has(r.name))}
             onchange={(e): void => {
               if (e.currentTarget.checked) leaves.forEach(r => selected.add(r.name));
               else selected.clear();
-            }} />
+            }} />{/if}
         </span>
       {/if}
       {#each shown as c (c.key)}
@@ -304,7 +305,7 @@ function subOf(r: LabRow): string[] {
         {#if grid}<span class="gut">{i + 1}</span>{/if}
         <span class="chev" data-testid="mt-group-toggle"><AppIcon icon={collapsed.has(r.name) ? faChevronRight : faChevronDown} size="xs" /></span>
         <span class="name" style:grid-column="span {shown.length}">
-          <span class="gicon"><AppIcon icon={r.icon} size="15px" /></span>
+          <span class="gicon"><LabIcon icon={r.icon} size={16} /></span>
           <span class="title">{r.title}</span>
           {#if r.chip}<span class="kind">{r.chip}</span>{/if}
           <span class="agg">{@render dot(r)}{r.agg ?? `${r.children?.length ?? 0}`}</span>
@@ -333,16 +334,13 @@ function subOf(r: LabRow): string[] {
           <span class="flex items-center justify-center">{@render dot(r)}</span>
         {:else}
           <span class="cb">
-            <input type="checkbox" disabled={readonly} data-testid="mt-check" aria-label="Select {r.title}" checked={selected.has(r.name)} onclick={(e): void => e.stopPropagation()} onchange={(): void => toggleSel(r)} />
+            {#if !readonly}<input type="checkbox" data-testid="mt-check" aria-label="Select {r.title}" checked={selected.has(r.name)} onclick={(e): void => e.stopPropagation()} onchange={(): void => toggleSel(r)} />{/if}
           </span>
         {/if}
         {#each shown as c (c.key)}
           {#if c.key === '__name'}
             <span class="name" style:padding-left={f.depth ? '22px' : undefined}>
-              {#if !grid}
-                {#if typeof r.icon === 'string'}<AppIcon icon={r.icon} size="14px" />{/if}
-                {@render dot(r)}
-              {/if}
+              {#if !grid}{@render dot(r)}{/if}
               <span class="title" title={r.title}>{r.title}</span>
               {#if r.shortId}<span class="muted mono">{r.shortId.slice(0, 8)}</span>{/if}
               {#each subOf(r) as s, j (j)}
@@ -358,7 +356,7 @@ function subOf(r: LabRow): string[] {
     {/if}
   {/each}
   {#if !flat.length}
-    <div class="px-4 py-3 text-xs text-[var(--pd-table-body-text)]">No rows match the column filters.</div>
+    <div class="px-4 py-3 text-[12px] text-[var(--pd-table-body-text)]">No rows match the column filters.</div>
   {/if}
 </div>
 
@@ -369,7 +367,7 @@ function subOf(r: LabRow): string[] {
   --row-h: 34px;
   width: 100%;
   min-width: max-content;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--pd-table-body-text);
   outline: none;
   align-self: flex-start;
@@ -541,7 +539,7 @@ function subOf(r: LabRow): string[] {
   color: var(--pd-content-header-icon, var(--pd-table-body-text));
 }
 .kind {
-  font-size: 10.5px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--pd-table-body-text);
@@ -594,7 +592,7 @@ function subOf(r: LabRow): string[] {
 }
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11.5px;
+  font-size: 12px;
 }
 .pill {
   flex-shrink: 0;
@@ -670,7 +668,7 @@ function subOf(r: LabRow): string[] {
   align-items: center;
   justify-content: center;
   width: 24px;
-  height: 22px;
+  height: 24px;
   border-radius: 4px;
   font-size: 12px;
   color: var(--pd-action-button-details-text);
@@ -732,7 +730,7 @@ function subOf(r: LabRow): string[] {
 .gut {
   justify-content: flex-end;
   padding-right: 6px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--pd-table-body-text);
   background: var(--pd-content-card-bg, transparent);

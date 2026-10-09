@@ -169,7 +169,7 @@ function onkey(e: KeyboardEvent): void {
   onkeydown={onkey}>
   <div class="absolute right-3 top-2 z-10 flex items-center gap-1">
     {#if open}
-      <div data-testid="find-bar" class="flex items-center gap-1 h-7 pl-2 pr-1 rounded-md border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-bg)] shadow-lg text-xs text-[var(--pd-input-field-focused-text)]">
+      <div data-testid="find-bar" class="flex items-center gap-1 h-7 pl-2 pr-1 rounded-md border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-bg)] shadow-lg text-[12px] text-[var(--pd-input-field-focused-text)]">
         <AppIcon icon={faMagnifyingGlass} size="xs" />
         <input
           bind:this={input}

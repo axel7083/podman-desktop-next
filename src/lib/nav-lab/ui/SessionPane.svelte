@@ -47,8 +47,9 @@ export function sessionSource(s: PanelSession): SessionSource {
 <script lang="ts">
 /**
  * One bottom-panel pane (logs or terminal). A compact single toolbar row:
- * source chip (kind icon, resource name, connection, status; click focuses the
- * resource tab), then for logs: time range, level, follow, timestamps, wrap,
+ * resource chip (kind icon, name, status: opens / focuses the resource tab)
+ * and connection chip (provider icon, name: opens the connection Overview),
+ * rule F25; then for logs: time range, level, follow, timestamps, wrap,
  * find (Ctrl+F), download, clear.
  */
 import {
@@ -67,6 +68,7 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 import { STATUS_DOT } from '../data.ts';
 import CodeView from '../r3/CodeView.svelte';
 import ConnIcon from './ConnIcon.svelte';
+import LabIcon from './LabIcon.svelte';
 
 interface Props {
   session: PanelSession;
@@ -155,35 +157,50 @@ function clear(): void {
     onclick={(e): void => {
       e.stopPropagation();
       run();
-    }}><AppIcon {icon} size="xs" /></button>
+    }}><AppIcon {icon} /></button>
 {/snippet}
 
 <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
 <div data-testid="panel-pane" data-kind={session.kind} data-session={session.id} class="flex flex-col flex-1 min-w-0 min-h-0" onclick={onfocus}>
-  <div data-testid="pane-toolbar" class="relative flex items-center gap-1 h-7 shrink-0 pl-1.5 pr-1 text-[11px] border-b border-[color-mix(in_srgb,var(--pd-content-divider)_60%,transparent)]" class:bg-[color-mix(in_srgb,var(--pd-content-card-bg)_55%,transparent)]={active}>
-    <button
-      type="button"
-      data-testid="pane-source"
-      class="flex items-center gap-1.5 h-5 min-w-0 pl-1 pr-1.5 rounded text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)]"
-      title="Open {src.name}"
-      onclick={(e): void => {
-        e.stopPropagation();
-        if (src.target) onopen?.(src.target, {});
-      }}>
-      {#if src.icon}<span class="flex w-3.5 h-3.5 items-center justify-center shrink-0"><AppIcon icon={src.icon} size="12px" /></span>{/if}
-      <span class="truncate font-medium">{src.name}</span>
-      {#if src.status}<span class="w-1.5 h-1.5 rounded-full shrink-0 {STATUS_DOT[src.status] ?? STATUS_DOT.stopped}" title={src.status}></span>{/if}
-      <ConnIcon connId={session.connId} size={11} dot={false} />
-      <span class="opacity-60 truncate max-w-32 font-normal">{c?.name}</span>
-    </button>
-    {#if session.label}<span class="truncate opacity-50 font-mono">{session.label}</span>{/if}
+  <div data-testid="pane-toolbar" class="relative flex items-center gap-1 h-8 shrink-0 pl-1.5 pr-1 text-[12px] border-b border-[color-mix(in_srgb,var(--pd-content-divider)_60%,transparent)]" class:bg-[color-mix(in_srgb,var(--pd-content-card-bg)_55%,transparent)]={active}>
+    {#if src.target && src.target.kind !== 'connection'}
+      <button
+        type="button"
+        data-testid="pane-source"
+        class="chip font-medium text-[var(--pd-content-header)]"
+        title="Open {src.name}"
+        onclick={(e): void => {
+          e.stopPropagation();
+          if (src.target) onopen?.(src.target, {});
+        }}>
+        {#if src.icon}<LabIcon icon={src.icon} size={14} />{/if}
+        <span class="truncate">{src.name}</span>
+        {#if src.status}<span class="w-1.5 h-1.5 rounded-full shrink-0 {STATUS_DOT[src.status] ?? STATUS_DOT.stopped}" title={src.status}></span>{/if}
+      </button>
+    {/if}
+    {#if c}
+      <button
+        type="button"
+        data-testid="pane-conn"
+        class="chip text-[var(--pd-table-body-text)] hover:text-[var(--pd-content-header)]"
+        title="Open {c.name} overview"
+        onclick={(e): void => {
+          e.stopPropagation();
+          onopen?.({ kind: 'connection', connId: c.id }, {});
+        }}>
+        <ConnIcon connId={c.id} size={14} dot={false} />
+        <span class="truncate max-w-40">{c.name}</span>
+        {#if src.target?.kind === 'connection' && src.status}<span class="w-1.5 h-1.5 rounded-full shrink-0 {STATUS_DOT[src.status] ?? STATUS_DOT.stopped}" title={src.status}></span>{/if}
+      </button>
+    {/if}
+    {#if session.label}<span class="truncate text-[var(--pd-table-body-text)] font-mono">{session.label}</span>{/if}
     <span class="flex-1"></span>
     {#if session.kind === 'logs'}
       <div class="relative">
         <button
           type="button"
           data-testid="logs-range"
-          class="flex items-center gap-1 h-5 px-1.5 rounded hover:bg-[var(--pd-action-button-details-bg)] text-[var(--pd-content-header)]"
+          class="flex items-center gap-1 h-6 px-1.5 rounded hover:bg-[var(--pd-action-button-details-bg)] text-[var(--pd-content-header)]"
           aria-haspopup="menu"
           title="Time range"
           onclick={(e): void => {
@@ -193,7 +210,7 @@ function clear(): void {
           {#if range === 'live'}<span class="w-1.5 h-1.5 rounded-full bg-[var(--pd-status-running)]"></span>{:else}<AppIcon icon={faClock} size="xs" />{/if}
           {rangeLabel}<AppIcon icon={faChevronDown} size="xs" /></button>
         {#if rangeOpen || customOpen}
-          <div role="menu" tabindex="-1" class="absolute right-0 top-6 z-50 w-56 rounded-md border border-[var(--pd-dropdown-border)] bg-[var(--pd-dropdown-bg)] shadow-xl py-1 text-xs" onclick={(e): void => e.stopPropagation()}>
+          <div role="menu" tabindex="-1" class="absolute right-0 top-7 z-50 w-56 rounded-md border border-[var(--pd-dropdown-border)] bg-[var(--pd-dropdown-bg)] shadow-xl py-1 text-[12px]" onclick={(e): void => e.stopPropagation()}>
             {#if rangeOpen}
               {#each RANGES as [id, label] (id)}
                 <button type="button" role="menuitemradio" aria-checked={range === id} class="w-full flex items-center px-3 h-7 text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)]" class:font-semibold={range === id} onclick={(): void => setRange(id)}>{label}</button>
@@ -218,7 +235,7 @@ function clear(): void {
           aria-label="Level"
           bind:value={level}
           onclick={(e): void => e.stopPropagation()}
-          class="h-5 pl-1 pr-0 rounded text-[11px] bg-transparent text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)] outline-none cursor-pointer">
+          class="h-6 pl-1 pr-0 rounded text-[12px] bg-transparent text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)] outline-none cursor-pointer">
           <option value="all">All levels</option>
           <option value="info">Info+</option>
           <option value="warn">Warn+</option>
@@ -252,16 +269,27 @@ function clear(): void {
 </div>
 
 <style>
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 4px;
+}
+.chip:hover {
+  background: var(--pd-action-button-details-bg);
+}
 .tb {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--pd-action-button-details-text);
-  opacity: 0.75;
 }
 .tb:hover {
   opacity: 1;

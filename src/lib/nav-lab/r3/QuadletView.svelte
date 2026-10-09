@@ -5,10 +5,13 @@ import { faAlignLeft, faEllipsisVertical, faPenToSquare, faPlay, faRotateRight, 
 import type { LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import ActBtn from './ActBtn.svelte';
+import Card from './Card.svelte';
 import CodeView from './CodeView.svelte';
 import Head from './Head.svelte';
 import { live, openMenu, showJournal } from './live.svelte.ts';
+import KV from './KV.svelte';
 import { quadletIni, systemctlStatus } from './quadlet.ts';
+import Section from './Section.svelte';
 import type { FoundNode } from './trees.ts';
 
 interface Props {
@@ -31,17 +34,14 @@ function journal(): void {
 </script>
 
 {#snippet actions()}
-  <ActBtn icon={faAlignLeft} label="Logs (journalctl)" onclick={journal} />
   <ActBtn icon={up ? faStop : faPlay} label={up ? 'Stop' : 'Start'} disabled={st === 'ready'} onclick={(): void => void (live.status[n.id] = up ? 'stopped' : 'running')} />
   <ActBtn icon={faRotateRight} label="Restart" disabled={!up} onclick={(): void => void (live.status[n.id] = 'running')} />
+  <ActBtn icon={faAlignLeft} label="Logs (journalctl)" onclick={journal} />
   <ActBtn icon={faPenToSquare} label="Edit" onclick={(): void => { view = 'source'; }} />
   <ActBtn icon={faTrash} label="Delete" danger onclick={(): void => lab.openCreate(`Remove ${n.label}`)} />
   <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, [{ label: 'Logs (journalctl)', icon: faAlignLeft, run: journal }, { label: 'Show source', run: (): void => { view = 'source'; } }])} />
 {/snippet}
 
-{#snippet row(k: string, v: string)}
-  <tr><td class="pt-1.5 pr-6 w-44 align-top text-[var(--pd-table-body-text)]">{k}</td><td class="pt-1.5 wrap-anywhere">{v}</td></tr>
-{/snippet}
 
 <div data-testid="quadlet-view" class="flex flex-col h-full min-h-0">
   <Head
@@ -59,29 +59,31 @@ function journal(): void {
     }}
     {actions} />
   {#if view === 'source'}
-    <div class="flex items-center gap-2 h-8 px-4 shrink-0 text-xs text-[var(--pd-table-body-text)] border-b border-[var(--pd-content-divider)]">
-      <span class="font-mono">{n.data?.path}</span><span class="opacity-60">· podman-systemd.unit(5)</span>
+    <div class="flex items-center gap-2 h-8 px-4 shrink-0 text-[12px] text-[var(--pd-table-body-text)] border-b border-[var(--pd-content-divider)]">
+      <span class="font-mono">{n.data?.path}</span><span>· podman-systemd.unit(5)</span>
     </div>
     <CodeView lines={quadletIni(n.label)} lang="ini" numbered testid="quadlet-source" />
   {:else if view === 'status'}
     <CodeView lines={systemctlStatus(n.label, st)} testid="quadlet-status" />
   {:else}
-    <div class="flex-1 min-h-0 overflow-auto px-5 py-4 text-[13px] leading-5">
-      <div class="rounded-lg bg-[var(--pd-content-card-bg)] p-4 max-w-4xl">
-        <table class="w-full">
-          <tbody>
-            <tr><td colspan="2" class="text-base font-semibold text-[var(--pd-table-body-text-sub-secondary)] pb-1">Details</td></tr>
-            {@render row('Unit file', n.label)}
-            {@render row('Type', n.data?.type ?? '')}
-            {@render row('Generated service', svc)}
-            {@render row('Path', n.data?.path ?? '')}
-            {@render row('Status', st)}
-            {@render row('Enabled', 'yes (WantedBy=default.target)')}
-          </tbody>
-        </table>
+    <div data-testid="summary" class="flex-1 min-h-0 overflow-auto px-5 py-4 flex flex-col gap-4">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4 items-start">
+        <Card title="Details">
+          <KV
+            rows={[
+              { k: 'Unit file', v: n.label },
+              { k: 'Type', v: n.data?.type ?? '' },
+              { k: 'Generated service', v: svc },
+              { k: 'Path', v: n.data?.path ?? '', mono: true },
+              { k: 'Status', v: st },
+              { k: 'Enabled', v: 'yes (WantedBy=default.target)' },
+              { k: 'Connection', v: f.connId, onclick: (): void => onopen({ kind: 'connection', connId: f.connId }, {}) },
+            ]} />
+        </Card>
       </div>
-      <div class="pt-4 pb-1.5 text-base font-semibold text-[var(--pd-content-header)]">systemctl --user status {svc}</div>
-      <pre class="m-0 p-3 rounded-lg font-mono text-xs leading-5 bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)] overflow-auto">{systemctlStatus(n.label, st).join('\n')}</pre>
+      <Section title="systemctl --user status {svc}">
+        <pre class="flex-1 m-0 p-3 rounded-lg font-mono text-[12px] leading-5 bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)] overflow-auto">{systemctlStatus(n.label, st).join('\n')}</pre>
+      </Section>
     </div>
   {/if}
 </div>

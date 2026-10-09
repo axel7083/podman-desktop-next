@@ -1,14 +1,18 @@
 <script lang="ts">
-/** Bootable containers extension sections (Overview, Images, Disk Images, Examples) in its card style. */
-import { faArrowCircleDown, faCircleInfo, faCompactDisc, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@podman-desktop/ui-svelte';
-
-import AppIcon from '#lib/components/AppIcon.svelte';
+/**
+ * Bootable containers extension sections (Overview, Images, Disk Images, Examples).
+ * Header: secondary "Pull image" + primary "Build" (rule D12); lists are tables.
+ */
+import { faArrowCircleDown, faCompactDisc, faPlusCircle, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import type { LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
-import ActBtn from './ActBtn.svelte';
+import LabIcon from '../ui/LabIcon.svelte';
+import Btn from './Btn.svelte';
+import Card from './Card.svelte';
+import KV from './KV.svelte';
+import StatGrid from './StatGrid.svelte';
 import Head from './Head.svelte';
 import RowsTable from './RowsTable.svelte';
 import { type FoundNode, OVERVIEW_ICON } from './trees.ts';
@@ -69,8 +73,8 @@ const disks = $derived<LabRow[]>(
 </script>
 
 {#snippet actions()}
-  {#if section === 'Images'}<ActBtn icon={faArrowCircleDown} label="Pull image" onclick={(): void => lab.openCreate('Pull a bootc image')} />{/if}
-  <Button icon={faPlusCircle} onclick={(): void => lab.openCreate('Build a disk image')}>Build</Button>
+  {#if section === 'Images' || section === 'Overview'}<Btn icon={faArrowCircleDown} testid="bootc-pull" onclick={(): void => lab.openCreate('Pull a bootc image')}>Pull image</Btn>{/if}
+  <Btn kind="primary" icon={faPlusCircle} testid="bootc-build" onclick={(): void => lab.openCreate('Build a disk image')}>Build</Btn>
 {/snippet}
 
 <div data-testid="bootc-view" class="flex flex-col h-full min-h-0">
@@ -84,38 +88,35 @@ const disks = $derived<LabRow[]>(
       <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 p-5">
         {#each EXAMPLES as [t, d, img] (t)}
           <div class="flex flex-col gap-2 p-4 rounded-lg bg-[var(--pd-content-card-bg)]">
-            <div class="flex items-center gap-2"><AppIcon icon="icons/redhat.bootc.png" size="24px" /><span class="text-base font-semibold text-[var(--pd-content-card-header-text)]">{t}</span></div>
-            <p class="text-[13px] text-[var(--pd-content-card-text)] flex-1">{d}</p>
-            <div class="font-mono text-xs truncate text-[var(--pd-content-card-text)] opacity-80">{img}</div>
+            <div class="flex items-center gap-2"><LabIcon icon="icons/redhat.bootc.png" size={20} /><span class="text-[14px] font-semibold text-[var(--pd-content-header)]">{t}</span></div>
+            <p class="text-[13px] text-[var(--pd-table-body-text)] flex-1">{d}</p>
+            <div class="font-mono text-[12px] truncate text-[var(--pd-table-body-text)]">{img}</div>
             <div class="flex items-center gap-2 pt-1">
-              <select aria-label="Architecture" class="h-7 px-2 rounded-md text-xs bg-[var(--pd-select-bg)] text-[var(--pd-content-card-text)] border border-[var(--pd-input-field-stroke)]" bind:value={arch[t]}>
+              <select aria-label="Architecture" class="h-7 px-2 rounded-md text-[12px] bg-[var(--pd-select-bg)] text-[var(--pd-content-header)] border border-[var(--pd-input-field-stroke)]" bind:value={arch[t]}>
                 <option value="amd64">x86_64</option><option value="arm64">aarch64</option>
               </select>
-              <Button type="link" icon={faCircleInfo}>More Details</Button>
               <span class="flex-1"></span>
-              <Button icon={faArrowCircleDown} onclick={(): void => lab.openCreate(`Pull ${img} (${arch[t] ?? 'amd64'})`)}>Pull image</Button>
+              <Btn icon={faArrowCircleDown} onclick={(): void => lab.openCreate(`Pull ${img} (${arch[t] ?? 'amd64'})`)}>Pull image</Btn>
             </div>
           </div>
         {/each}
       </div>
     {:else}
-      <div class="p-5 flex flex-col gap-4 text-[13px]">
-        <div class="rounded-lg p-5 bg-[var(--pd-content-card-bg)] flex items-center gap-4">
-          <AppIcon icon="icons/redhat.bootc.png" size="48px" />
-          <div class="flex-1">
-            <div class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">Welcome to Bootable Containers</div>
-            <div class="text-[var(--pd-content-card-text)]">Build a bootable OS image from a container image, then turn it into a disk image (qcow2, raw, ISO, AMI…).</div>
-          </div>
-          <Button icon={faCompactDisc} onclick={(): void => lab.openCreate('Build a disk image')}>Build disk image</Button>
-        </div>
-        <div class="grid grid-cols-3 gap-4">
-          {#each [['Images', '3'], ['Disk Images', '2'], ['Examples', '6']] as [k, v] (k)}
-            {@const child = f.root.children?.find(x => x.label === k)}
-            <button type="button" class="p-4 rounded-lg bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] text-left" onclick={(): void => { if (child) onopen({ kind: 'node', connId: f.connId, nodeId: child.id }, {}); }}>
-              <div class="text-3xl font-semibold text-[var(--pd-content-card-header-text)]">{v}</div>
-              <div class="text-[var(--pd-content-card-text)]">{k}</div>
-            </button>
-          {/each}
+      <div data-testid="bootc-overview" class="px-5 py-4 flex flex-col gap-4">
+        <StatGrid
+          items={(f.root.children ?? [])
+            .filter(x => x.label !== 'Overview')
+            .map(x => ({ label: x.label, count: x.detail ?? '', icon: x.icon, onclick: (): void => onopen({ kind: 'node', connId: f.connId, nodeId: x.id }, {}) }))} />
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4 items-start">
+          <Card title="About">
+            <KV
+              rows={[
+                { k: 'Extension', v: 'Bootable containers' },
+                { k: 'Description', v: 'Build a bootable OS image from a container image, then turn it into a disk image (qcow2, raw, ISO, AMI…).' },
+                { k: 'Connection', v: f.connId, onclick: (): void => onopen({ kind: 'connection', connId: f.connId }, {}) },
+                { k: 'Output folder', v: '~/bootc/output', mono: true },
+              ]} />
+          </Card>
         </div>
       </div>
     {/if}

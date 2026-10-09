@@ -12,7 +12,7 @@ import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
 import { hash } from './details.ts';
 import { ext, isInstalled } from './exts.ts';
-import ActBtn from './ActBtn.svelte';
+import Btn from './Btn.svelte';
 import Head from './Head.svelte';
 import ModernTable from './ModernTable.svelte';
 import PromoEmpty from './PromoEmpty.svelte';
@@ -87,7 +87,7 @@ const rows = $derived<LabRow[]>(
 {/snippet}
 
 {#snippet actions()}
-  {#if installed}<ActBtn icon={faRotateRight} label="Rescan" disabled={scanning} onclick={(): void => void run++} />{/if}
+  {#if installed}<Btn icon={faRotateRight} disabled={scanning} testid="rescan" onclick={(): void => void run++}>Rescan</Btn>{/if}
 {/snippet}
 
 <div data-testid="scan-view" class="flex flex-col h-full min-h-0">
@@ -104,16 +104,16 @@ const rows = $derived<LabRow[]>(
       onbrowse={(): void => onopen({ kind: 'extensions' }, {})} />
   {:else if scanning}
     <div class="flex flex-col items-center justify-center gap-3 flex-1 text-[var(--pd-content-text)]">
-      <div class="text-base">Scanning {image}…</div>
+      <div class="text-[14px]">Scanning {image}…</div>
       <div class="w-80"><LinearProgress /></div>
-      <div class="text-xs text-[var(--pd-table-body-text)]">Cataloging packages · matching against the Grype DB (updated 2 hours ago)</div>
+      <div class="text-[12px] text-[var(--pd-table-body-text)]">Cataloging packages · matching against the Grype DB (updated 2 hours ago)</div>
     </div>
   {:else}
     <div data-testid="scan-table" class="flex flex-1 min-h-0 overflow-auto">
       {#if rows.length}
         <ModernTable {rows} cols={[['Severity', 'sev', '110px'], ['Package', 'pkg', 'minmax(8rem, 1fr)'], ['Installed', 'inst', '150px'], ['Fixed in', 'fixed', '150px']]} variant={lab.table === 'grid' ? 'grid' : 'modern'} initialSort="" mono={['inst', 'fixed']} readonly />
       {:else}
-        <div class="px-4 py-3 text-xs text-[var(--pd-table-body-text)]">No vulnerabilities match.</div>
+        <div class="px-4 py-3 text-[12px] text-[var(--pd-table-body-text)]">No vulnerabilities match.</div>
       {/if}
     </div>
   {/if}

@@ -13,6 +13,7 @@
  * pages. Extension sub-tree children use semantic icons; every overview uses
  * the Overview icon. Right-click a tree item for its actions. Lab toggle
  * "Install: Vanilla | All extensions" switches what is installed.
+ * Design rules: docs/p13-design-rules.md (audit: docs/p13-audit.md).
  */
 import { faChevronDown, faChevronRight, faEllipsisVertical, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import { untrack } from 'svelte';
@@ -40,6 +41,7 @@ import Frame from '../r2/Frame.svelte';
 import SimpleSwitcher from '../r2/SimpleSwitcher.svelte';
 import { extPagesFor, labConns } from '../r2/simple.ts';
 import TitleActions from '../r2/TitleActions.svelte';
+import AccountsView from '../r3/AccountsView.svelte';
 import ConnView from '../r3/ConnView.svelte';
 import ExtensionsView from '../r3/ExtensionsView.svelte';
 import FilterInput from '../r3/FilterInput.svelte';
@@ -49,11 +51,13 @@ import KubePlayView from '../r3/KubePlayView.svelte';
 import ListView from '../r3/ListView.svelte';
 import ScanView from '../r3/ScanView.svelte';
 import SettingsView from '../r3/SettingsView.svelte';
+import ToolView from '../r3/ToolView.svelte';
 import { connActions, isUp, live, type MenuItem, openMenu, resActions, resStatus } from '../r3/live.svelte.ts';
 import NodeView from '../r3/NodeView.svelte';
 import { OVERVIEW_ICON, TREE_PROVIDERS, type TreeNode, treeRoot } from '../r3/trees.ts';
 import BottomPanel from '../ui/BottomPanel.svelte';
 import Content from '../ui/Content.svelte';
+import LabIcon from '../ui/LabIcon.svelte';
 import TabStrip from '../ui/TabStrip.svelte';
 
 const wb = new Workbench();
@@ -191,7 +195,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
       if (e.key === 'Enter') open(o.target);
     }}>
     <span
-      class="w-3 shrink-0 text-[9px] opacity-70"
+      class="flex w-3 shrink-0 justify-center text-[9px] opacity-70"
       role="presentation"
       data-chevron={o.chevron ? o.key : undefined}
       onclick={(e): void => {
@@ -201,19 +205,19 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
         }
       }}>{#if o.chevron}<AppIcon icon={o.open ? faChevronDown : faChevronRight} />{/if}</span>
     {#if o.status}
-      <span class="w-2 h-2 mx-1 rounded-full shrink-0 {STATUS_DOT[o.status] ?? STATUS_DOT.running}" data-status={o.status}></span>
+      <span class="flex w-4 h-4 items-center justify-center shrink-0"><span class="w-2 h-2 rounded-full {STATUS_DOT[o.status] ?? STATUS_DOT.running}" data-status={o.status}></span></span>
     {:else if o.icon}
-      <span class="flex w-4 h-4 items-center justify-center shrink-0" style:font-size="13px"><AppIcon icon={o.icon} size="15px" /></span>
+      <LabIcon icon={o.icon} size={16} />
     {/if}
     <span class="truncate">{label}</span>
-    {#if o.dim}<span class="truncate text-sm opacity-50">{o.dim}</span>{/if}
+    {#if o.dim}<span class="truncate text-[11px] text-[var(--pd-table-body-text)]">{o.dim}</span>{/if}
     <span class="flex-1"></span>
-    {#if o.count !== undefined}<span class="text-sm opacity-50 {menu ? 'group-hover/row:hidden' : ''}">{o.count}</span>{/if}
+    {#if o.count !== undefined}<span class="text-[11px] text-[var(--pd-table-body-text)] {menu ? 'group-hover/row:hidden' : ''}">{o.count}</span>{/if}
     {#if menu}
       <button
         type="button"
         aria-label="Actions for {label}"
-        class="w-5 h-5 shrink-0 items-center justify-center rounded hover:bg-[var(--pd-content-card-hover-inset-bg)] text-[10px] hidden group-hover/row:flex"
+        class="w-5 h-5 shrink-0 items-center justify-center rounded hover:bg-[var(--pd-content-card-hover-inset-bg)] text-[11px] hidden group-hover/row:flex"
         onclick={(e): void => openMenu(e, menu)}><AppIcon icon={faEllipsisVertical} /></button>
     {/if}
   </div>
@@ -260,7 +264,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
           {@render sectionRows(s)}
         {/each}
         {#if extS.length || extT.length || pages.length}
-          <div data-testid="tree-extensions" class="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Extensions</div>
+          <div data-testid="tree-extensions" class="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Extensions</div>
           {#each extS as s (s.id)}
             {@render sectionRows(s)}
           {/each}
@@ -298,6 +302,10 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
           <NodeView nodeId={t.nodeId} onopen={open} />
         {:else if t?.kind === 'extensions'}
           <ExtensionsView />
+        {:else if t?.kind === 'accounts'}
+          <AccountsView />
+        {:else if t?.kind === 'tool' && t.toolId}
+          <ToolView toolId={t.toolId} onopen={open} />
         {:else}
           <Content target={t} onopen={open} selectedRes={t?.resId} />
         {/if}

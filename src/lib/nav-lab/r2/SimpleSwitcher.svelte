@@ -8,12 +8,13 @@
  * connection the button is just a label (no chevrons) and the menu only has
  * the two actions.
  */
-import { faCheck, faChevronDown, faChevronUp, faGear, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faChevronDown, faChevronUp, faGear, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 
 import { conn as findConn, STATUS_DOT } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
+import FilterInput from '../r3/FilterInput.svelte';
 import ConnIcon from '../ui/ConnIcon.svelte';
 import { labConns, switchGroup } from './simple.ts';
 
@@ -72,7 +73,7 @@ function onpointer(e: PointerEvent): void {
     {#if !collapsed && current}
       <span class="flex-1 min-w-0 leading-tight">
         <span class="block font-semibold truncate text-[var(--pd-secondary-nav-header-text)]">{current.name}</span>
-        <span class="block text-xs truncate text-[var(--pd-content-sub-header)]">{current.product} · {current.status}</span>
+        <span class="block text-[11px] truncate text-[var(--pd-table-body-text)]">{current.product} · {current.status}</span>
       </span>
       {#if !single}<span class="flex flex-col text-[8px] opacity-60 leading-none"><AppIcon icon={faChevronUp} /><AppIcon icon={faChevronDown} /></span>{/if}
     {/if}
@@ -83,15 +84,11 @@ function onpointer(e: PointerEvent): void {
       class="absolute top-full mt-1 z-40 py-1 rounded-lg border border-[var(--pd-dropdown-border)] bg-[var(--pd-dropdown-bg)] text-[var(--pd-dropdown-item-text)] shadow-xl {collapsed ? 'left-0 w-64' : 'left-0 right-0'}">
       {#if !single}
         {#if conns.length > 8}
-          <label class="flex items-center gap-2 h-7 mx-1.5 mb-1 px-2 rounded-md border border-[var(--pd-input-field-stroke)] bg-[var(--pd-input-field-bg)] text-[var(--pd-input-field-icon)]">
-            <AppIcon icon={faMagnifyingGlass} size="xs" />
-            <!-- svelte-ignore a11y_autofocus -->
-            <input autofocus class="flex-1 min-w-0 bg-transparent outline-none text-sm text-[var(--pd-input-field-focused-text)] placeholder:text-[var(--pd-input-field-placeholder-text)]" placeholder="Filter connections" bind:value={filter} />
-          </label>
+          <div class="px-1.5 pb-1"><FilterInput placeholder="Filter connections" bind:value={filter} /></div>
         {/if}
         <div class="max-h-[60vh] overflow-auto">
           {#each groups as [g, list] (g)}
-            <div class="px-3 pt-1.5 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">{g}</div>
+            <div class="px-3 pt-1.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">{g}</div>
             {#each list as c (c.id)}
               <button type="button" role="menuitem" class="w-full flex items-center gap-2 h-7 px-3 text-left hover:bg-[var(--pd-dropdown-item-hover-bg)]" onclick={(): void => pick(c.id)}>
                 <ConnIcon connId={c.id} size={16} dot={false} />

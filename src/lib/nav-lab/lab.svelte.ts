@@ -14,6 +14,7 @@ import { untrack } from "svelte";
 
 import type { IconRef } from "#lib/ext/types.ts";
 import DashboardIcon from "#lib/images/DashboardIcon.svelte";
+import PodIcon from "#lib/images/PodIcon.svelte";
 import SettingsIcon from "#lib/images/SettingsIcon.svelte";
 
 import {
@@ -30,7 +31,7 @@ import {
   tool,
   WORKFLOWS,
 } from "./data.ts";
-import { findNode } from "./r3/trees.ts";
+import { findNode, OVERVIEW_ICON } from "./r3/trees.ts";
 
 export type ProposalId =
   | "p1"
@@ -372,7 +373,7 @@ export function describe(t: LabTarget): TargetInfo {
     case "kubeplay":
       return {
         title: "Play Kubernetes YAML",
-        icon: "icons/podman-desktop.kube-context.png",
+        icon: PodIcon,
         connId: c?.id,
         crumb: [c?.name ?? ""],
       };
@@ -384,6 +385,9 @@ export function describe(t: LabTarget): TargetInfo {
         crumb: [c?.name ?? ""],
       };
     case "connection":
+      // P13 (rule B6): a connection tab is its Overview (same icon as the tree row) + provider badge.
+      if (lab.proposal === "p13")
+        return { title: c?.name ?? "?", icon: OVERVIEW_ICON, connId: c?.id, crumb: [c?.group ?? ""] };
       return {
         title: c?.name ?? "?",
         icon: c?.icon ?? faBorderAll,

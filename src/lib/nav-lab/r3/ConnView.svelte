@@ -1,20 +1,22 @@
 <script lang="ts">
 /**
- * Connection summary tab (P13): compact header with start/stop, key-value
- * grid, resource counts, and promotion cards for related extensions
+ * Connection Overview tab (P13): header (Overview icon, start / stop quick
+ * actions), resource counters, key-value card, and promotion cards for related extensions
  * ("Install" in Vanilla flips the extension on; "Open" when installed).
  */
 import { faEllipsisVertical, faPlay, faRotateRight, faStop, faTerminal } from '@fortawesome/free-solid-svg-icons';
-import AppIcon from '#lib/components/AppIcon.svelte';
 
 import type { LabConnection, LabTarget } from '../data.ts';
 import ActBtn from './ActBtn.svelte';
+import Card from './Card.svelte';
 import ExtCards from './ExtCards.svelte';
 import { ext, isInstalled, type LabExtension, promotionsFor, sectionVisible } from './exts.ts';
 import Head from './Head.svelte';
+import KV from './KV.svelte';
 import { connActions, connStatus, isUp, openConnTerminal, openMenu, toggleConn } from './live.svelte.ts';
 import PromoEmpty from './PromoEmpty.svelte';
-import { TREE_PROVIDERS, treeRoot } from './trees.ts';
+import StatGrid from './StatGrid.svelte';
+import { OVERVIEW_ICON, TREE_PROVIDERS, treeRoot } from './trees.ts';
 
 interface Props {
   c: LabConnection;
@@ -25,8 +27,9 @@ let { c, onopen }: Props = $props();
 
 const st = $derived(connStatus(c));
 const up = $derived(isUp(st));
-const sections = $derived(c.sections.filter(sectionVisible));
 const trees = $derived(TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) && isInstalled(p.extId)));
+/** Same collections as the tree: sections replaced by an extension tree are listed once (as the tree). */
+const sections = $derived(c.sections.filter(s => sectionVisible(s) && !trees.some(p => p.replaces.includes(s.id))));
 const promos = $derived(promotionsFor(c));
 /** First promoted extension not installed yet: shown as the PD empty-state promotion. */
 const missing = $derived(promos.find(e => !isInstalled(e.id)));
@@ -48,10 +51,6 @@ function openExt(e: LabExtension): void {
 }
 </script>
 
-{#snippet kv(k: string, v: string)}
-  <tr><td class="pt-1.5 pr-6 w-32 text-[var(--pd-table-body-text)]">{k}</td><td class="pt-1.5 wrap-anywhere">{v}</td></tr>
-{/snippet}
-
 {#snippet actions()}
   <ActBtn icon={up ? faStop : faPlay} label={up ? 'Stop' : 'Start'} onclick={(): void => toggleConn(c)} />
   <ActBtn icon={faRotateRight} label="Restart" disabled={!up} onclick={(): void => toggleConn(c)} />
@@ -60,43 +59,32 @@ function openExt(e: LabExtension): void {
 {/snippet}
 
 <div class="flex flex-col h-full min-h-0">
-  <Head icon={c.icon} title={c.name} status={st} sub="{c.product} · {c.detail}" {actions} />
-  <div data-testid="conn-view" class="flex-1 min-h-0 overflow-auto px-5 py-4 text-[13px] leading-5 flex flex-col gap-4">
+  <Head icon={OVERVIEW_ICON} title={c.name} status={st} sub="{c.product} · {c.detail}" provenance={c.product} {actions} />
+  <div data-testid="conn-view" class="flex-1 min-h-0 overflow-auto px-5 py-4 flex flex-col gap-4">
+    <StatGrid
+      items={[
+        ...sections.map(sec => ({ label: sec.label, count: sec.count, icon: sec.ext?.icon ?? sec.icon, onclick: (): void => onopen({ kind: 'list', connId: c.id, sectionId: sec.id }, {}) })),
+        ...trees.map(p => ({ label: p.label, count: treeRoot(p, c.id).children?.filter(x => x.label !== 'Overview').length ?? 0, icon: p.icon, onclick: (): void => onopen({ kind: 'node', connId: c.id, nodeId: treeRoot(p, c.id).id }, {}) })),
+      ]} />
     <div class="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4 items-start">
-      <section class="rounded-lg bg-[var(--pd-content-card-bg)] px-4 py-3">
-        <div class="text-base font-semibold text-[var(--pd-table-body-text-sub-secondary)] pb-1">Details</div>
-        <table class="w-full"><tbody>
-          {@render kv('Type', c.product)}
-          {@render kv('Details', c.detail)}
-          {@render kv('Status', st)}
-          {@render kv('Endpoint', c.group === 'Kubernetes' ? `https://api.${c.id}:6443` : `unix:///run/user/1000/podman/${c.id}.sock`)}
-        </tbody></table>
-      </section>
-      <section class="rounded-lg bg-[var(--pd-content-card-bg)] px-4 py-3">
-        <div class="text-base font-semibold text-[var(--pd-table-body-text-sub-secondary)] pb-2">Resources</div>
-        <div class="flex flex-wrap gap-2">
-          {#each sections as sec (sec.id)}
-            <button type="button" class="flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-[var(--pd-content-card-inset-bg)] hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => onopen({ kind: 'list', connId: c.id, sectionId: sec.id }, {})}>
-              <AppIcon icon={sec.ext?.icon ?? sec.icon} size="14px" /><span>{sec.label}</span><span class="font-semibold">{sec.count}</span>
-            </button>
-          {/each}
-          {#each trees as p (p.id)}
-            {@const root = treeRoot(p, c.id)}
-            <button type="button" class="flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-[var(--pd-content-card-inset-bg)] hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => onopen({ kind: 'node', connId: c.id, nodeId: root.id }, {})}>
-              <AppIcon icon={p.icon} size="14px" /><span>{p.label}</span><span class="font-semibold">{root.children?.length}</span>
-            </button>
-          {/each}
-        </div>
-      </section>
+      <Card title="Details">
+        <KV
+          rows={[
+            { k: 'Type', v: c.product },
+            { k: 'Details', v: c.detail },
+            { k: 'Status', v: st },
+            { k: 'Endpoint', v: c.group === 'Kubernetes' ? `https://api.${c.id}:6443` : `unix:///run/user/1000/podman/${c.id}.sock`, mono: true },
+          ]} />
+      </Card>
     </div>
     {#if missing}
       {@const txt = PROMO_TEXT[missing.id] ?? [`No ${missing.name}`, `${missing.description}.`, 'podman-desktop.io/extensions']}
-      <div class="rounded-lg border border-[var(--pd-content-divider)]">
+      <div class="rounded-lg bg-[color-mix(in_srgb,var(--pd-content-card-bg)_40%,transparent)]">
         <PromoEmpty icon={ext(missing.id)?.icon ?? ''} title={txt[0]} description={txt[1]} extId={missing.id} info={txt[2]} onbrowse={(): void => onopen({ kind: 'extensions' }, {})} onaction={(): void => openExt(missing)} actionLabel="Open" />
       </div>
     {/if}
-    {#if promos.length}
-      <ExtCards ids={promos.map(e => e.id)} title="Extend {c.product}" onopenext={openExt} />
+    {#if promos.some(e => e.id !== missing?.id)}
+      <ExtCards ids={promos.filter(e => e.id !== missing?.id).map(e => e.id)} title="Extend {c.product}" onopenext={openExt} />
     {/if}
   </div>
 </div>

@@ -62,21 +62,23 @@ export interface TreeProvider {
 
 export type Raw = Omit<TreeNode, 'id' | 'children'> & { children?: Raw[] };
 
-const MCP_SERVERS: [string, string[], string[], string[]][] = [
-  ['github', ['list_issues', 'create_pull_request', 'get_file_contents', 'search_code'], ['repo://acme/orders'], ['review-pr']],
-  ['kubernetes', ['pods_list', 'pods_log', 'resources_get', 'events_list'], ['kubeconfig://current'], []],
-  ['podman', ['container_list', 'container_run', 'image_pull'], [], ['debug-container']],
-  ['filesystem', ['read_file', 'write_file', 'list_directory'], ['file:///home/dev/orders'], []],
-  ['postgres', ['query', 'list_tables'], ['postgres://orders-db/orders'], ['explain-query']],
+/** name, tools, resources, prompts, transport, clients, image / command. */
+const MCP_SERVERS: [string, string[], string[], string[], string, string, string][] = [
+  ['github', ['list_issues', 'create_pull_request', 'get_file_contents', 'search_code'], ['repo://acme/orders'], ['review-pr'], 'stdio', 'Claude Code, Goose', 'ghcr.io/github/github-mcp-server:0.9'],
+  ['kubernetes', ['pods_list', 'pods_log', 'resources_get', 'events_list'], ['kubeconfig://current'], [], 'SSE', 'Claude Code', 'quay.io/containers/kubernetes-mcp-server:0.4'],
+  ['podman', ['container_list', 'container_run', 'image_pull'], [], ['debug-container'], 'stdio', 'Claude Code, VS Code', 'podman-mcp-server --socket podman.sock'],
+  ['filesystem', ['read_file', 'write_file', 'list_directory'], ['file:///home/dev/orders'], [], 'stdio', '—', 'docker.io/mcp/filesystem:latest'],
+  ['postgres', ['query', 'list_tables'], ['postgres://orders-db/orders'], ['explain-query'], 'Streamable HTTP', 'Goose', 'docker.io/mcp/postgres:latest'],
 ];
 
 const mcp = (): Raw[] => [
   overview(),
-  ...MCP_SERVERS.map(([name, tools, resources, prompts], i) => ({
+  ...MCP_SERVERS.map(([name, tools, resources, prompts, transport, clients, command], i) => ({
     label: name,
     icon: faServer,
     status: i === 3 ? 'stopped' : 'running',
     detail: `${tools.length} tools`,
+    data: { transport, clients, command, tools: String(tools.length) },
     children: [
       { label: 'Tools', icon: faWrench, detail: String(tools.length), children: tools.map(t => ({ label: t, icon: faWrench })) },
       { label: 'Resources', icon: faFileLines, detail: String(resources.length), children: resources.map(r => ({ label: r, icon: faFileLines })) },
@@ -98,6 +100,7 @@ const helm = (connId: string): Raw[] =>
     icon: faBoxArchive,
     status: 'running',
     detail: chart,
+    data: { chart, revision: String(revs), namespace: name === 'keycloak' ? 'auth' : 'default', updated: `${revs + 1} days ago` },
     children: Array.from({ length: revs }, (_, i) => ({
       label: `Revision ${revs - i}`,
       icon: faClockRotateLeft,

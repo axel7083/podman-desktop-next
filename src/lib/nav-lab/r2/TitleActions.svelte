@@ -6,7 +6,7 @@
  */
 import { faBell } from '@fortawesome/free-solid-svg-icons';
 
-import AppIcon from '#lib/components/AppIcon.svelte';
+import LabIcon from '../ui/LabIcon.svelte';
 import type { IconRef } from '#lib/ext/types.ts';
 
 import type { LabTarget } from '../data.ts';
@@ -39,7 +39,7 @@ const RIGHT: [LabTarget['kind'], string, IconRef][] = [
     class:bg-[var(--pd-titlebar-hover-bg)]={active === kind}
     class:!text-[var(--pd-global-nav-icon-selected)]={active === kind}
     onclick={(): void => { if (kind !== 'notifications') onopen({ kind }); }}>
-    <AppIcon icon={ic} size="15px" />
+    <LabIcon icon={ic} size={16} />
   </button>
 {/snippet}
 

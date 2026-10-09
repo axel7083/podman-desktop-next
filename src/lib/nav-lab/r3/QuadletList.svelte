@@ -6,7 +6,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 import type { LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
-import ActBtn from './ActBtn.svelte';
+import Btn from './Btn.svelte';
 import Head from './Head.svelte';
 import { isUp, live, type MenuItem, showJournal } from './live.svelte.ts';
 import RowsTable from './RowsTable.svelte';
@@ -72,8 +72,8 @@ const rows = $derived(
 </script>
 
 {#snippet actions()}
-  <ActBtn icon={faRotateRight} label="Refresh" onclick={(): void => undefined} />
-  <Button icon={faPlusCircle} onclick={(): void => lab.openCreate('Generate a Quadlet')}>Generate Quadlet</Button>
+  <Btn icon={faRotateRight} onclick={(): void => undefined}>Refresh</Btn>
+  <Btn kind="primary" icon={faPlusCircle} onclick={(): void => lab.openCreate('Generate a Quadlet')}>Generate Quadlet</Btn>
 {/snippet}
 
 {#snippet seg()}

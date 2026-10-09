@@ -1,6 +1,6 @@
 <script lang="ts">
 /** Global context menu (right-click / ⋮) driven by `live.menu`. */
-import AppIcon from '#lib/components/AppIcon.svelte';
+import LabIcon from '../ui/LabIcon.svelte';
 
 import { live, type MenuItem } from './live.svelte.ts';
 
@@ -40,7 +40,7 @@ function onpointer(e: PointerEvent): void {
         class="w-full flex items-center gap-2 h-7 px-3 text-left whitespace-nowrap {it.disabled ? 'opacity-40 cursor-default' : 'hover:bg-[var(--pd-dropdown-item-hover-bg)]'}"
         class:text-[var(--pd-status-dead)]={it.danger && !it.disabled}
         onclick={(): void => pick(it)}>
-        <span class="w-4 flex justify-center shrink-0 text-[12px]">{#if it.icon}<AppIcon icon={it.icon} size={typeof it.icon === 'string' ? '14px' : 'xs'} />{/if}</span>{it.label}
+        <span class="w-4 flex justify-center shrink-0">{#if it.icon}<LabIcon icon={it.icon} size={14} />{/if}</span>{it.label}
       </button>
     {/each}
   </div>

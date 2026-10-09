@@ -1,10 +1,10 @@
 <script lang="ts">
 /**
- * Editor-style tab strip (36px): target icon + provider badge, italic preview
- * tabs, close on hover, optional leading "home" tab, optional connection
+ * Editor-style tab strip (32px, rule A1): `Tab` items (target icon + provider
+ * badge, italic preview tabs, close on hover, tab context menu), optional leading "home" tab, optional connection
  * groups (P3), and an overflow menu "+N" that keeps the active tab visible.
  */
-import { faChevronDown, faHouse, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import type { Snippet } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -12,6 +12,8 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 import { conn as findConn, type LabTarget } from '../data.ts';
 import { describe, HOME, lab, type LabTab, type Workbench } from '../lab.svelte.ts';
 import { ctxColor } from '../r2/ctx.ts';
+import { type MenuItem } from '../r3/live.svelte.ts';
+import Tab from './Tab.svelte';
 import TabIcon from './TabIcon.svelte';
 
 interface Props {
@@ -86,72 +88,42 @@ function select(key: string): void {
 function homeTarget(): LabTarget | undefined {
   return wb.home;
 }
+
+function tabMenu(key: string): MenuItem[] {
+  const idx = wb.tabs.findIndex(t => t.key === key);
+  return [
+    { label: 'Close', run: (): void => wb.close(key) },
+    { label: 'Close others', disabled: wb.tabs.length < 2, run: (): void => wb.tabs.filter(t => t.key !== key).forEach(t => wb.close(t.key)) },
+    { label: 'Close tabs to the right', disabled: idx === wb.tabs.length - 1, run: (): void => wb.tabs.slice(idx + 1).forEach(t => wb.close(t.key)) },
+  ];
+}
 </script>
 
 {#snippet tabEl(tab: LabTab)}
   {@const d = describe(tab.target)}
-  {@const sel = tab.key === wb.active}
-  {@const gc = groupByConn ? findConn(d.connId)?.color : lab.color ? ctxColor(d.connId) : undefined}
-  <div
-    role="tab"
-    tabindex="0"
-    aria-selected={sel}
-    title="{d.crumb.filter(Boolean).join(' › ')}{d.crumb.length ? ' › ' : ''}{d.title}"
-    class="group/tab relative flex items-center gap-2 h-full pl-3 pr-1.5 border-r border-[var(--pd-content-divider)] cursor-pointer shrink-0 select-none"
-    class:bg-[var(--pd-content-bg)]={sel}
-    class:text-[var(--pd-tab-text-highlight)]={sel}
-    class:text-[var(--pd-tab-text)]={!sel}
-    class:hover:bg-[var(--pd-content-card-hover-bg)]={!sel}
-    style:max-width="196px"
-    onclick={(): void => select(tab.key)}
-    ondblclick={(): void => wb.pin(tab.key)}
-    onauxclick={(e): void => {
-      if (e.button === 1) wb.close(tab.key);
-    }}
-    onkeydown={(e): void => {
-      if (e.key === 'Enter') select(tab.key);
-    }}>
-    {#if sel}<span class="absolute left-0 right-0 top-0 h-[2px] bg-[var(--pd-tab-highlight)]" style:background={gc && !groupByConn ? gc : undefined}></span>{/if}
-    {#if gc}<span class="absolute left-0 right-0 bottom-0 h-[2px]" style:background={gc}></span>{/if}
-    {#if lab.color && !groupByConn && gc}<span class="w-1.5 h-1.5 rounded-full shrink-0 -mr-1" style:background={gc}></span>{/if}
-    <TabIcon icon={d.icon} connId={d.connId} size={15} />
-    <span class="truncate text-base" class:italic={tab.preview}>{d.title}</span>
-    <button
-      type="button"
-      aria-label="Close {d.title}"
-      class="ml-0.5 w-5 h-5 shrink-0 flex items-center justify-center rounded hover:bg-[var(--pd-content-card-hover-inset-bg)] text-[var(--pd-tab-text)] {sel ? '' : 'invisible group-hover/tab:visible'}"
-      onclick={(e): void => {
-        e.stopPropagation();
-        wb.close(tab.key);
-      }}><AppIcon icon={faXmark} size="xs" /></button>
-  </div>
+  {@const gc = groupByConn ? undefined : lab.color ? ctxColor(d.connId) : undefined}
+  <Tab
+    icon={d.icon}
+    connId={d.connId}
+    title={d.title}
+    tooltip="{d.crumb.filter(Boolean).join(' › ')}{d.crumb.length ? ' › ' : ''}{d.title}"
+    selected={tab.key === wb.active}
+    preview={tab.preview}
+    color={gc}
+    onselect={(): void => select(tab.key)}
+    onpin={(): void => wb.pin(tab.key)}
+    onclose={(): void => wb.close(tab.key)}
+    menu={(): MenuItem[] => tabMenu(tab.key)} />
 {/snippet}
 
 <div
   role="tablist"
   aria-label="Open tabs"
-  class="flex items-stretch h-9 shrink-0 bg-[var(--pd-secondary-nav-bg)] border-b border-[var(--pd-content-divider)] relative"
+  class="flex items-stretch h-8 shrink-0 bg-[var(--pd-secondary-nav-bg)] border-b border-[var(--pd-content-divider)] relative"
   bind:clientWidth={width}>
   {#if wb.home}
-    {@const ht = homeTarget()!}
-    {@const d = describe(ht)}
-    {@const sel = wb.active === HOME}
-    <div
-      role="tab"
-      tabindex="0"
-      aria-selected={sel}
-      title="Current view (not closable)"
-      class="relative flex items-center gap-2 h-full px-3 border-r border-[var(--pd-content-divider)] cursor-pointer shrink-0"
-      class:bg-[var(--pd-content-bg)]={sel}
-      class:text-[var(--pd-tab-text-highlight)]={sel}
-      class:text-[var(--pd-tab-text)]={!sel}
-      onclick={(): void => select(HOME)}
-      onkeydown={(): void => select(HOME)}>
-      {#if sel}<span class="absolute left-0 right-0 top-0 h-[2px] bg-[var(--pd-tab-highlight)]"></span>{/if}
-      <span class="text-[11px] opacity-70"><AppIcon icon={faHouse} /></span>
-      {#if ht.kind !== 'dashboard'}<TabIcon icon={d.icon} connId={d.connId} size={15} />{/if}
-      <span class="text-base font-medium whitespace-nowrap">{homeLabel ?? d.title}</span>
-    </div>
+    {@const d = describe(homeTarget()!)}
+    <Tab icon={d.icon} connId={d.connId} title={homeLabel ?? d.title} tooltip="{homeLabel ?? d.title} (not closable)" selected={wb.active === HOME} closable={false} testid="home-tab" onselect={(): void => select(HOME)} />
   {/if}
   <div class="flex items-stretch min-w-0 overflow-hidden">
     {#each layout.visible as seg (seg.tab.key)}
@@ -159,7 +131,7 @@ function homeTarget(): LabTarget | undefined {
         {@const gc = findConn(seg.groupStart)}
         {#if gc}
           <div class="flex items-center px-1.5 shrink-0 border-r border-[var(--pd-content-divider)]">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold text-white whitespace-nowrap" style:background={gc.color}>{gc.name}</span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold text-white whitespace-nowrap" style:background={gc.color}>{gc.name}</span>
           </div>
         {/if}
       {/if}
@@ -185,9 +157,9 @@ function homeTarget(): LabTarget | undefined {
               role="menuitem"
               class="w-full flex items-center gap-2 px-3 py-1.5 text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)]"
               onclick={(): void => select(t.key)}>
-              <TabIcon icon={d.icon} connId={d.connId} size={15} />
+              <TabIcon icon={d.icon} connId={d.connId} />
               <span class="truncate flex-1" class:italic={t.preview}>{d.title}</span>
-              <span class="text-xs opacity-60 truncate max-w-28">{findConn(d.connId)?.name ?? d.crumb[0] ?? ''}</span>
+              <span class="text-[11px] text-[var(--pd-table-body-text)] truncate max-w-28">{findConn(d.connId)?.name ?? d.crumb[0] ?? ''}</span>
             </button>
           {/each}
         </div>

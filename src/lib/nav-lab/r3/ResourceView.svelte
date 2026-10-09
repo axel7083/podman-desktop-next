@@ -1,18 +1,18 @@
 <script lang="ts">
 /**
  * Resource tab (P13, also used by Content for P5/P12/P14): the shared header
- * (icon, name, status, connection chip, actions) with PD's details tabs
- * (Summary | Inspect | Kube…, images: Summary | History | Inspect | Check)
- * and PD's readable details layout (cards of label / value rows). Logs and
- * terminals are actions that open in the bottom panel.
+ * (icon, name, status, connection chip, quick actions) with the details views
+ * as a segmented control (Summary | Inspect | Kube…, images: Summary | History
+ * | Inspect | Check). Summary is always the default (rule E18): key/value
+ * cards, then related collections as tables (compose services, image used by,
+ * pod containers, deployment pods, conditions, events). Every reference opens
+ * its tab (rule F25). Logs and terminals open in the bottom panel.
  */
 import {
   faAlignLeft,
   faArrowUp,
-  faDownload,
   faEllipsisVertical,
   faKeyboard,
-  faPenToSquare,
   faPlay,
   faRotateRight,
   faStop,
@@ -20,17 +20,17 @@ import {
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 
-import AppIcon from '#lib/components/AppIcon.svelte';
-
-import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf, section as findSection, STATUS_DOT } from '../data.ts';
+import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import ActBtn from './ActBtn.svelte';
-import CodeView from './CodeView.svelte';
+import Btn from './Btn.svelte';
+import Card from './Card.svelte';
 import type { LabRow } from './cells/types.ts';
+import CodeView from './CodeView.svelte';
 import { composeDir, composeFile, composeServices, composeVolumes, composeYaml, containerInfo, hash, imageInfo, inspectText, isKube, kubeConditions, kubeEvents, relatedPods } from './details.ts';
 import { ext } from './exts.ts';
 import Head from './Head.svelte';
-import ModernTable from './ModernTable.svelte';
+import KV from './KV.svelte';
 import {
   can,
   deleteRes,
@@ -51,6 +51,8 @@ import {
   startRes,
   stopRes,
 } from './live.svelte.ts';
+import ModernTable from './ModernTable.svelte';
+import Section from './Section.svelte';
 
 interface Props {
   res: LabResource;
@@ -62,7 +64,7 @@ interface Props {
 let { res, c, s, onopen }: Props = $props();
 
 // svelte-ignore state_referenced_locally
-let view = $state(live.view[res.id] ?? (res.sectionId === 'compose' ? 'containers' : 'summary'));
+let view = $state(live.view[res.id] ?? 'summary');
 
 $effect(() => {
   const v = live.view[res.id];
@@ -80,10 +82,9 @@ const xviews = $derived(extViews(s.id));
 const isCompose = $derived(s.id === 'compose');
 const services = $derived(isCompose ? composeServices(res) : []);
 const views = $derived<[string, string][]>([
-  ...(isCompose ? ([['containers', 'Containers']] as [string, string][]) : []),
   ['summary', 'Summary'],
   ...(isImage ? ([['history', 'History']] as [string, string][]) : []),
-  ['inspect', isKube(s.id) ? 'YAML' : 'Inspect'],
+  ['inspect', isKube(s.id) ? 'YAML' : isCompose ? 'compose.yaml' : 'Inspect'],
   ...(s.id === 'containers' || s.id === 'pods' ? ([['kube', 'Kube']] as [string, string][]) : []),
   ...(isImage ? ([['check', 'Check']] as [string, string][]) : []),
   ...xviews.map(v => [v.id, v.label] as [string, string]),
@@ -92,6 +93,7 @@ const h = $derived(hash(res.name));
 const icon = $derived(s.ext?.icon ?? s.icon);
 const repoTag = $derived(res.name.split(/:(?=[^:/]+$)/));
 const shortId = $derived((h * 2654435761).toString(16).slice(0, 12).padEnd(12, '0'));
+const variant = $derived(lab.table === 'grid' ? 'grid' : 'modern');
 
 function openRes(r: LabResource): void {
   onopen({ kind: 'resource', connId: r.connId, sectionId: r.sectionId, resId: r.id }, {});
@@ -101,33 +103,53 @@ function upper(x: string): string {
   return x === 'ready' ? 'RUNNING' : x === 'error' ? 'DEGRADED' : x.toUpperCase();
 }
 
-const ctrIcon = $derived(findSection(c, 'containers')?.icon ?? icon);
+/** Table row for a related resource: status dot, name, columns, quick actions, menu, opens its tab. */
+function refRow(r: LabResource, title: string, cols: Record<string, string>, real = true): LabRow {
+  const cst = resStatus(r);
+  const cup = isUp(cst);
+  return {
+    name: r.id,
+    r,
+    status: upper(cst),
+    icon,
+    title,
+    sub: [],
+    cols,
+    open: real ? (): void => openRes(r) : undefined,
+    pin: real ? (): void => openRes(r) : undefined,
+    buttons: can.start(r.sectionId)
+      ? [
+          cup ? { title: 'Stop', icon: faStop, run: (): void => stopRes(r) } : { title: 'Start', icon: faPlay, run: (): void => startRes(r) },
+          ...(can.logs(r.sectionId) ? [{ title: 'See logs', icon: faAlignLeft, run: (): void => showLogs(r) }] : []),
+        ]
+      : can.logs(r.sectionId)
+        ? [{ title: 'See logs', icon: faAlignLeft, run: (): void => showLogs(r) }]
+        : [],
+    menu: real ? (): ReturnType<typeof resActions> => resActions(r, onopen) : undefined,
+  };
+}
+
+/** Read-only text rows (conditions, events, checks, layers). */
+function textRows(rows: string[][], keys: string[], status?: (r: string[]) => string): LabRow[] {
+  return rows.map((r, i) => ({
+    name: `${i}:${r.join('|')}`,
+    status: status?.(r) ?? '',
+    icon,
+    title: r[0],
+    sub: [],
+    cols: Object.fromEntries(keys.map((k, j) => [k, r[j + 1] ?? ''])),
+    buttons: [],
+  }));
+}
+
 const serviceRows = $derived.by((): LabRow[] => {
   void live.status;
   return services
     .filter(x => !live.deleted.includes(x.ctr.id))
     .map(x => {
-      const r = x.ctr;
-      const cst = resStatus(r);
-      const cup = isUp(cst);
-      const ci = containerInfo(r);
-      return {
-        name: r.id,
-        r,
-        status: upper(cst),
-        icon: ctrIcon,
-        title: x.service,
-        sub: [],
-        cols: { ctr: r.name, image: ci.image, ports: ci.ports.map(p => `${p}→8080`).join(', '), uptime: cup ? r.age : '' },
-        open: x.real ? (): void => openRes(r) : undefined,
-        pin: x.real ? (): void => openRes(r) : undefined,
-        buttons: [
-          cup ? { title: 'Stop', icon: faStop, run: (): void => stopRes(r) } : { title: 'Start', icon: faPlay, run: (): void => startRes(r) },
-          { title: 'See logs', icon: faAlignLeft, run: (): void => showLogs(r) },
-          { title: 'Delete', icon: faTrash, danger: true, run: (): void => deleteRes(r) },
-        ],
-        menu: x.real ? (): ReturnType<typeof resActions> => resActions(r, onopen) : undefined,
-      };
+      const ci = containerInfo(x.ctr);
+      const row = refRow(x.ctr, x.service, { ctr: x.ctr.name, image: ci.image, ports: ci.ports.map(p => `${p}→8080`).join(', '), uptime: isUp(resStatus(x.ctr)) ? x.ctr.age : '' }, x.real);
+      return { ...row, buttons: [...row.buttons, { title: 'Delete', icon: faTrash, danger: true, run: (): void => deleteRes(x.ctr) }] };
     });
 });
 const upCount = $derived(services.filter(x => isUp(resStatus(x.ctr))).length);
@@ -135,6 +157,12 @@ const upCount = $derived(services.filter(x => isUp(resStatus(x.ctr))).length);
 function composeLogs(): void {
   showGroupLogs(res.name, c.id, services.map(x => x.ctr), { kind: 'resource', connId: c.id, sectionId: s.id, resId: res.id }, icon);
 }
+
+/** Compose project or pod a container belongs to (reference row). */
+const groupRef = $derived.by((): LabResource | undefined => {
+  if (!res.group) return undefined;
+  return resourcesOf(c.id, 'compose').find(x => x.name === res.group) ?? resourcesOf(c.id, 'pods').find(x => x.name === res.group);
+});
 
 function kubeYaml(): string[] {
   const ci = containerInfo(res);
@@ -161,60 +189,29 @@ function kubeYaml(): string[] {
 }
 </script>
 
-{#snippet row(k: string, v: string | number | undefined)}
-  <tr><td class="pt-1.5 pr-6 w-40 align-top whitespace-nowrap text-[var(--pd-table-body-text)]">{k}</td><td class="pt-1.5 wrap-anywhere text-[var(--pd-details-card-text)]">{v ?? '—'}</td></tr>
-{/snippet}
-
-{#snippet card(title: string, body: import('svelte').Snippet)}
-  <section class="rounded-lg bg-[var(--pd-content-card-bg)] px-4 py-3 min-w-0">
-    <div class="text-base font-semibold text-[var(--pd-table-body-text-sub-secondary)] pb-1">{title}</div>
-    {@render body()}
-  </section>
-{/snippet}
-
-{#snippet resRow(r: LabResource, detail: string)}
-  <button type="button" class="w-full flex items-center gap-2 h-8 px-1 text-left rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => openRes(r)}>
-    <span class="w-2 h-2 rounded-full shrink-0 {STATUS_DOT[resStatus(r)] ?? STATUS_DOT.running}"></span>
-    <span class="truncate text-[var(--pd-table-body-text-highlight)]">{r.name}</span><span class="text-xs text-[var(--pd-table-body-text)] truncate">{detail}</span>
-  </button>
-{/snippet}
-
-{#snippet table(rows: string[][], head: string[])}
-  <table class="w-full text-[13px]">
-    <thead><tr class="text-left text-xs uppercase text-[var(--pd-table-header-text)]">{#each head as hd (hd)}<th class="font-semibold pr-3 h-8">{hd}</th>{/each}</tr></thead>
-    <tbody>
-      {#each rows as r, i (i)}
-        <tr class="border-t border-[var(--pd-content-divider)]">{#each r as cell, j (j)}<td class="pr-3 h-8 truncate max-w-[360px]" class:text-[var(--pd-status-degraded)]={cell === 'Warning' || cell === 'False'}>{cell}</td>{/each}</tr>
-      {/each}
-    </tbody>
-  </table>
-{/snippet}
-
 {#snippet imageExtra()}
-  <span class="text-sm text-[var(--pd-table-body-text-sub-highlight)] shrink-0">{shortId}</span>
-  <span class="px-1.5 rounded text-xs bg-[var(--pd-label-bg)] text-[var(--pd-label-text)] shrink-0">{repoTag[1] ?? 'latest'}</span>
+  <span class="text-[12px] font-mono text-[var(--pd-table-body-text)] shrink-0">{shortId}</span>
+  <span class="px-1.5 rounded text-[11px] bg-[var(--pd-label-bg)] text-[var(--pd-label-text)] shrink-0">{repoTag[1] ?? 'latest'}</span>
 {/snippet}
 
 {#snippet actions()}
   {#if isImage}
-    <ActBtn icon={faPlay} label="Run Image" onclick={(): void => lab.openCreate(`Run ${res.name}`)} />
-    <ActBtn icon={faTrash} label="Delete Image" danger onclick={(): void => deleteRes(res)} />
-    <ActBtn icon={faArrowUp} label="Push Image" onclick={(): void => lab.openCreate(`Push ${res.name}`)} />
-    <ActBtn icon={faPenToSquare} label="Edit Image" onclick={(): void => lab.openCreate(`Edit ${res.name}`)} />
-    <ActBtn icon={faDownload} label="Save Image" onclick={(): void => lab.openCreate(`Save ${res.name}`)} />
+    <ActBtn icon={faPlay} label="Run image" onclick={(): void => lab.openCreate(`Run ${res.name}`)} />
+    <ActBtn icon={faArrowUp} label="Push image" onclick={(): void => lab.openCreate(`Push ${res.name}`)} />
     <ActBtn icon={ext('grype')?.icon ?? faTrash} label="Scan vulnerabilities" onclick={(): void => scanRes(res, onopen)} />
+    <ActBtn icon={faTrash} label="Delete image" danger onclick={(): void => deleteRes(res)} />
     <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, imageMenu(res, onopen))} />
-  {:else}
-    {#if isCompose}
-      <ActBtn icon={faAlignLeft} label="See logs" onclick={composeLogs} />
-      {#if upCount}
-        <ActBtn icon={faStop} label="Stop all" onclick={(): void => services.forEach(x => stopRes(x.ctr))} />
-      {:else}
-        <ActBtn icon={faPlay} label="Start all" onclick={(): void => services.forEach(x => startRes(x.ctr))} />
-      {/if}
-      <ActBtn icon={faRotateRight} label="Restart all" disabled={!upCount} onclick={(): void => services.forEach(x => restartRes(x.ctr))} />
+  {:else if isCompose}
+    <ActBtn icon={faAlignLeft} label="See logs" onclick={composeLogs} />
+    {#if upCount}
+      <ActBtn icon={faStop} label="Stop all" onclick={(): void => services.forEach(x => stopRes(x.ctr))} />
+    {:else}
+      <ActBtn icon={faPlay} label="Start all" onclick={(): void => services.forEach(x => startRes(x.ctr))} />
     {/if}
-    {#if can.logs(s.id)}<ActBtn icon={faAlignLeft} label="See logs" onclick={(): void => showLogs(res)} />{/if}
+    <ActBtn icon={faRotateRight} label="Restart all" disabled={!upCount} onclick={(): void => services.forEach(x => restartRes(x.ctr))} />
+    <ActBtn icon={faTrash} label="Delete" danger onclick={(): void => deleteRes(res)} />
+    <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, resActions(res, onopen))} />
+  {:else}
     {#if can.start(s.id)}
       {#if up}
         <ActBtn icon={faStop} label="Stop" onclick={(): void => stopRes(res)} />
@@ -223,6 +220,7 @@ function kubeYaml(): string[] {
       {/if}
       <ActBtn icon={faRotateRight} label="Restart" disabled={!up} onclick={(): void => restartRes(res)} />
     {/if}
+    {#if can.logs(s.id)}<ActBtn icon={faAlignLeft} label="See logs" onclick={(): void => showLogs(res)} />{/if}
     {#if can.terminal(s.id)}<ActBtn icon={faTerminal} label="Open terminal" disabled={!up} onclick={(): void => openTerminal(res)} />{/if}
     {#if hasTty(res)}<ActBtn icon={faKeyboard} label="Attach TTY" disabled={!up} onclick={(): void => openTty(res)} />{/if}
     <ActBtn icon={faTrash} label="Delete" danger onclick={(): void => deleteRes(res)} />
@@ -230,7 +228,7 @@ function kubeYaml(): string[] {
   {/if}
 {/snippet}
 
-<div class="flex flex-col h-full min-h-0 bg-[var(--pd-details-bg)]">
+<div class="flex flex-col h-full min-h-0 bg-[var(--pd-content-bg)]">
   <Head
     {icon}
     title={isImage ? repoTag[0] : res.name}
@@ -246,11 +244,7 @@ function kubeYaml(): string[] {
     }}
     actions={deleted ? undefined : actions} />
   {#if deleted}
-    <div class="flex-1 flex items-center justify-center text-[var(--pd-details-empty-sub-header)]">{res.name} was deleted.</div>
-  {:else if view === 'containers' && isCompose}
-    <div data-testid="compose-containers" class="flex flex-1 min-h-0 overflow-auto">
-      <ModernTable rows={serviceRows} cols={[['Container', 'ctr', 'minmax(8rem, 1.2fr)'], ['Image', 'image', 'minmax(8rem, 2fr)'], ['Ports', 'ports', '130px'], ['Uptime', 'uptime', '100px', true]]} variant={lab.table === 'grid' ? 'grid' : 'modern'} initialSort="" />
-    </div>
+    <div class="flex-1 flex items-center justify-center text-[13px] text-[var(--pd-table-body-text)]">{res.name} was deleted.</div>
   {:else if view === 'inspect' && isCompose}
     <CodeView lines={composeYaml(res)} lang="yaml" numbered testid="inspect" />
   {:else if view === 'inspect'}
@@ -261,171 +255,182 @@ function kubeYaml(): string[] {
     {@const im = imageInfo(res)}
     <CodeView lines={im.layers.map(l => `${l.id}  ${l.size.padStart(8)}  ${res.age} ago  ${l.cmd}`)} numbered testid="history" />
   {:else if view === 'check'}
-    <div class="flex-1 min-h-0 overflow-auto px-5 py-4 text-[13px]">
-      {#snippet checks()}
-        {@render table(
-          [
-            ['Passed', 'Image has a non-root USER', 'OpenShift checker'],
-            ['Passed', 'Image exposes ports below 1024 only when root', 'OpenShift checker'],
-            [h % 2 ? 'Warning' : 'Passed', 'Image size below 1 GB', 'OpenShift checker'],
-            [h % 3 ? 'Passed' : 'Warning', 'Image has OCI labels (source, version)', 'OpenShift checker'],
-          ],
-          ['Result', 'Check', 'Provider'],
-        )}
-      {/snippet}
-      <div class="flex flex-col gap-4">
-        {@render card('Image checks', checks)}
-        {#snippet vulns()}
-          <div class="flex items-center gap-3 pt-1">
-            <span class="flex w-6 h-6 items-center justify-center shrink-0"><AppIcon icon={ext('grype')?.icon ?? faTrash} size="20px" /></span>
-            <span class="flex-1 text-[var(--pd-table-body-text)]">Scan the OS packages and language dependencies of this image for known CVEs.</span>
-            <button type="button" data-testid="check-scan" class="h-7 px-3 rounded-md text-xs border border-[var(--pd-button-secondary-border,var(--pd-content-divider))] text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)]" onclick={(): void => scanRes(res, onopen)}>Scan vulnerabilities</button>
-          </div>
-        {/snippet}
-        {@render card('Vulnerabilities · Grype', vulns)}
-      </div>
+    <div data-testid="check" class="flex-1 min-h-0 overflow-auto px-5 py-4 flex flex-col gap-4">
+      <Section title="Image checks · OpenShift checker" count={4}>
+        <ModernTable
+          {variant}
+          readonly
+          initialSort=""
+          rows={textRows(
+            [
+              ['Image has a non-root USER', 'Passed'],
+              ['Image exposes ports below 1024 only when root', 'Passed'],
+              ['Image size below 1 GB', h % 2 ? 'Warning' : 'Passed'],
+              ['Image has OCI labels (source, version)', h % 3 ? 'Passed' : 'Warning'],
+            ],
+            ['result'],
+            r => (r[1] === 'Passed' ? 'RUNNING' : 'DEGRADED'),
+          )}
+          cols={[['Result', 'result', '120px']]} />
+      </Section>
+      <Card title="Vulnerabilities · Grype">
+        <div class="flex items-center gap-3 text-[13px]">
+          <span class="flex-1 text-[var(--pd-table-body-text)]">Scan the OS packages and language dependencies of this image for known CVEs.</span>
+          <Btn icon={ext('grype')?.icon} testid="check-scan" onclick={(): void => scanRes(res, onopen)}>Scan vulnerabilities</Btn>
+        </div>
+      </Card>
     </div>
   {:else if view === 'layers'}
     {@const im = imageInfo(res)}
     <div class="flex-1 min-h-0 overflow-auto px-5 py-4">
-      {#snippet layers()}{@render table(im.layers.map(l => [l.id, l.size, l.cmd]), ['Layer', 'Size', 'Created by'])}{/snippet}
-      {@render card(`${im.layers.length} layers · Layers explorer`, layers)}
+      <Section title="Layers · Layers explorer" count={im.layers.length}>
+        <ModernTable {variant} readonly initialSort="" mono={['size']} rows={textRows(im.layers.map(l => [l.id, l.size, l.cmd]), ['size', 'cmd'])} cols={[['Size', 'size', '90px'], ['Created by', 'cmd', 'minmax(12rem, 3fr)']]} />
+      </Section>
     </div>
   {:else}
-    <div data-testid="summary" class="flex-1 min-h-0 overflow-auto px-5 py-4 text-[13px] leading-5">
+    <div data-testid="summary" class="flex-1 min-h-0 overflow-auto px-5 py-4 flex flex-col gap-4">
       <div class="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4 items-start">
         {#if isCompose}
-          {#snippet project()}
-            <table class="w-full"><tbody>
-              {@render row('Project', res.name)}
-              {@render row('Working directory', composeDir(res))}
-              {@render row('Config file', composeFile(res))}
-              {@render row('Services', `${services.length} (${upCount} running)`)}
-              {@render row('Networks', `${res.name}_default`)}
-              {@render row('Volumes', composeVolumes(res).join(', ') || '—')}
-              {@render row('Engine', `${c.product} · ${c.name}`)}
-            </tbody></table>
-          {/snippet}
-          {#snippet svcList()}
-            {#each services as x (x.ctr.id)}
-              {#if x.real}{@render resRow(x.ctr, `${x.service} · ${containerInfo(x.ctr).image}`)}{:else}<div class="flex items-center gap-2 h-8 px-1"><span class="w-2 h-2 rounded-full {STATUS_DOT[resStatus(x.ctr)] ?? STATUS_DOT.running}"></span>{x.service}<span class="text-xs text-[var(--pd-table-body-text)]">{x.ctr.sub}</span></div>{/if}
-            {/each}
-          {/snippet}
-          {@render card('Project', project)}
-          {@render card(`Services (${services.length})`, svcList)}
+          <Card title="Project">
+            <KV
+              rows={[
+                { k: 'Project', v: res.name },
+                { k: 'Working directory', v: composeDir(res), mono: true },
+                { k: 'Config file', v: composeFile(res), mono: true },
+                { k: 'Services', v: `${services.length} (${upCount} running)` },
+                { k: 'Networks', v: `${res.name}_default` },
+                { k: 'Volumes', v: composeVolumes(res).join(', ') || '—' },
+                { k: 'Engine', v: `${c.product} · ${c.name}`, onclick: (): void => onopen({ kind: 'connection', connId: c.id }, {}) },
+              ]} />
+          </Card>
         {:else if s.id === 'containers'}
           {@const ci = containerInfo(res)}
           {@const image = resourcesOf(c.id, 'images').find(i => i.name === ci.image || ci.image.startsWith(i.name.split(':')[0]))}
-          {#snippet details()}
-            <table class="w-full"><tbody>
-              {@render row('Name', res.name)}
-              {@render row('ID', `${(h * 2654435761).toString(16)}${(h * 97).toString(16)}`.padEnd(64, '0').slice(0, 64))}
-              {@render row('Engine', `${c.product} · ${c.name}`)}
-              <tr><td class="pt-1.5 pr-6 text-[var(--pd-table-body-text)]">Image</td><td class="pt-1.5">{#if image}<button type="button" class="hover:text-[var(--pd-link)] hover:underline" onclick={(): void => openRes(image)}>{ci.image}</button>{:else}{ci.image}{/if}</td></tr>
-              {@render row('Command', ci.command)}
-              {@render row('Created', `${res.age} ago`)}
-              {@render row('Started', up ? `${res.age} ago` : '—')}
-              {@render row('Restart policy', ci.restart)}
-              {#if res.group}{@render row('Compose / pod', res.group)}{/if}
-            </tbody></table>
-          {/snippet}
-          {#snippet net()}
-            <table class="w-full"><tbody>
-              <tr><td class="pt-1.5 pr-6 w-40 text-[var(--pd-table-body-text)]">Ports</td><td class="pt-1.5">{#each ci.ports as p, i (p)}{#if i > 0}, {/if}<a class="hover:text-[var(--pd-link)] hover:underline" href="http://localhost:{p}" target="_blank" rel="noreferrer">{p}</a> → 8080/tcp{:else}<span class="opacity-60">none</span>{/each}</td></tr>
-              {@render row('Networks', ci.networks.join(', '))}
-              {@render row('Mounts', ci.mounts.join(', '))}
-              {@render row('CPU', up ? `${ci.cpu.at(-1)}%` : '0%')}
-              {@render row('Memory', up ? `${ci.mem} MB` : '0 MB')}
-            </tbody></table>
-          {/snippet}
-          {#snippet labels()}
-            <table class="w-full"><tbody>{#each ci.labels as [k, v] (k)}{@render row(k, v)}{/each}</tbody></table>
-          {/snippet}
-          {#snippet env()}
-            <div class="font-mono text-xs leading-6">{#each ci.env as e (e)}<div>{e}=<span class="opacity-60">•••</span></div>{/each}</div>
-          {/snippet}
-          {@render card('Details', details)}
-          {@render card('Networking & storage', net)}
-          {@render card(`Labels (${ci.labels.length})`, labels)}
-          {@render card(`Environment (${ci.env.length})`, env)}
+          <Card title="Details">
+            <KV
+              rows={[
+                { k: 'Name', v: res.name },
+                { k: 'ID', v: `${(h * 2654435761).toString(16)}${(h * 97).toString(16)}`.padEnd(64, '0').slice(0, 64), mono: true },
+                { k: 'Engine', v: `${c.product} · ${c.name}`, onclick: (): void => onopen({ kind: 'connection', connId: c.id }, {}) },
+                { k: 'Image', v: ci.image, onclick: image ? (): void => openRes(image) : undefined },
+                { k: 'Command', v: ci.command, mono: true },
+                { k: 'Created', v: `${res.age} ago` },
+                { k: 'Started', v: up ? `${res.age} ago` : '—' },
+                { k: 'Restart policy', v: ci.restart },
+                ...(res.group ? [{ k: groupRef?.sectionId === 'pods' ? 'Pod' : 'Compose project', v: res.group, onclick: groupRef ? (): void => openRes(groupRef) : undefined }] : []),
+              ]} />
+          </Card>
+          <Card title="Networking & storage">
+            <KV
+              rows={[
+                ...(ci.ports.length ? ci.ports.map((p, i) => ({ k: i ? `Port ${i + 1}` : 'Ports', v: `${p} → 8080/tcp`, href: `http://localhost:${p}` })) : [{ k: 'Ports', v: 'none' }]),
+                { k: 'Networks', v: ci.networks.join(', ') },
+                { k: 'Mounts', v: ci.mounts.join(', ') },
+                { k: 'CPU', v: up ? `${ci.cpu.at(-1)}%` : '0%' },
+                { k: 'Memory', v: up ? `${ci.mem} MB` : '0 MB' },
+              ]} />
+          </Card>
+          <Card title="Labels ({ci.labels.length})"><KV rows={ci.labels.map(([k, v]) => ({ k, v }))} /></Card>
+          <Card title="Environment ({ci.env.length})"><KV rows={ci.env.map(e => ({ k: e, v: '•••', mono: true }))} /></Card>
         {:else if isImage}
           {@const im = imageInfo(res)}
-          {#snippet details()}
-            <table class="w-full"><tbody>
-              {@render row('Name', repoTag[0])}
-              {@render row('ID', `sha256:${shortId}${(h * 31).toString(16)}`)}
-              {@render row('Tags', im.tags.join(', '))}
-              {@render row('Size', im.size)}
-              {@render row('Created', `${res.age} ago`)}
-              {@render row('Architecture', `linux/${im.arch}`)}
-              {@render row('Digest', im.digest)}
-              {@render row('Layers', im.layers.length)}
-            </tbody></table>
-          {/snippet}
-          {#snippet usedBy()}
-            {#each im.usedBy as u (u.id)}{@render resRow(u, resStatus(u))}{:else}<div class="text-[var(--pd-table-body-text)]">Not used by any container.</div>{/each}
-          {/snippet}
-          {@render card('Details', details)}
-          {@render card(`Used by (${im.usedBy.length})`, usedBy)}
+          <Card title="Details">
+            <KV
+              rows={[
+                { k: 'Name', v: repoTag[0] },
+                { k: 'ID', v: `sha256:${shortId}${(h * 31).toString(16)}`, mono: true },
+                { k: 'Tags', v: im.tags.join(', ') },
+                { k: 'Size', v: im.size },
+                { k: 'Created', v: `${res.age} ago` },
+                { k: 'Architecture', v: `linux/${im.arch}` },
+                { k: 'Digest', v: im.digest, mono: true },
+                { k: 'Layers', v: im.layers.length },
+              ]} />
+          </Card>
         {:else if s.id === 'pods'}
-          {@const names = [`${res.name}-infra`, `${res.name}-app`, `${res.name}-sidecar`].slice(0, 2 + (h % 2))}
-          {#snippet details()}
-            <table class="w-full"><tbody>
-              {@render row('Name', res.name)}
-              {@render row('Containers', names.length)}
-              {@render row('Infra container', names[0])}
-              {@render row('Created', `${res.age} ago`)}
-              {@render row('Ports', `${8000 + (h % 90)} → 8080/tcp`)}
-              {@render row('Network', 'podman')}
-            </tbody></table>
-          {/snippet}
-          {#snippet ctrs()}
-            {#each names as n (n)}
-              <div class="flex items-center gap-2 h-8"><span class="w-2 h-2 rounded-full {up ? STATUS_DOT.running : STATUS_DOT.exited}"></span>{n}<span class="text-xs text-[var(--pd-table-body-text)]">{n.endsWith('infra') ? 'localhost/podman-pause:5.6' : `quay.io/acme/${res.name}:1.0`}</span></div>
-            {/each}
-          {/snippet}
-          {@render card('Details', details)}
-          {@render card(`Containers (${names.length})`, ctrs)}
+          <Card title="Details">
+            <KV
+              rows={[
+                { k: 'Name', v: res.name },
+                { k: 'Containers', v: 2 + (h % 2) },
+                { k: 'Infra container', v: `${res.name}-infra` },
+                { k: 'Created', v: `${res.age} ago` },
+                { k: 'Ports', v: `${8000 + (h % 90)} → 8080/tcp` },
+                { k: 'Network', v: 'podman' },
+                { k: 'Engine', v: `${c.product} · ${c.name}`, onclick: (): void => onopen({ kind: 'connection', connId: c.id }, {}) },
+              ]} />
+          </Card>
         {:else if isKube(s.id)}
           {@const replicas = (h % 4) + 1}
           {@const ready = up && st !== 'degraded' ? replicas : Math.max(0, replicas - 1)}
-          {#snippet details()}
-            <table class="w-full"><tbody>
-              {@render row('Name', res.name)}
-              {@render row('Namespace', c.id.includes('ocp') ? 'checkout' : 'default')}
-              {#if s.id === 'deployments'}{@render row('Replicas', `${ready}/${replicas} ready`)}{@render row('Strategy', 'RollingUpdate 25%')}{/if}
-              {#if s.id === 'kpods'}{@render row('Node', res.sub.split('node ')[1])}{@render row('Pod IP', `10.128.${h % 9}.${h % 250}`)}{@render row('Restarts', st === 'degraded' ? 7 : 0)}{/if}
-              {#if s.id === 'services'}{@render row('Type', 'ClusterIP')}{@render row('Cluster IP', res.sub.split(' ')[1])}{@render row('Ports', '8080/TCP')}{/if}
-              {@render row('Created', `${res.age} ago`)}
-              {@render row('Labels', `app=${res.name.split('-')[0]}`)}
-              {#if s.ext}{@render row('Provided by', s.ext.name)}{/if}
-            </tbody></table>
-          {/snippet}
-          {#snippet conds()}{@render table(kubeConditions(st), ['Type', 'Status', 'Reason'])}{/snippet}
-          {#snippet events()}{@render table(kubeEvents({ ...res, status: st }), ['Type', 'Reason', 'Message', 'Age'])}{/snippet}
-          {@render card('Details', details)}
-          {#if s.id === 'deployments'}
-            {@const pods = relatedPods(res)}
-            {#snippet podList()}{#each pods as p (p.id)}{@render resRow(p, p.sub)}{:else}<div class="text-[var(--pd-table-body-text)]">No pods.</div>{/each}{/snippet}
-            {@render card(`Pods (${pods.length})`, podList)}
-          {/if}
-          {@render card('Conditions', conds)}
-          {@render card('Events', events)}
+          <Card title="Details">
+            <KV
+              rows={[
+                { k: 'Name', v: res.name },
+                { k: 'Namespace', v: c.id.includes('ocp') ? 'checkout' : 'default' },
+                ...(s.id === 'deployments' ? [{ k: 'Replicas', v: `${ready}/${replicas} ready` }, { k: 'Strategy', v: 'RollingUpdate 25%' }] : []),
+                ...(s.id === 'kpods' ? [{ k: 'Node', v: res.sub.split('node ')[1] }, { k: 'Pod IP', v: `10.128.${h % 9}.${h % 250}` }, { k: 'Restarts', v: st === 'degraded' ? 7 : 0 }] : []),
+                ...(s.id === 'services' ? [{ k: 'Type', v: 'ClusterIP' }, { k: 'Cluster IP', v: res.sub.split(' ')[1] }, { k: 'Ports', v: '8080/TCP' }] : []),
+                { k: 'Created', v: `${res.age} ago` },
+                { k: 'Labels', v: `app=${res.name.split('-')[0]}` },
+                { k: 'Cluster', v: c.name, onclick: (): void => onopen({ kind: 'connection', connId: c.id }, {}) },
+                ...(s.ext ? [{ k: 'Provided by', v: s.ext.name }] : []),
+              ]} />
+          </Card>
         {:else}
-          {#snippet details()}
-            <table class="w-full"><tbody>
-              {@render row('Name', res.name)}
-              {@render row('Kind', s.label)}
-              {@render row('Status', st)}
-              {@render row('Created', `${res.age} ago`)}
-              {@render row('Info', res.sub)}
-              {#if res.group}{@render row('Group', res.group)}{/if}
-            </tbody></table>
-            {#if s.ext}<div class="flex items-center gap-1.5 pt-2 text-xs text-[var(--pd-table-body-text)]"><AppIcon icon={s.ext.icon} size="12px" />Provided by {ext(s.ext.id)?.name ?? s.ext.name}</div>{/if}
-          {/snippet}
-          {@render card('Details', details)}
+          <Card title="Details">
+            <KV
+              rows={[
+                { k: 'Name', v: res.name },
+                { k: 'Kind', v: s.label },
+                { k: 'Status', v: st },
+                { k: 'Created', v: `${res.age} ago` },
+                { k: 'Info', v: res.sub },
+                ...(res.group ? [{ k: 'Group', v: res.group }] : []),
+                { k: 'Connection', v: c.name, onclick: (): void => onopen({ kind: 'connection', connId: c.id }, {}) },
+                ...(s.ext ? [{ k: 'Provided by', v: ext(s.ext.id)?.name ?? s.ext.name }] : []),
+              ]} />
+          </Card>
         {/if}
       </div>
+
+      {#if isCompose}
+        <Section title="Services" count={serviceRows.length} testid="compose-services">
+          <ModernTable {variant} initialSort="" rows={serviceRows} cols={[['Container', 'ctr', 'minmax(8rem, 1.2fr)'], ['Image', 'image', 'minmax(8rem, 2fr)'], ['Ports', 'ports', '130px'], ['Uptime', 'uptime', '100px', true]]} />
+        </Section>
+      {:else if isImage}
+        {@const im = imageInfo(res)}
+        <Section title="Used by" count={im.usedBy.length} testid="used-by">
+          {#if im.usedBy.length}
+            <ModernTable {variant} readonly initialSort="" rows={im.usedBy.map(u => refRow(u, u.name, { status: resStatus(u), age: u.age }))} cols={[['Status', 'status', '110px'], ['Age', 'age', '110px', true]]} />
+          {:else}
+            <div class="py-2 text-[13px] text-[var(--pd-table-body-text)]">Not used by any container.</div>
+          {/if}
+        </Section>
+      {:else if s.id === 'pods'}
+        {@const names = [`${res.name}-infra`, `${res.name}-app`, `${res.name}-sidecar`].slice(0, 2 + (h % 2))}
+        <Section title="Containers" count={names.length} testid="pod-containers">
+          <ModernTable
+            {variant}
+            readonly
+            initialSort=""
+            rows={names.map(n => ({ name: n, status: up ? 'RUNNING' : 'EXITED', icon, title: n, sub: [], cols: { image: n.endsWith('infra') ? 'localhost/podman-pause:5.6' : `quay.io/acme/${res.name}:1.0` }, buttons: [] }))}
+            cols={[['Image', 'image', 'minmax(10rem, 2fr)']]} />
+        </Section>
+      {:else if isKube(s.id)}
+        {#if s.id === 'deployments'}
+          {@const pods = relatedPods(res)}
+          <Section title="Pods" count={pods.length} testid="deployment-pods">
+            <ModernTable {variant} readonly initialSort="" rows={pods.map(p => refRow(p, p.name, { info: p.sub, age: p.age }))} cols={[['Info', 'info', 'minmax(10rem, 2fr)'], ['Age', 'age', '100px', true]]} />
+          </Section>
+        {/if}
+        <Section title="Conditions" count={3} testid="conditions">
+          <ModernTable {variant} readonly initialSort="" rows={textRows(kubeConditions(st), ['status', 'reason'], r => (r[1] === 'True' ? 'RUNNING' : 'DEGRADED'))} cols={[['Status', 'status', '90px'], ['Reason', 'reason', 'minmax(10rem, 2fr)']]} />
+        </Section>
+        <Section title="Events" testid="events">
+          <ModernTable {variant} readonly initialSort="" rows={textRows(kubeEvents({ ...res, status: st }).map(([t, r, m, a]) => [r, t, m, a]), ['type', 'message', 'age'], r => (r[1] === 'Warning' ? 'DEGRADED' : 'RUNNING'))} cols={[['Type', 'type', '90px'], ['Message', 'message', 'minmax(14rem, 4fr)'], ['Age', 'age', '70px']]} />
+        </Section>
+      {/if}
     </div>
   {/if}
 </div>

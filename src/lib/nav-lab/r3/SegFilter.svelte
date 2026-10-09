@@ -14,7 +14,7 @@ interface Props {
 let { tabs, value, onpick, label = 'Filter', testid = 'seg-filter' }: Props = $props();
 </script>
 
-<div role="radiogroup" aria-label={label} data-testid={testid} class="flex shrink-0 h-7 p-0.5 rounded-md border border-[var(--pd-content-divider)] text-xs">
+<div role="radiogroup" aria-label={label} data-testid={testid} class="flex shrink-0 h-7 p-0.5 rounded-md border border-[var(--pd-content-divider)] text-[12px]">
   {#each tabs as [id, text] (id)}
     <button
       type="button"
