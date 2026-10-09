@@ -46,13 +46,13 @@ jobs:
           fi
           if [ "${{ github.event.action }}" = "closed" ]; then echo "remove=true" >> "$GITHUB_OUTPUT"; fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.v.outputs.sha }}
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.v.outputs.remove != 'true'
         with:
           node-version: 24
