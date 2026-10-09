@@ -144,7 +144,7 @@ const extension: MockExtension = {
         ],
       },
     ],
-    dashboardCards: [{ id: 'podman-update', title: 'Podman', component: PodmanUpdateCard }],
+    dashboardCards: [{ id: 'podman-update', title: 'Podman', component: PodmanUpdateCard, compact: true }],
     commands: [
       {
         id: 'podman.machine.create',

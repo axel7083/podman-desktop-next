@@ -169,6 +169,7 @@ const extension: MockExtension = {
     // CLI tool in Settings › CLI Tools (P17).
     cliTools: [{ id: 'example', name: 'example', displayName: 'Example CLI', description: 'Example command-line tool.', version: '1.0.0', latest: '1.1.0' }],
     // Dashboard card (P17).
+    // `compact: true` renders a one-line notice above the grid (no capped slot).
     dashboardCards: [{ id: 'example-card', title: 'Example', component: TemplateCard }],
     // Status-bar entry.
     statusItems: [{ id: 'example-status', align: 'right', icon: faFlask, text: () => 'Example', command: 'example.hello' }],

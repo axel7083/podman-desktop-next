@@ -101,7 +101,10 @@ const allEnabledCards = $derived(
     .filter(c => isOn(`${c.ext.id}:${c.id}`))
     .toSorted((a, b) => (ordering.get(`${a.ext.id}:${a.id}`) ?? 0) - (ordering.get(`${b.ext.id}:${b.id}`) ?? 0)),
 );
-const cards = $derived(allCards || allEnabledCards.length <= CARD_CAP + 1 ? allEnabledCards : allEnabledCards.slice(0, CARD_CAP));
+// compact one-line cards (update notices) sit above the grid and never use a capped slot
+const compactCards = $derived(allEnabledCards.filter(c => c.compact));
+const gridCards = $derived(allEnabledCards.filter(c => !c.compact));
+const cards = $derived(allCards || gridCards.length <= CARD_CAP + 1 ? gridCards : gridCards.slice(0, CARD_CAP));
 
 function open(c: ConnectionView): void {
   navigate(connectionHome(c));
@@ -254,6 +257,13 @@ function toggle(): void {
               <span class="text-lg font-semibold text-[var(--pd-content-card-header-text)]">Extensions</span>
               <Button type="link" padding="px-1 py-0" title="Choose and reorder dashboard sections" onclick={customize}>Customize</Button>
             </div>
+            {#each compactCards as card (card.ext.id + card.id)}
+              <Contribution ext={card.ext} kind="dashboardCard" api="P17">
+                <div class="rounded-lg px-4 py-2 bg-[var(--pd-content-card-carousel-card-bg)]">
+                  <LazyComponent component={card.component} />
+                </div>
+              </Contribution>
+            {/each}
             <div class="grid grid-cols-2 gap-3">
               {#each cards as card (card.ext.id + card.id)}
                 <Contribution ext={card.ext} kind="dashboardCard" api="P17">
@@ -263,9 +273,9 @@ function toggle(): void {
                 </Contribution>
               {/each}
             </div>
-            {#if allEnabledCards.length > cards.length || allCards}
+            {#if gridCards.length > cards.length || allCards}
               <Button type="secondary" class="self-center" onclick={toggleCards}>
-                {allCards ? 'Show fewer cards' : `Show ${allEnabledCards.length - cards.length} more cards`}
+                {allCards ? 'Show fewer cards' : `Show ${gridCards.length - cards.length} more cards`}
               </Button>
             {/if}
           </div>

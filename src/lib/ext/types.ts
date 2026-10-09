@@ -383,6 +383,8 @@ export interface CardDef {
   id: string;
   title: string;
   component: ComponentRef<Record<string, never>>;
+  /** One-line notice (e.g. an update) rendered full-width above the grid; never takes one of the capped card slots. */
+  compact?: boolean;
 }
 
 /** Status-bar entry. */
