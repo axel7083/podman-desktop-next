@@ -147,7 +147,7 @@ const statusColumn = new TableColumn<Row, StatusCellData>('Status', {
 
 const nameColumn = new TableColumn<Row, NameCellData>('Name', {
   // floor so a group's line 2 (chip + "n containers (m filtered)") never truncates at 1280px
-  width: 'minmax(17rem, 2fr)',
+  width: 'minmax(15rem, 2fr)',
   renderer: NameCell,
   renderMapping: (r): NameCellData => {
     if (isGroup(r)) {
@@ -169,14 +169,14 @@ const nameColumn = new TableColumn<Row, NameCellData>('Name', {
 const imageColumn = new TableColumn<Row, string>('Image', {
   // single line + ellipsis (TextCell) so long image names never run into Uptime
   // floor so ~30 chars of an image reference stay visible at 1280px
-  width: 'minmax(12rem, 3fr)',
+  width: 'minmax(6rem, 3fr)',
   renderer: TextCell,
   renderMapping: (r): string => (isGroup(r) ? (r.details ?? []).join(' · ') : shortImage(r.image)),
   comparator: (a, b): number => (isGroup(a) ? '' : a.image).localeCompare(isGroup(b) ? '' : b.image),
 });
 
 const uptimeColumn = new TableColumn<Row, Date | undefined>('Uptime', {
-  width: '110px',
+  width: '100px',
   renderer: TableDurationColumn,
   renderMapping: (r): Date | undefined => (!isGroup(r) && r.state === 'RUNNING' && r.startedAt ? new Date(r.startedAt) : undefined),
   comparator: (a, b): number => (isGroup(b) ? 0 : (b.startedAt ?? 0)) - (isGroup(a) ? 0 : (a.startedAt ?? 0)),
@@ -205,7 +205,7 @@ const actionsColumn = new TableColumn<Row, ActionsCellData>('Actions', {
 /** Fixed width from the longest value/header (~7px per 12px char + cell padding), 80–160px. */
 function contributedWidth(title: string, values: string[]): string {
   const longest = Math.max(title.length, ...values.map(v => v.length));
-  return `${Math.min(160, Math.max(80, Math.ceil(longest * 7 + 16)))}px`;
+  return `${Math.min(120, Math.max(72, Math.ceil(longest * 7 + 16)))}px`;
 }
 
 const columns = $derived([

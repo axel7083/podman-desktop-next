@@ -172,6 +172,8 @@ $effect(() => {
  * at the top edge (an orphaned "More (n)" / "⋯ n" row) is scrolled past when
  * the selected row still fits.
  */
+let tailPad = $state(0);
+
 function revealSelected(): void {
   const el = scroller;
   const row = el?.querySelector<HTMLElement>('[aria-current="page"]');
@@ -199,7 +201,20 @@ function revealSelected(): void {
   // skip past a group that is cut at the top edge when the row still fits below its end
   const cut = groupEls.find(g => g !== own && top(g) < target && bottom(g) > target + 1);
   if (cut && bottom(cut) <= rowTop && rowBottom - bottom(cut) <= view) target = bottom(cut);
-  target = Math.max(0, Math.min(target, el.scrollHeight - view));
+  // otherwise snap up to the cut group's start when the row still fits (never leave a bare "More" row on top)
+  else if (cut && rowBottom - top(cut) <= view) target = top(cut);
+  // last resort: hide the cut group entirely, the row lands at the top under its header
+  else if (cut) target = Math.min(bottom(cut), rowTop - headerH);
+  // the end of the list can't scroll that far: grow a tail spacer so the snap lands on a group edge
+  const max = el.scrollHeight - tailPad - view;
+  tailPad = Math.max(0, Math.ceil(target - max));
+  target = Math.max(0, target);
+  if (tailPad > 0) {
+    requestAnimationFrame(() => {
+      el.scrollTop = target;
+    });
+    return;
+  }
   if (Math.abs(target - el.scrollTop) > 1) el.scrollTop = target;
 }
 
@@ -418,7 +433,7 @@ function onResizeDblClick(): void {
         {/if}
       </div>
     {/each}
-    <div class="h-2" aria-hidden="true"></div>
+    <div class="h-2" aria-hidden="true" style:margin-bottom="{tailPad}px"></div>
   </div>
 
   <!-- footer never scrolls away: Extensions, Accounts, Settings -->
