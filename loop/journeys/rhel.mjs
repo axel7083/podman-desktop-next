@@ -17,7 +17,8 @@ export async function journey(t) {
   await t.open('/settings/resources', { speed: '5' });
   await page.getByRole('region', { name: 'podman', exact: true }).waitFor();
   await t.shot('resources-podman-card');
-  await page.getByRole('button', { name: 'Create RHEL Podman machine' }).click();
+  await page.getByRole('button', { name: /^More ways to create \(Podman/ }).click();
+  await page.getByText('Create new RHEL Podman machine', { exact: true }).click();
   await page.locator('#field-provider').waitFor();
   await pick('field-provider', 'Hyper-V (Windows)');
   await page.getByRole('alert', { name: /provider hyperv is not supported/ }).waitFor();

@@ -13,7 +13,7 @@ Proposed provider for Microsoft's built-in container engine (`wslc.exe`, GA 2026
 
 ## Mock
 - Connections `wslc-default` (started) and `wslc-ai-gpu` (stopped, GPU), engine type `wslc`, `resources` = containers/images/volumes/networks (no Pods/Secrets).
-- Factory "New WSLC session" (name, CPU, memory, storage path, GPU).
+- Factory "Create WSLC session" (name, CPU, memory, storage path, GPU).
 - Tab "Capabilities" on every engine (Podman / Docker / WSLC / Apple container matrix, current column highlighted, limitation banner).
 - Container kebab "Recreate on Podman" (dialog with copied run args, target engine, shifted ports → task → new container) and "Open in Windows Terminal".
 - Dashboard card (WSL 3.0.1 detected, sessions, VPN hint), CLI tool `wslc` 3.0.1.

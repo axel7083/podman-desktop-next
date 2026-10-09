@@ -10,7 +10,7 @@
  * (docs/ia.md "Status bar").
  */
 import { faBell, faChevronDown, faChevronRight, faChevronUp, faCircleCheck, faCircleDot, faCircleXmark, faEllipsis, faListCheck, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
-import { Spinner } from '@podman-desktop/ui-svelte';
+import { Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import HintChip from '#lib/components/HintChip.svelte';
 
@@ -266,13 +266,15 @@ const statusIcon: Record<string, typeof faCircleCheck> = {
                 {statusLabel(c)}
               </span>
               {#if c.status === 'started' || c.status === 'stopped'}
-                <button
-                  class="shrink-0 w-6 h-6 flex items-center justify-center rounded text-[var(--pd-button-icon-text)] hover:text-[var(--pd-button-icon-hover-text)] hover:bg-[var(--pd-button-icon-bg)] focus-visible:outline-2 focus-visible:outline-[var(--pd-button-primary-bg)]"
-                  title={actionLabel(c)}
-                  aria-label={actionLabel(c)}
-                  onclick={toggleConnection.bind(undefined, c)}>
-                  <Icon icon={c.status === 'started' ? faStop : faPlay} size="xs" />
-                </button>
+                <!-- labelled icon button: secondary-text glyph inside a bordered 24px button, tooltip names the action -->
+                <Tooltip left tip={actionLabel(c)}>
+                  <button
+                    class="shrink-0 w-6 h-6 flex items-center justify-center rounded-md border border-[var(--pd-content-divider)] text-[var(--pd-content-card-text)] hover:text-[var(--pd-modal-dropdown-text)] hover:border-[var(--pd-button-secondary-hover-border,var(--pd-button-primary-bg))] hover:bg-[var(--pd-content-bg)] focus-visible:outline-2 focus-visible:outline-[var(--pd-button-primary-bg)]"
+                    aria-label={actionLabel(c)}
+                    onclick={toggleConnection.bind(undefined, c)}>
+                    <Icon icon={c.status === 'started' ? faStop : faPlay} class="w-2.5 h-2.5" />
+                  </button>
+                </Tooltip>
               {:else}
                 <span class="w-6 shrink-0"></span>
               {/if}

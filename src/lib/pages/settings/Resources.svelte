@@ -6,8 +6,8 @@
  * Scaling: provider cards grouped by kind (same groups as the primary nav)
  * with a name filter on top; connection details are label/value rows.
  */
-import { faArrowsRotate, faCircleInfo, faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button, EmptyScreen, FilteredEmptyScreen, SearchInput, Tooltip } from '@podman-desktop/ui-svelte';
+import { faArrowsRotate, faChevronDown, faCircleInfo, faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { Button, DropdownMenu, EmptyScreen, FilteredEmptyScreen, SearchInput, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -117,6 +117,10 @@ function details(c: ConnectionView): void {
   navigate(`/c/${c.id}`);
 }
 
+function createLabel(label: string): string {
+  return label.replace(/^Create /, 'Create new ');
+}
+
 function endpointLabel(c: ConnectionView): string {
   if (c.kind === 'engine') return `${c.engineType === 'docker' ? 'Docker' : c.engineType === 'podman' ? 'Podman' : (c.engineType ?? '')} endpoint`;
   if (c.kind === 'kubernetes') return 'Kubernetes endpoint';
@@ -148,7 +152,7 @@ function endpointLabel(c: ConnectionView): string {
           <Contribution ext={p.ext} kind="provider" api="P1">
             <div class="bg-[var(--pd-invert-content-card-bg)] mb-3 rounded-md p-3 flex" role="region" aria-label={p.id}>
               <div role="region" aria-label="Provider Setup" class="border-r border-[var(--pd-content-divider)] flex flex-col shrink-0">
-                <div class="w-[230px] pr-4 py-2 flex flex-col flex-1">
+                <div class="w-[260px] pr-4 py-2 flex flex-col flex-1">
                   <div class="flex min-w-0">
                     <AppIcon icon={p.icon} size="40px" class="max-w-[40px] shrink-0" title={p.name} />
                     <span class="my-auto font-semibold text-[var(--pd-invert-content-card-header-text)] ml-3 truncate" title={p.name}>{p.name}</span>
@@ -156,23 +160,32 @@ function endpointLabel(c: ConnectionView): string {
                       <span class="my-auto text-[var(--pd-content-sub-header)] ml-3 shrink-0">v{p.version}</span>
                     {/if}
                   </div>
-                  <!-- one button per factory: first primary, the others secondary, stacked; long labels wrap to two lines, full label in the tooltip -->
-                  <div class="mt-3 flex flex-col gap-2 items-stretch">
-                    {#each p.factories as f, i (f.id)}
-                      {@const label = f.label.replace(/^Create /, 'Create new ')}
-                      <Contribution ext={f.ext} kind="connectionFactory" api="P12">
+                  <!-- one pattern for every provider: a single-line primary "Create new …" for the first
+                       factory, variants (e.g. RHEL Podman machine) in a split dropdown next to it -->
+                  {#if p.factories.length > 0}
+                    {@const first = p.factories[0]}
+                    <div class="mt-3 flex items-center gap-1">
+                      <Contribution ext={first.ext} kind="connectionFactory" api="P12">
                         <Button
                           icon={faPlusCircle}
-                          type={i === 0 ? 'primary' : 'secondary'}
-                          class="w-full justify-start text-left"
-                          onclick={create.bind(undefined, f.id)}
-                          title="{label}{f.description ? ` – ${f.description}` : ''}"
-                          aria-label={f.label}>
-                          <span class="block whitespace-normal line-clamp-2 max-w-[170px] text-left">{label}</span>
+                          class="whitespace-nowrap"
+                          onclick={create.bind(undefined, first.id)}
+                          title="{createLabel(first.label)}{first.description ? ` – ${first.description}` : ''}"
+                          aria-label={first.label}>
+                          {createLabel(first.label)}
                         </Button>
                       </Contribution>
-                    {/each}
-                  </div>
+                      {#if p.factories.length > 1}
+                        <DropdownMenu title="More ways to create ({p.name})" icon={faChevronDown}>
+                          {#each p.factories.slice(1) as f (f.id)}
+                            <Contribution ext={f.ext} kind="connectionFactory" api="P12">
+                              <ListItemButtonIcon title={createLabel(f.label)} icon={faPlusCircle} onClick={create.bind(undefined, f.id)} menu={true} />
+                            </Contribution>
+                          {/each}
+                        </DropdownMenu>
+                      {/if}
+                    </div>
+                  {/if}
                 </div>
               </div>
               <div class="grow min-w-0 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] content-start text-[var(--pd-invert-content-card-text)]" role="region" aria-label="Provider Connections">
