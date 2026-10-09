@@ -119,7 +119,9 @@ enabled. Each names where it is implemented.
    (Kubernetes / VMs & services), 10 per group + "+n more"; headings carry a
    count but no trailing colon; extension cards capped at 4 with "Show n more
    cards" and configured with the ListOrganizer (header pencil, or the
-   "Customize" link on the Extensions card).
+   "Customize" link on the Extensions card). Compact cards (`CardDef.compact`, e.g.
+   the Podman update notice) render as one-line rows above the grid and never
+   take a capped slot.
 8. **Container groups**: one row format for every grouper — title = group name
    (never truncated by a chip, no "(type)" suffix), line 2 = chip (extension icon
    + short label, `GrouperDef.chip`: "Quarkus Dev Services", "Compose", "Kind",
@@ -146,10 +148,14 @@ enabled. Each names where it is implemented.
     contributed item shows its extension (icon + name) on the right. Provenance,
     meta, "+n more" and the footer count use secondary text; accent is reserved
     for the selected row. The palette grows out of the title-bar search field
-    (its input sits exactly over it) instead of stacking a second search box.
+    (its input takes the field's measured width and position; only the results
+    panel below is wider) instead of stacking a second search box. Every tab
+    strip (NavPage `Button type="tab"`, palette, DetailsPage) uses neutral
+    unselected text and accent only on the selected underline.
     **Status-bar connections popover**: grouped by kind with collapsible headers
     and counts, 6 rows per group (running first) + "Show all n"; status is a dot
-    plus neutral text, start/stop is a labelled icon button; hint chips keep
+    plus neutral text, start/stop is a labelled icon button (bordered, secondary
+    text colour, tooltip "Stop <name>"); hint chips keep
     their authored case.
     **Status bar** (`StatusBar.svelte`): a running task shows once, as its
     progress toast plus the task counter (spinner + count, no per-task progress
@@ -162,7 +168,9 @@ enabled. Each names where it is implemented.
     authored sentence case, each with its extension's icon and a title tooltip
     (label – extension) when it ellipsizes. Settings › Resources groups provider
     cards by kind (Engines / Kubernetes / VMs & services) under a name filter;
-    connection details are label/value rows that ellipsize with a tooltip.
+    connection details are label/value rows that ellipsize with a tooltip. Every
+    provider card has one single-line primary "Create new …" button; extra
+    factories (RHEL Podman machine) sit in its split dropdown.
 13. **Toasts**: at most 2; a task's progress toast is replaced in place by its
     outcome (same `taskId`); success/info auto-dismiss after 5 s, warnings 8 s,
     errors persist; compact 300px cards above the status bar.
