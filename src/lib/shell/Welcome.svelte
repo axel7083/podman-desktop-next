@@ -50,9 +50,6 @@ function skip(): void {
     style="background-image: url({bgImage}); background-position: 50% -175%; background-size: 100% 75%"
     role="dialog"
     aria-label="Welcome">
-    <div class="flex flex-row flex-none backdrop-blur-sm p-6 mt-10">
-      <div class="flex flex-auto text-lg font-bold text-[var(--pd-content-card-header-text)]">Get started with Podman Desktop next</div>
-    </div>
 
     <div class="flex flex-col justify-center content-center flex-auto backdrop-blur-sm p-2 overflow-y-auto">
       <div class="flex justify-center p-2"><DesktopIcon size="80" /></div>
@@ -98,7 +95,7 @@ function skip(): void {
 
     <div class="flex justify-end flex-none bg-[var(--pd-content-bg)] p-8">
       <div class="flex flex-row gap-2">
-        <Button type="secondary" onclick={skip}>Skip</Button>
+        <Button type="link" onclick={skip}>Skip</Button>
         <Button disabled={selection.length === 0} onclick={start}>
           {isAll ? 'Start with everything' : `Start with ${selection.length} scenario${selection.length === 1 ? '' : 's'}`} · {extCount} extensions
         </Button>

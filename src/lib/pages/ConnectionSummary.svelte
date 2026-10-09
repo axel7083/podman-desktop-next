@@ -152,6 +152,8 @@ const tiles = $derived([
   ...coreResourcesOf(conn).map(r => ({ id: r.id, label: r.label, icon: r.icon, count: count(r.id) as number | undefined, path: `/c/${conn.id}/${r.id}`, ext: undefined, dimmed: false })),
   ...contributedTiles,
 ]);
+/** Display labels for the connection kind (Details › Type). */
+const KIND_LABEL: Record<string, string> = { engine: 'Container engine', kubernetes: 'Kubernetes cluster', vm: 'Virtual machine', service: 'Service' };
 </script>
 
 <!-- Connection home: one header (identity + lifecycle), Summary + contributed tabs. No breadcrumb/close: it is a top-level destination reached from the primary nav. -->
@@ -159,7 +161,7 @@ const tiles = $derived([
 <DetailsPage title={conn.name} onclose={noop}>
   {#snippet subtitleSnippet()}
     <span class="text-sm leading-none line-clamp-1">
-      <span class="text-[var(--pd-content-sub-header)]">{conn.providerName}{conn.version ? ` ${conn.version}` : ''} ·</span>
+      <span class="text-[var(--pd-content-card-text)]">{conn.providerName}{conn.version ? ` ${conn.version}` : ''} ·</span>
       <span class="text-[var(--pd-link)]">{conn.endpoint}</span>
     </span>
   {/snippet}
@@ -239,7 +241,7 @@ const tiles = $derived([
           <h2 class="text-lg font-semibold text-[var(--pd-content-card-header-text)] mb-2">Details</h2>
           <table class="w-full">
             <tbody>
-              {#each [['Status', statusLabel(conn)], ['Provider', conn.providerName], ['Type', conn.kind === 'engine' ? `${conn.engineType ?? ''} engine` : conn.kind], ['Endpoint', conn.endpoint], ['Version', conn.version ?? ''], ...Object.entries(conn.details ?? {}).filter(([k]) => !(parent && k === 'Runs on')), ['Contributed by', `${conn.ext.displayName} (${conn.ext.id})`]] as [label, value] (label)}
+              {#each [['Status', statusLabel(conn)], ['Provider', conn.providerName], ['Type', KIND_LABEL[conn.kind] ?? conn.kind], ['Endpoint', conn.endpoint], ['Version', conn.version ?? ''], ...Object.entries(conn.details ?? {}).filter(([k]) => !(parent && k === 'Runs on')), ['Contributed by', `${conn.ext.displayName} (${conn.ext.id})`]] as [label, value] (label)}
                 {#if value}
                   <tr><td class="py-1 w-48 text-[var(--pd-table-body-text)]">{label}</td><td class="py-1 wrap-anywhere">{value}</td></tr>
                 {/if}
