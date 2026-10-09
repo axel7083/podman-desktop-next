@@ -208,6 +208,10 @@ function contributedWidth(title: string, values: string[]): string {
   return `${Math.min(120, Math.max(72, Math.ceil(longest * 7 + 16)))}px`;
 }
 
+/** Below ~1400px the low-priority contributed columns (MODEL, AGENT) drop before Image or Actions shrink. */
+let innerWidth = $state(1440);
+const wide = $derived(innerWidth >= 1400);
+
 const columns = $derived([
   statusColumn,
   nameColumn,
@@ -218,7 +222,7 @@ const columns = $derived([
   // column is sized to its longest value (each table row is its own grid, so max-content
   // would misalign) and capped at 160px so it never starves Image.
   ...registry.columns
-    .filter(c => c.target === 'container')
+    .filter(c => wide && c.target === 'container')
     .map(c => ({ c, values: visible.map(x => c.value(x) ?? '').filter(Boolean) }))
     .filter(({ values }) => values.length > 0)
     .map(
@@ -308,6 +312,8 @@ function runToolbar(m: (typeof toolbar)[number]): void {
 
 const toolbar = $derived(registry.menusFor({ target: 'container', conn, resource: conn }, 'toolbar'));
 </script>
+
+<svelte:window bind:innerWidth />
 
 <NavPage bind:searchTerm={searchTerm} title="containers">
   {#snippet additionalActions()}

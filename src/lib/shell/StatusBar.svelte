@@ -9,7 +9,8 @@
  * Contributed items beyond STATUS_ITEM_CAP collapse into a "⋯" overflow
  * (docs/ia.md "Status bar").
  */
-import { faBell, faChevronDown, faChevronRight, faChevronUp, faCircleCheck, faCircleDot, faCircleXmark, faEllipsis, faListCheck, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import { faBell, faChevronDown, faChevronRight, faChevronUp, faCircleCheck, faCircleDot, faCircleXmark, faEllipsis, faListCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCirclePlay, faCircleStop } from '@fortawesome/free-regular-svg-icons';
 import { Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import HintChip from '#lib/components/HintChip.svelte';
@@ -266,13 +267,13 @@ const statusIcon: Record<string, typeof faCircleCheck> = {
                 {statusLabel(c)}
               </span>
               {#if c.status === 'started' || c.status === 'stopped'}
-                <!-- labelled icon button: secondary-text glyph inside a bordered 24px button, tooltip names the action -->
+                <!-- labelled icon button: round play/stop glyph in secondary text, hover background, tooltip names the action -->
                 <Tooltip left tip={actionLabel(c)}>
                   <button
-                    class="shrink-0 w-6 h-6 flex items-center justify-center rounded-md border border-[var(--pd-content-divider)] text-[var(--pd-content-card-text)] hover:text-[var(--pd-modal-dropdown-text)] hover:border-[var(--pd-button-secondary-hover-border,var(--pd-button-primary-bg))] hover:bg-[var(--pd-content-bg)] focus-visible:outline-2 focus-visible:outline-[var(--pd-button-primary-bg)]"
+                    class="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-[var(--pd-content-card-text)] opacity-80 hover:opacity-100 hover:bg-[var(--pd-content-bg)] focus-visible:outline-2 focus-visible:outline-[var(--pd-button-primary-bg)]"
                     aria-label={actionLabel(c)}
                     onclick={toggleConnection.bind(undefined, c)}>
-                    <Icon icon={c.status === 'started' ? faStop : faPlay} class="w-2.5 h-2.5" />
+                    <Icon icon={c.status === 'started' ? faCircleStop : faCirclePlay} class="w-3.5 h-3.5" />
                   </button>
                 </Tooltip>
               {:else}

@@ -217,7 +217,7 @@ function toggle(): void {
                   </div>
                   {#if engines.length > shownEngines.length || allEngines}
                     <Button type="link" padding="px-0 py-0" class="self-start" onclick={toggleEngines}>
-                      {allEngines ? 'Show running engines first' : `Show all ${engines.length} engines (${engines.length - shownEngines.length} more)`}
+                      {allEngines ? 'Show running engines first' : `Show all ${engines.length} engines`}
                     </Button>
                   {/if}
                   {#each otherGroups as g (g.id)}
