@@ -42,9 +42,9 @@ export async function journey(t) {
   await t.open('/tools/openshift-cluster-manager', { speed: '5' });
   await page.getByRole('button', { name: 'Connect to ocp-dev' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Update and connect', exact: true }).click();
-  await page.getByText(/oc login --web ocp-dev/).first().waitFor({ timeout: 20000 });
+  await page.getByText(/Log in to ocp-dev/).first().waitFor({ timeout: 20000 });
   await t.shot('toasts-task');
-  await page.getByText(/oc login --web ocp-dev.*completed/).first().waitFor({ timeout: 20000 });
+  await page.getByText(/Log in to ocp-dev.*completed/).first().waitFor({ timeout: 20000 });
   await page.waitForTimeout(500);
   await page.waitForTimeout(600);
   await t.open('/c/ocp-dev');

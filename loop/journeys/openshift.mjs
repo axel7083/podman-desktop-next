@@ -48,7 +48,7 @@ export async function journey(t) {
   await done('Update oc');
   await page.waitForTimeout(400);
   await t.shot('ocm-login-progress');
-  await done('oc login --web ocp-dev');
+  await done('Log in to ocp-dev');
   await t.open('/c/ocp-dev', P);
   await page.getByRole('link', { name: 'Virtual machines' }).first().waitFor();
   await t.shot('ocp-dev-connected');
