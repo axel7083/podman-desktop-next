@@ -65,7 +65,7 @@ screen in another published version. Each version keeps its own state
 Cut a release from the current `main`:
 
 ```bash
-git tag v2 && git push origin v2
+git tag -s v2 -m "v2" && git push origin v2   # tags are signed; an annotated message is required
 ```
 
 `.github/workflows/pages.yml` builds with `BASE_PATH=/podman-desktop-next/<id>` and
