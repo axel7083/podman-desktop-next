@@ -1,8 +1,8 @@
 /** P13 list rows for the ui-svelte Table. */
-import type { IconRef } from '#lib/ext/types.ts';
+import type { IconRef } from "#lib/ext/types.ts";
 
-import type { LabResource } from '../../data.ts';
-import type { MenuItem } from '../live.svelte.ts';
+import type { LabResource } from "../../data.ts";
+import type { MenuItem } from "../live.svelte.ts";
 
 export interface ActionBtn {
   title: string;
@@ -28,6 +28,8 @@ export interface LabRow {
   chip?: string;
   cols: Record<string, string>;
   open?: () => void;
+  /** Pinned open (double-click / Enter). */
+  pin?: () => void;
   buttons: ActionBtn[];
   menu?: () => MenuItem[];
   children?: LabRow[];

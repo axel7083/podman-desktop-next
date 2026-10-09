@@ -29,9 +29,11 @@ interface Props {
   view?: string;
   onview?: (v: string) => void;
   actions?: Snippet;
+  /** Inline filter control (segmented All / Running / Stopped) before the search. */
+  filters?: Snippet;
 }
 
-let { icon, title, status, connId, onconn, sub, extra, search = $bindable(), views = [], view, onview, actions }: Props = $props();
+let { icon, title, status, connId, onconn, sub, extra, search = $bindable(), views = [], view, onview, actions, filters }: Props = $props();
 const c = $derived(findConn(connId));
 </script>
 
@@ -54,6 +56,7 @@ const c = $derived(findConn(connId));
     {/if}
     {#if sub}<span class="text-xs text-[var(--pd-content-sub-header)] truncate min-w-0">{sub}</span>{/if}
     <span class="flex-1"></span>
+    {#if filters}{@render filters()}{/if}
     {#if search !== undefined}
       <div class="w-64 shrink-0" data-testid="head-search"><SearchInput title={title} bind:searchTerm={search} /></div>
     {/if}

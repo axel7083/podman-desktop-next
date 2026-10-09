@@ -23,6 +23,7 @@ import { containerInfo, hash, imageInfo } from './details.ts';
 import Head from './Head.svelte';
 import { can, deleteRes, imageMenu, isUp, live, resActions, resStatus, startRes, stopRes } from './live.svelte.ts';
 import RowsTable from './RowsTable.svelte';
+import SegFilter from './SegFilter.svelte';
 
 interface Props {
   c: LabConnection;
@@ -85,6 +86,7 @@ function toRow(r: LabResource): LabRow {
       sub: [tag ?? 'latest'],
       cols: { age: r.age, size: im.size, arch: im.arch },
       open: (): void => openRes(r),
+      pin: (): void => openRes(r, false),
       buttons: [{ title: 'Run Image', icon: faPlay, run: (): void => lab.openCreate(`Run ${r.name}`) }, del],
       menu: () => imageMenu(r, onopen),
     };
@@ -100,6 +102,7 @@ function toRow(r: LabResource): LabRow {
       sub: [st.toUpperCase(), ci.ports.length ? `PORT${ci.ports.length > 1 ? 'S' : ''} ${ci.ports.join(', ')}` : ''].filter(Boolean),
       cols: { image: ci.image, uptime: up ? r.age : '' },
       open: (): void => openRes(r),
+      pin: (): void => openRes(r, false),
       buttons: [...startStop, del],
       menu: () => resActions(r, onopen),
     };
@@ -113,6 +116,7 @@ function toRow(r: LabResource): LabRow {
     sub: [r.sub],
     cols: { age: r.age },
     open: (): void => openRes(r),
+      pin: (): void => openRes(r, false),
     buttons: [...startStop, del],
     menu: () => resActions(r, onopen),
   };
@@ -158,6 +162,7 @@ const cols = $derived<[string, string, string, boolean?][]>(
 );
 
 const noun = $derived(s.label.toLowerCase());
+const modern = $derived(lab.table !== 'classic');
 </script>
 
 {#snippet actions()}
@@ -181,18 +186,27 @@ const noun = $derived(s.label.toLowerCase());
   {/if}
 {/snippet}
 
+{#snippet seg()}
+  <SegFilter {tabs} value={filter} onpick={(v): void => { filter = v; }} />
+{/snippet}
+
 <div data-testid="list-view" class="flex flex-col h-full min-h-0">
-  <Head {icon} title={s.label} connId={c.id} onconn={(): void => onopen({ kind: 'connection', connId: c.id }, {})} sub={s.ext ? s.ext.name : undefined} bind:search {actions} />
-  {#if tabs.length}
+  <Head {icon} title={s.label} connId={c.id} onconn={(): void => onopen({ kind: 'connection', connId: c.id }, {})} sub={s.ext ? s.ext.name : undefined} bind:search {actions} filters={modern && tabs.length ? seg : undefined} />
+  {#if tabs.length && !modern}
     <div class="flex items-center gap-1 px-4 pt-2 shrink-0 border-b border-[var(--pd-content-divider)]">
       {#each tabs as [id, label] (id)}
         <Button type="tab" selected={filter === id} onclick={(): void => { filter = id; }}>{label}</Button>
       {/each}
     </div>
   {/if}
-  <div class="flex flex-1 min-h-0 overflow-auto px-2 pb-2">
+  <div class="flex flex-1 min-h-0 overflow-auto" class:px-2={!modern} class:pb-2={!modern}>
     {#if rows.length}
       <RowsTable kind="p13-{s.id}" {rows} {cols} />
+    {:else if all.length && modern}
+      <div class="flex items-center gap-2 px-4 py-3 text-xs text-[var(--pd-content-sub-header)]">
+        No {noun} match “{search || filter}”.
+        <button type="button" class="text-[var(--pd-link)] hover:underline" onclick={(): void => { search = ''; filter = 'all'; }}>Clear filters</button>
+      </div>
     {:else if all.length}
       <FilteredEmptyScreen {icon} kind={noun} searchTerm={search || filter} onResetFilter={(): void => { search = ''; filter = 'all'; }} />
     {:else}

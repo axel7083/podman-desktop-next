@@ -11,7 +11,7 @@ function sync(): void {
   goto(href(`/nav-lab?${lab.query()}`), { replaceState: true }).catch(() => undefined);
 }
 
-function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' | 'conns' | 'install'>(k: K, v: (typeof lab)[K]): void {
+function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' | 'conns' | 'install' | 'table'>(k: K, v: (typeof lab)[K]): void {
   lab[k] = v;
   sync();
 }
@@ -42,6 +42,7 @@ function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' 
       lab.installed = [];
       set('install', v);
     })}
+    {@render seg('Table', [['classic', 'Classic'], ['modern', 'Modern'], ['grid', 'Grid']] as ['classic' | 'modern' | 'grid', string][], lab.table, v => set('table', v))}
   {/if}
   {@render seg('Colour (H)', [[true, 'On'], [false, 'Off']], lab.color, v => set('color', v))}
   {@render seg('Theme', [['dark', 'Dark'], ['light', 'Light']] as ['dark' | 'light', string][], lab.theme, v => set('theme', v))}

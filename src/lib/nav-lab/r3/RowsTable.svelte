@@ -6,11 +6,13 @@
  */
 import { Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 
+import { lab } from '../lab.svelte.ts';
 import ActionsCell from './cells/ActionsCell.svelte';
 import NameCell from './cells/NameCell.svelte';
 import StatusCell from './cells/StatusCell.svelte';
 import TextCell from './cells/TextCell.svelte';
 import type { LabRow } from './cells/types.ts';
+import ModernTable from './ModernTable.svelte';
 
 interface Props {
   kind: string;
@@ -47,8 +49,12 @@ const columns = $derived([
 const row = new TableRow<LabRow, LabRow>({ selectable: (): boolean => true, children: (r): LabRow[] => r.children ?? [] });
 </script>
 
+{#if lab.table !== 'classic'}
+  <ModernTable {rows} {cols} variant={lab.table} />
+{:else}
 <div data-testid="rows-table" class="flex min-w-full grow">
   {#key columns}
     <Table {kind} data={rows} {columns} {row} defaultSortColumn="Name" enableLayoutConfiguration key={(r): string => r.name} label={(r): string => r.title} />
   {/key}
 </div>
+{/if}

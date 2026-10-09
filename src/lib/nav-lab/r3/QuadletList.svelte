@@ -9,6 +9,7 @@ import type { LabRow } from './cells/types.ts';
 import Head from './Head.svelte';
 import { isUp, live, type MenuItem, showJournal } from './live.svelte.ts';
 import RowsTable from './RowsTable.svelte';
+import SegFilter from './SegFilter.svelte';
 import type { FoundNode, TreeNode } from './trees.ts';
 
 interface Props {
@@ -20,6 +21,8 @@ let { f, onopen }: Props = $props();
 
 let search = $state('');
 let filter = $state('all');
+const TABS: [string, string][] = [['all', 'All'], ['running', 'Running'], ['stopped', 'Stopped']];
+const modern = $derived(lab.table !== 'classic');
 
 function st(n: TreeNode): string {
   return live.status[n.id] ?? n.status ?? 'ready';
@@ -56,6 +59,7 @@ const rows = $derived(
       sub: [s.toUpperCase()],
       cols: { type: n.data?.type ?? '', service: n.data?.service ?? '', path: n.data?.path ?? '' },
       open: (): void => open(n),
+      pin: (): void => open(n, false),
       buttons: [
         s === 'running' ? { title: 'Stop', icon: faStop, run: (): void => toggle(n) } : { title: 'Start', icon: faPlay, run: (): void => toggle(n), enabled: s !== 'ready' },
         { title: 'Logs (journalctl)', icon: faAlignLeft, run: (): void => showJournal(n.label, n.data?.service ?? '', f.connId) },
@@ -71,14 +75,20 @@ const rows = $derived(
   <Button icon={faPlusCircle} onclick={(): void => lab.openCreate('Generate a Quadlet')}>Generate Quadlet</Button>
 {/snippet}
 
+{#snippet seg()}
+  <SegFilter tabs={TABS} value={filter} onpick={(v): void => { filter = v; }} />
+{/snippet}
+
 <div data-testid="quadlet-list" class="flex flex-col h-full min-h-0">
-  <Head icon={f.provider.icon} title="Quadlets" connId={f.connId} onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})} sub="Podman Quadlet" bind:search {actions} />
+  <Head icon={f.provider.icon} title="Quadlets" connId={f.connId} onconn={(): void => onopen({ kind: 'connection', connId: f.connId }, {})} sub="Podman Quadlet" bind:search {actions} filters={modern ? seg : undefined} />
+  {#if !modern}
   <div class="flex items-center gap-1 px-4 pt-2 shrink-0 border-b border-[var(--pd-content-divider)]">
-    {#each [['all', 'All'], ['running', 'Running'], ['stopped', 'Stopped']] as [id, label] (id)}
+    {#each TABS as [id, label] (id)}
       <Button type="tab" selected={filter === id} onclick={(): void => { filter = id; }}>{label}</Button>
     {/each}
   </div>
-  <div class="flex flex-1 min-h-0 overflow-auto px-2 pb-2">
+  {/if}
+  <div class="flex flex-1 min-h-0 overflow-auto" class:px-2={!modern} class:pb-2={!modern}>
     <RowsTable kind="p13-quadlets" {rows} cols={[['Type', 'type', '90px'], ['Service name', 'service', 'minmax(8rem, 1fr)'], ['Path', 'path', 'minmax(10rem, 2fr)']]} />
   </div>
 </div>
