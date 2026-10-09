@@ -9,7 +9,19 @@ import {
   faCodeBranch,
   faCubes,
   faDiagramProject,
+  faArrowRightArrowLeft,
+  faCircleDot,
+  faDatabase,
+  faFolderTree,
+  faIdBadge,
+  faLink,
+  faLock,
+  faRoute,
+  faSitemap,
+  faUserLock,
+  faUserShield,
   faGear,
+  faHardDrive,
   faKey,
   faLayerGroup,
   faListCheck,
@@ -35,7 +47,10 @@ import NodeIcon from '#lib/images/NodeIcon.svelte';
 import PodIcon from '#lib/images/PodIcon.svelte';
 import PVCIcon from '#lib/images/PVCIcon.svelte';
 import ServiceIcon from '#lib/images/ServiceIcon.svelte';
+import SecretIcon from '#lib/images/SecretIcon.svelte';
 import VolumeIcon from '#lib/images/VolumeIcon.svelte';
+
+import { kubeResources } from './r3/kube-data.ts';
 
 export type ConnStatus = 'running' | 'stopped' | 'error' | 'starting';
 export type ConnGroup = 'Engines' | 'Kubernetes' | 'VMs & services';
@@ -47,6 +62,8 @@ export interface LabSection {
   /** Contributed by an extension (icon of that extension). */
   ext?: { id: string; name: string; icon: string };
   count: number;
+  /** Tree folder the section is nested in (Kubernetes: Compute, Config, Network, Storage, Access Control). */
+  group?: string;
 }
 
 export interface LabConnection {
@@ -74,6 +91,10 @@ export interface LabResource {
   age: string;
   /** Compose project / pod group. */
   group?: string;
+  /** Kubernetes namespace (namespaced kinds). */
+  ns?: string;
+  /** Kind-specific table columns (Kubernetes lists: ready, restarts, type, ports…). */
+  cols?: Record<string, string>;
 }
 
 export interface LabTool {
@@ -88,15 +109,16 @@ export interface LabTool {
 /* Sections                                                            */
 /* ------------------------------------------------------------------ */
 
-const S = (id: string, label: string, icon: IconRef, count: number, ext?: LabSection['ext']): LabSection => ({
+const S = (id: string, label: string, icon: IconRef, count: number, ext?: LabSection['ext'], group?: string): LabSection => ({
   id,
   label,
   icon,
   count,
   ext,
+  group,
 });
 
-const EXT = {
+export const EXT = {
   pipelines: { id: 'pipelines', name: 'OpenShift Pipelines & GitOps', icon: 'icons/redhat.openshift-pipelines-gitops.svg' },
   argo: { id: 'argo', name: 'Argo CD', icon: 'icons/argo-cd.svg' },
   virt: { id: 'virt', name: 'OpenShift Virtualization', icon: 'icons/redhat.openshift-virtualization.png' },
@@ -115,7 +137,7 @@ const EXT = {
   aap: { id: 'aap', name: 'Ansible Automation Platform', icon: 'icons/redhat.aap.png' },
 };
 
-function engineSections(c: number, i: number, p: number, extra: LabSection[] = []): LabSection[] {
+export function engineSections(c: number, i: number, p: number, extra: LabSection[] = []): LabSection[] {
   return [
     S('containers', 'Containers', ContainerIcon, c),
     S('pods', 'Pods', PodIcon, p),
@@ -126,25 +148,50 @@ function engineSections(c: number, i: number, p: number, extra: LabSection[] = [
   ];
 }
 
+/** Kubernetes kinds, grouped like the PD Kubernetes extension (groups are tree folders). */
+export const KUBE_GROUPS = ['Compute', 'Config', 'Network', 'Storage', 'Access Control'] as const;
+
 function kubeSections(scale: number, extra: LabSection[] = []): LabSection[] {
+  const G = (id: string, label: string, icon: IconRef, count: number, group?: string): LabSection => S(id, label, icon, count, undefined, group);
   return [
-    S('nodes', 'Nodes', NodeIcon, Math.max(1, Math.round(scale / 6))),
-    S('kpods', 'Pods', PodIcon, scale * 2),
-    S('deployments', 'Deployments', DeploymentIcon, scale),
-    S('services', 'Services', ServiceIcon, scale),
-    S('routes', 'Ingresses & Routes', IngressRouteIcon, Math.round(scale / 2)),
-    S('pvcs', 'Persistent volume claims', PVCIcon, Math.round(scale / 3)),
-    S('config', 'ConfigMaps & Secrets', ConfigMapSecretIcon, scale * 2),
-    S('jobs', 'Jobs', JobIcon, 4),
-    S('cronjobs', 'CronJobs', CronJobIcon, 2),
+    G('nodes', 'Nodes', NodeIcon, Math.max(1, Math.round(scale / 6))),
+    G('deployments', 'Deployments', DeploymentIcon, scale, 'Compute'),
+    G('daemonsets', 'DaemonSets', faSitemap, 3, 'Compute'),
+    G('statefulsets', 'StatefulSets', faDatabase, 2, 'Compute'),
+    G('replicasets', 'ReplicaSets', faLayerGroup, scale, 'Compute'),
+    G('kpods', 'Pods', PodIcon, scale * 2, 'Compute'),
+    G('jobs', 'Jobs', JobIcon, 4, 'Compute'),
+    G('cronjobs', 'CronJobs', CronJobIcon, 2, 'Compute'),
+    G('configmaps', 'ConfigMaps', ConfigMapSecretIcon, scale, 'Config'),
+    G('secrets', 'Secrets', SecretIcon, scale, 'Config'),
+    G('services', 'Services', ServiceIcon, scale, 'Network'),
+    G('endpoints', 'Endpoints', faCircleDot, scale, 'Network'),
+    G('endpointslices', 'Endpoint Slices', faCircleDot, scale, 'Network'),
+    G('routes', 'Ingresses & Routes', IngressRouteIcon, Math.round(scale / 2), 'Network'),
+    G('netpols', 'Network Policies', faShieldHalved, 3, 'Network'),
+    G('ingressclasses', 'Ingress Classes', faRoute, 1, 'Network'),
+    G('httproutes', 'HTTPRoutes', faRoute, 2, 'Network'),
+    G('portforwards', 'Port Forwarding', faArrowRightArrowLeft, 1, 'Network'),
+    G('pvcs', 'Persistent Volume Claims', PVCIcon, Math.round(scale / 3), 'Storage'),
+    G('pvs', 'Persistent Volumes', faHardDrive, Math.round(scale / 3), 'Storage'),
+    G('storageclasses', 'Storage Classes', faFolderTree, 2, 'Storage'),
+    G('serviceaccounts', 'Service Accounts', faIdBadge, scale, 'Access Control'),
+    G('roles', 'Roles', faUserLock, 4, 'Access Control'),
+    G('rolebindings', 'Role Bindings', faLink, 4, 'Access Control'),
+    G('clusterroles', 'Cluster Roles', faUserShield, 6, 'Access Control'),
+    G('clusterrolebindings', 'Cluster Role Bindings', faLock, 6, 'Access Control'),
+    G('namespaces', 'Namespaces', faLayerGroup, 6),
     ...extra,
   ];
 }
 
+/** Section ids of the Kubernetes kinds (core resources of a Kubernetes connection). */
+export const KUBE_KINDS = kubeSections(1).map(s => s.id);
+
 const OPENSHIFT_EXTRA = (s: number): LabSection[] => [
   S('pipelines', 'Pipelines', faCodeBranch, s, EXT.pipelines),
   S('gitops', 'GitOps', faCodeBranch, Math.round(s / 2), EXT.argo),
-  S('vms', 'Virtual machines', faServer, 3, EXT.virt),
+  S('vms', 'Virtualization', faServer, 3, EXT.virt),
   S('operators', 'Operators', faCubes, 9, EXT.olm),
   S('servicenet', 'Service network', faCircleNodes, 2, EXT.skupper),
   S('helm', 'Helm releases', faBoxArchive, 4, EXT.helm),
@@ -253,7 +300,7 @@ export const CONNECTIONS: LabConnection[] = [
     status: 'stopped',
     color: '#64ad6c',
     initials: 'MC',
-    sections: kubeSections(3),
+    sections: kubeSections(3, [S('vms', 'Virtualization', faServer, 0, EXT.virt), S('operators', 'Operators', faCubes, 2, EXT.olm)]),
   },
   {
     id: 'openshift-local',
@@ -621,6 +668,10 @@ function build(): LabResource[] {
         PODMAN_IMAGES.forEach((name, i) => out.push(R(c.id, s.id, name, 'ready', `${(i * 37) % 900 + 80} MB`, i)));
         continue;
       }
+      if (c.group === 'Kubernetes' && KUBE_KINDS.includes(s.id)) {
+        out.push(...kubeResources(c, s));
+        continue;
+      }
       const specific = SPECIFIC[s.id];
       for (let i = 0; i < s.count; i++) {
         let name: string;
@@ -727,7 +778,7 @@ export const MANY_TABS: LabTarget[] = [
   res('podman-machine-default', 'images', 'quay.io/acme/orders-api:1.4'),
   res('rhel-10', 'containers', 0),
   res('desktop-linux', 'containers', 2),
-  res('ocp-dev', 'kpods', 'checkout-1b58'),
+  res('ocp-dev', 'kpods', 0),
   res('ocp-dev', 'deployments', 'checkout'),
   res('ocp-dev', 'pipelines', 'build-orders'),
   res('ocp-prod', 'kpods', 2),
@@ -748,7 +799,7 @@ export const FEW_TABS: LabTarget[] = [MANY_TABS[0], MANY_TABS[5], MANY_TABS[13]]
 
 export interface PanelSession {
   id: string;
-  kind: 'terminal' | 'logs' | 'yaml';
+  kind: 'terminal' | 'logs' | 'yaml' | 'chat';
   title: string;
   /** Header label of the pane (`podman logs`, `journalctl`, `tty`…). */
   label?: string;
@@ -764,6 +815,10 @@ export interface PanelSession {
   icon?: IconRef;
   /** Task output (P13): lines appended in order while streaming, then the stream stops. */
   script?: string[];
+  /** Called once a task script has been fully streamed. */
+  ondone?: () => void;
+  /** Lightspeed chat (kind 'chat'): the context the question is about (selection, failed command, log line). */
+  context?: string;
 }
 
 export const PANEL_SESSIONS: PanelSession[] = [
@@ -794,6 +849,20 @@ export const PANEL_SESSIONS: PanelSession[] = [
     title: 'kubectl · kind-dev',
     connId: 'kind-dev',
     lines: ['$ kubectl get pods -A | head -4', 'NAMESPACE     NAME                                READY   STATUS    AGE', 'kube-system   coredns-7db6d8ff4d-2xk9p            1/1     Running   2d', 'kube-system   etcd-kind-dev-control-plane         1/1     Running   2d', '$ '],
+  },
+  {
+    id: 't5',
+    kind: 'terminal',
+    title: 'rhel-10',
+    connId: 'rhel-10',
+    lines: [
+      '[core@rhel-10 ~]$ sudo dnf install -y container-tools',
+      'Updating Subscription Management repositories.',
+      'Unable to read consumer identity',
+      'This system is not registered with an entitlement server. You can use "rhc" or "subscription-manager" to register.',
+      'Error: There are no enabled repositories in "/etc/yum.repos.d", "/etc/yum/repos.d", "/etc/distro.repos.d".',
+      '[core@rhel-10 ~]$ ',
+    ],
   },
   {
     id: 'l1',

@@ -15,7 +15,7 @@
  * "Install: Vanilla | All extensions" switches what is installed.
  * Design rules: docs/p13-design-rules.md (audit: docs/p13-audit.md).
  */
-import { faArrowCircleDown, faChevronDown, faChevronRight, faEllipsisVertical, faHammer, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faChevronDown, faChevronRight, faEllipsisVertical, faFolder, faFolderOpen, faHammer, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import { untrack } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -24,6 +24,7 @@ import type { IconRef } from '#lib/ext/types.ts';
 import {
   conn as findConn,
   FEW_TABS,
+  KUBE_KINDS,
   type LabResource,
   type LabSection,
   type LabTarget,
@@ -46,7 +47,15 @@ import ConnView from '../r3/ConnView.svelte';
 import ExtensionsView from '../r3/ExtensionsView.svelte';
 import FilterInput from '../r3/FilterInput.svelte';
 import { connVisible, isInstalled, sectionVisible, toolVisible } from '../r3/exts.ts';
+import { flows } from '../r3/flows.svelte.ts';
 import HomeDashboard from '../r3/HomeDashboard.svelte';
+import KubeListView from '../r3/KubeListView.svelte';
+import { inNs } from '../r3/kube-ns.svelte.ts';
+import { kubeMenu } from '../r3/kube-details.svelte.ts';
+import { nsMenu } from '../r3/kube-menu.ts';
+import KubeOverview from '../r3/KubeOverview.svelte';
+import KubeResourceView from '../r3/KubeResourceView.svelte';
+import OperatorsView from '../r3/OperatorsView.svelte';
 import KubePlayView from '../r3/KubePlayView.svelte';
 import ListView from '../r3/ListView.svelte';
 import ScanView from '../r3/ScanView.svelte';
@@ -107,6 +116,16 @@ function resizeTree(e: PointerEvent): void {
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', up);
 }
+// A flow (new RHEL machine, VM…) made a connection current.
+$effect(() => {
+  const id = flows.select;
+  if (!id) return;
+  untrack(() => {
+    flows.select = undefined;
+    select(id);
+  });
+});
+
 /** Expanded tree keys, remembered per connection (sections collapsed by default). */
 let expanded = $state<Record<string, string[]>>({});
 
@@ -117,6 +136,19 @@ const trees = $derived(c ? TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) &
 const sections = $derived(c ? c.sections.filter(s => sectionVisible(s) && !trees.some(p => p.replaces.includes(s.id))) : []);
 /** Core resources (no extension) first; extension-contributed sections go under EXTENSIONS. */
 const coreSections = $derived(sections.filter(s => !s.ext));
+/** Core sections and Kubernetes folders (Compute, Config…) in tree order. */
+const coreItems = $derived.by(() => {
+  const out: ({ s: LabSection } | { group: string; list: LabSection[] })[] = [];
+  for (const s of coreSections) {
+    if (!s.group) out.push({ s });
+    else {
+      const g = out.find(x => 'group' in x && x.group === s.group) as { group: string; list: LabSection[] } | undefined;
+      if (g) g.list.push(s);
+      else out.push({ group: s.group, list: [s] });
+    }
+  }
+  return out;
+});
 const extSections = $derived(sections.filter(s => !!s.ext));
 const extS = $derived(extSections.filter(s => !f || rows(s.id).length > 0));
 const extT = $derived(c ? trees.filter(p => !f || nodeMatches(treeRoot(p, c.id))) : []);
@@ -157,7 +189,14 @@ function select(id: string): void {
 function rows(sectionId: string): LabResource[] {
   if (!c) return [];
   void live.added;
-  return resourcesOf(c.id, sectionId).filter(r => !live.deleted.includes(r.id) && (!f || r.name.toLowerCase().includes(f)));
+  return resourcesOf(c.id, sectionId).filter(r => !live.deleted.includes(r.id) && inNs(r) && (!f || r.name.toLowerCase().includes(f)));
+}
+
+/** Kubernetes kinds: count in the selected namespaces; others: dataset count ± runtime changes. */
+function countOf(s: LabSection): number {
+  if (!c) return 0;
+  if (c.group === 'Kubernetes' && KUBE_KINDS.includes(s.id)) return rows(s.id).length;
+  return s.count + live.added.filter(id => id.startsWith(`${c.id}/${s.id}/`)).length - live.deleted.filter(id => id.startsWith(`${c.id}/${s.id}/`)).length;
 }
 
 function nodeMatches(n: TreeNode): boolean {
@@ -188,9 +227,10 @@ function nodeMenu(n: TreeNode): MenuItem[] {
 function rowMenu(t: LabTarget): MenuItem[] | undefined {
   if (t.kind === 'resource') {
     const r = resource(t.resId);
+    if (r && c?.group === 'Kubernetes' && KUBE_KINDS.includes(r.sectionId)) return kubeMenu(r, open);
     return r ? resActions(r, open) : undefined;
   }
-  if (t.kind === 'connection' && c) return connActions(c, open);
+  if (t.kind === 'connection' && c) return c.group === 'Kubernetes' ? [...connActions(c, open), ...nsMenu(c, open)] : connActions(c, open);
   if (t.kind === 'node' && t.nodeId && c) {
     const n = trees.flatMap(p => flat(treeRoot(p, c.id))).find(x => x.id === t.nodeId);
     return n ? nodeMenu(n) : undefined;
@@ -261,14 +301,40 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
   {/if}
 {/snippet}
 
-{#snippet sectionRows(s: LabSection)}
+{#snippet sectionRows(s: LabSection, depth = 0)}
   {@const list = rows(s.id)}
   {@const sOpen = open1.includes(s.id) || !!f}
-  {@render row(0, s.label, { key: s.id, chevron: list.length > 0, open: sOpen, target: { kind: 'list', connId: c!.id, sectionId: s.id }, icon: s.ext?.icon ?? s.icon, count: f ? list.length : s.count + live.added.filter(id => id.startsWith(`${c!.id}/${s.id}/`)).length - live.deleted.filter(id => id.startsWith(`${c!.id}/${s.id}/`)).length })}
+  {@render row(depth, s.label, { key: s.id, chevron: list.length > 0, open: sOpen, target: { kind: 'list', connId: c!.id, sectionId: s.id }, icon: s.ext?.icon ?? s.icon, count: f ? list.length : countOf(s) })}
   {#if sOpen}
     {#each list.slice(0, 40) as r (r.id)}
-      {@render row(1, r.name, { target: { kind: 'resource', connId: c!.id, sectionId: s.id, resId: r.id }, status: resStatus(r), dim: r.group })}
+      {@render row(depth + 1, r.name, { target: { kind: 'resource', connId: c!.id, sectionId: s.id, resId: r.id }, status: resStatus(r), dim: r.group ?? r.ns })}
     {/each}
+  {/if}
+{/snippet}
+
+{#snippet folderRows(group: string, list: LabSection[])}
+  {@const key = `grp:${group}`}
+  {@const gOpen = open1.includes(key) || !!f}
+  <div
+    role="treeitem"
+    tabindex="-1"
+    aria-selected="false"
+    aria-expanded={gOpen}
+    data-key={key}
+    data-folder={group}
+    class="flex items-center gap-1.5 h-6 pr-1 pl-1.5 cursor-pointer whitespace-nowrap text-[var(--pd-secondary-nav-text)] hover:bg-[var(--pd-secondary-nav-text-hover-bg)]"
+    onclick={(): void => toggle(key)}
+    onkeydown={(e): void => {
+      if (e.key === 'Enter') toggle(key);
+    }}>
+    <span class="flex w-3 shrink-0 justify-center text-[9px] opacity-70" data-chevron={key}><AppIcon icon={gOpen ? faChevronDown : faChevronRight} /></span>
+    <LabIcon icon={gOpen ? faFolderOpen : faFolder} size={16} />
+    <span class="truncate">{group}</span>
+    <span class="flex-1"></span>
+    <span class="text-[11px] text-[var(--pd-table-body-text)]">{list.reduce((n, s) => n + countOf(s), 0)}</span>
+  </div>
+  {#if gOpen}
+    {#each list as s (s.id)}{@render sectionRows(s, 1)}{/each}
   {/if}
 {/snippet}
 
@@ -286,8 +352,13 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
       </div>
       <div role="tree" aria-label="{c.name} resources" data-testid="p13-tree" class="flex-1 min-h-0 overflow-auto pb-2 text-base">
         {#if !f}{@render row(0, 'Overview', { target: { kind: 'connection', connId: c.id }, icon: OVERVIEW_ICON })}{/if}
-        {#each coreSections.filter(s => !f || rows(s.id).length > 0) as s (s.id)}
-          {@render sectionRows(s)}
+        {#each coreItems as it ('group' in it ? `grp:${it.group}` : it.s.id)}
+          {#if 'group' in it}
+            {@const list = it.list.filter(s => !f || rows(s.id).length > 0)}
+            {#if list.length}{@render folderRows(it.group, list)}{/if}
+          {:else if !f || rows(it.s.id).length > 0}
+            {@render sectionRows(it.s)}
+          {/if}
         {/each}
         {#if extS.length || extT.length || pages.length}
           <div data-testid="tree-extensions" class="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Extensions</div>
@@ -322,14 +393,22 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
         {@const tr = resource(t?.resId)}
         {#if t?.kind === 'dashboard'}
           <HomeDashboard onopen={open} />
+        {:else if t?.kind === 'list' && tc && ts && tc.group === 'Kubernetes' && KUBE_KINDS.includes(ts.id)}
+          <KubeListView c={tc} s={ts} onopen={open} />
+        {:else if t?.kind === 'list' && tc && ts && ts.id === 'operators'}
+          <OperatorsView c={tc} s={ts} onopen={open} />
         {:else if t?.kind === 'list' && tc && ts}
           <ListView c={tc} s={ts} onopen={open} />
+        {:else if t?.kind === 'resource' && tc && ts && tr && tc.group === 'Kubernetes' && KUBE_KINDS.includes(ts.id)}
+          <KubeResourceView res={tr} c={tc} s={ts} onopen={open} />
         {:else if t?.kind === 'scan' && tr}
           <ScanView res={tr} onopen={open} />
         {:else if t?.kind === 'settings'}
           <SettingsView />
         {:else if t?.kind === 'kubeplay' && tc}
           <KubePlayView connId={tc.id} onopen={open} />
+        {:else if t?.kind === 'connection' && tc && tc.group === 'Kubernetes'}
+          <KubeOverview c={tc} onopen={open} />
         {:else if t?.kind === 'connection' && tc}
           <ConnView c={tc} onopen={open} />
         {:else if t?.kind === 'node' && t.nodeId}
@@ -337,7 +416,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
         {:else if t?.kind === 'extensions'}
           <ExtensionsView />
         {:else if t?.kind === 'accounts'}
-          <AccountsView />
+          <AccountsView onopen={open} />
         {:else if t?.kind === 'tool' && t.toolId}
           <ToolView toolId={t.toolId} onopen={open} />
         {:else}
