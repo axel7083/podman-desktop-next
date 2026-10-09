@@ -21,6 +21,7 @@ import P13 from '#lib/nav-lab/proposals/P13.svelte';
 import P14 from '#lib/nav-lab/proposals/P14.svelte';
 import CreateModal from '#lib/nav-lab/ui/CreateModal.svelte';
 import LabBar from '#lib/nav-lab/ui/LabBar.svelte';
+import ContextMenu from '#lib/nav-lab/r3/ContextMenu.svelte';
 import { appUrl } from '#lib/nav.ts';
 
 const query = $derived(appUrl().search);
@@ -58,3 +59,4 @@ function onkey(e: KeyboardEvent): void {
   {/if}
 </div>
 <CreateModal />
+<ContextMenu />

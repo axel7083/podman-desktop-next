@@ -1,13 +1,14 @@
 /**
- * Round-3 helpers (P12–P14): the visible connection set (lab toggle
- * "Connections: 1 | many") and the extension pages relevant to a connection.
+ * Round-3 helpers (P12–P14): the visible connection set (lab toggles
+ * "Connections: 1 | many" and "Install: Vanilla | All extensions") and the extension pages relevant to a connection.
  */
 import { CONNECTIONS, type LabConnection, type LabTool, TOOLS } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
+import { connVisible, toolVisible } from '../r3/exts.ts';
 
 /** Connections visible in the lab (only podman-machine-default when `conns=one`). */
 export function labConns(): LabConnection[] {
-  return lab.conns === 'one' ? CONNECTIONS.filter(c => c.id === 'podman-machine-default') : CONNECTIONS;
+  return lab.conns === 'one' ? CONNECTIONS.filter(c => c.id === 'podman-machine-default') : CONNECTIONS.filter(connVisible);
 }
 
 /** Switcher group header for a connection group (today's PD wording). */
@@ -28,5 +29,5 @@ const PAGES_BY_GROUP: Record<LabConnection['group'], string[]> = {
 /** Extension pages for the selected connection: connection-relevant first, then the global ones. */
 export function extPagesFor(c: LabConnection | undefined): LabTool[] {
   const ids = [...(c ? PAGES_BY_GROUP[c.group] : []), ...GLOBAL_PAGES];
-  return ids.map(id => TOOLS.find(t => t.id === id)).filter((t): t is LabTool => !!t);
+  return ids.map(id => TOOLS.find(t => t.id === id)).filter((t): t is LabTool => !!t && toolVisible(t));
 }

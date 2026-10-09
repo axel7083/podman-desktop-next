@@ -45,7 +45,7 @@ export interface LabSection {
   label: string;
   icon: IconRef;
   /** Contributed by an extension (icon of that extension). */
-  ext?: { name: string; icon: string };
+  ext?: { id: string; name: string; icon: string };
   count: number;
 }
 
@@ -97,22 +97,22 @@ const S = (id: string, label: string, icon: IconRef, count: number, ext?: LabSec
 });
 
 const EXT = {
-  pipelines: { name: 'OpenShift Pipelines & GitOps', icon: 'icons/redhat.openshift-pipelines-gitops.svg' },
-  argo: { name: 'Argo CD', icon: 'icons/argo-cd.svg' },
-  virt: { name: 'OpenShift Virtualization', icon: 'icons/redhat.openshift-virtualization.png' },
-  olm: { name: 'Operators (OLM)', icon: 'icons/redhat.olm.png' },
-  skupper: { name: 'Service Interconnect', icon: 'icons/redhat.service-interconnect.png' },
-  rhoai: { name: 'OpenShift AI', icon: 'icons/redhat.openshift-ai.png' },
-  helm: { name: 'Helm', icon: 'icons/podman-desktop.helm.png' },
-  compose: { name: 'Compose', icon: 'icons/podman-desktop.compose.png' },
-  quadlet: { name: 'Podman Quadlet', icon: 'icons/podman-desktop.quadlet.png' },
-  bootc: { name: 'Bootable containers', icon: 'icons/redhat.bootc.png' },
-  rhel: { name: 'RHEL registration', icon: 'icons/redhat.rhel-registration.png' },
-  insights: { name: 'Lightspeed Insights', icon: 'icons/redhat.lightspeed-insights.png' },
-  kafka: { name: 'Streams for Apache Kafka', icon: 'icons/redhat.streams-kafka.svg' },
-  keycloak: { name: 'Keycloak', icon: 'icons/redhat.keycloak.svg' },
-  mcp: { name: 'MCP', icon: 'icons/podman-desktop.mcp.png' },
-  aap: { name: 'Ansible Automation Platform', icon: 'icons/redhat.aap.png' },
+  pipelines: { id: 'pipelines', name: 'OpenShift Pipelines & GitOps', icon: 'icons/redhat.openshift-pipelines-gitops.svg' },
+  argo: { id: 'argo', name: 'Argo CD', icon: 'icons/argo-cd.svg' },
+  virt: { id: 'virt', name: 'OpenShift Virtualization', icon: 'icons/redhat.openshift-virtualization.png' },
+  olm: { id: 'olm', name: 'Operators (OLM)', icon: 'icons/redhat.olm.png' },
+  skupper: { id: 'skupper', name: 'Service Interconnect', icon: 'icons/redhat.service-interconnect.png' },
+  rhoai: { id: 'rhoai', name: 'OpenShift AI', icon: 'icons/redhat.openshift-ai.png' },
+  helm: { id: 'helm', name: 'Helm', icon: 'icons/podman-desktop.helm.png' },
+  compose: { id: 'compose', name: 'Compose', icon: 'icons/podman-desktop.compose.png' },
+  quadlet: { id: 'quadlet', name: 'Podman Quadlet', icon: 'icons/podman-desktop.quadlet.png' },
+  bootc: { id: 'bootc', name: 'Bootable containers', icon: 'icons/redhat.bootc.png' },
+  rhel: { id: 'rhel', name: 'RHEL registration', icon: 'icons/redhat.rhel-registration.png' },
+  insights: { id: 'insights', name: 'Lightspeed Insights', icon: 'icons/redhat.lightspeed-insights.png' },
+  kafka: { id: 'kafka', name: 'Streams for Apache Kafka', icon: 'icons/redhat.streams-kafka.svg' },
+  keycloak: { id: 'keycloak', name: 'Keycloak', icon: 'icons/redhat.keycloak.svg' },
+  mcp: { id: 'mcp', name: 'MCP', icon: 'icons/podman-desktop.mcp.png' },
+  aap: { id: 'aap', name: 'Ansible Automation Platform', icon: 'icons/redhat.aap.png' },
 };
 
 function engineSections(c: number, i: number, p: number, extra: LabSection[] = []): LabSection[] {
@@ -692,7 +692,7 @@ export const WORKFLOWS = [
 /* Tabs                                                                */
 /* ------------------------------------------------------------------ */
 
-export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow';
+export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node';
 
 export interface LabTarget {
   kind: TargetKind;
@@ -702,10 +702,12 @@ export interface LabTarget {
   toolId?: string;
   kindId?: string;
   workflowId?: string;
+  /** Extension tree-provider node (P13). */
+  nodeId?: string;
 }
 
 export function targetKey(t: LabTarget): string {
-  return [t.kind, t.connId, t.sectionId, t.resId, t.toolId, t.kindId, t.workflowId].filter(Boolean).join('|');
+  return [t.kind, t.connId, t.sectionId, t.resId, t.toolId, t.kindId, t.workflowId, t.nodeId].filter(Boolean).join('|');
 }
 
 /** Resource target by name, or by index in its list. */
@@ -747,6 +749,8 @@ export interface PanelSession {
   title: string;
   connId: string;
   lines: string[];
+  /** Append fake log lines while visible (P13 "Show logs"). */
+  stream?: boolean;
 }
 
 export const PANEL_SESSIONS: PanelSession[] = [

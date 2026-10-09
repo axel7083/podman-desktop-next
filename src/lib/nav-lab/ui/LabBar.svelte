@@ -11,7 +11,7 @@ function sync(): void {
   goto(href(`/nav-lab?${lab.query()}`), { replaceState: true }).catch(() => undefined);
 }
 
-function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' | 'conns'>(k: K, v: (typeof lab)[K]): void {
+function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' | 'conns' | 'install'>(k: K, v: (typeof lab)[K]): void {
   lab[k] = v;
   sync();
 }
@@ -36,6 +36,12 @@ function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' 
   })}
   {#if lab.proposal === 'p12' || lab.proposal === 'p13' || lab.proposal === 'p14'}
     {@render seg('Connections', [['one', '1'], ['many', 'Many']] as ['one' | 'many', string][], lab.conns, v => set('conns', v))}
+  {/if}
+  {#if lab.proposal === 'p13'}
+    {@render seg('Install', [['vanilla', 'Vanilla'], ['all', 'All extensions']] as ['vanilla' | 'all', string][], lab.install, v => {
+      lab.installed = [];
+      set('install', v);
+    })}
   {/if}
   {@render seg('Colour (H)', [[true, 'On'], [false, 'Off']], lab.color, v => set('color', v))}
   {@render seg('Theme', [['dark', 'Dark'], ['light', 'Light']] as ['dark' | 'light', string][], lab.theme, v => set('theme', v))}

@@ -1,9 +1,9 @@
 <script lang="ts">
 /**
- * Renders any lab target: list, resource details (Summary | Inspect | Split),
+ * Renders any lab target: list, resource details (compact r3 ResourceView),
  * connection overview, tool page, dashboard, catalogs and stubs.
  */
-import { faMagnifyingGlass, faPlay, faPlus, faRotateRight, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faPlay, faPlus, faStop } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 import type { Snippet } from 'svelte';
 
@@ -28,7 +28,7 @@ import {
 import { describe, lab } from '../lab.svelte.ts';
 import ConnIcon from './ConnIcon.svelte';
 import ResourceTable from './ResourceTable.svelte';
-import TabIcon from './TabIcon.svelte';
+import ResourceView from '../r3/ResourceView.svelte';
 
 interface Props {
   target: LabTarget | undefined;
@@ -48,7 +48,6 @@ interface Props {
 
 let { target, onopen, scope = [], scopeBar, selectedRes, headerless = false, titleExtra, initialFilter = '' }: Props = $props();
 
-let view = $state<'summary' | 'inspect' | 'split'>('summary');
 // svelte-ignore state_referenced_locally
 let filter = $state(initialFilter);
 
@@ -95,20 +94,6 @@ const kindTitle = $derived.by(() => {
 const res = $derived(resource(target?.resId));
 const connCount = $derived(new Set(listRows.map(r => r.connId)).size);
 
-function inspectJson(): string {
-  return JSON.stringify(
-    {
-      Id: (res?.id ?? '').replace(/[^a-z0-9]/gi, '').slice(0, 12).padEnd(12, '0') + 'a3f9c1e07b2d',
-      Name: res?.name ?? c?.name,
-      Connection: c?.name,
-      Kind: s?.label ?? target?.kind,
-      State: { Status: res?.status ?? c?.status, StartedAt: '2026-10-09T07:12:01Z' },
-      Config: { Image: res?.sub, Labels: { 'io.podman.desktop.group': res?.group ?? null } },
-    },
-    null,
-    2,
-  );
-}
 </script>
 
 {#snippet header(title: string, sub?: string)}
@@ -165,73 +150,7 @@ function inspectJson(): string {
     </div>
   </div>
 {:else if target.kind === 'resource' && res && c && s}
-  <div class="flex flex-col h-full min-h-0 bg-[var(--pd-details-bg)]">
-    <div class="flex items-start gap-3 px-5 pt-3 pb-3 border-b border-[var(--pd-content-divider)]">
-      <div class="mt-1 text-[var(--pd-content-header-icon)]"><TabIcon icon={s.icon} connId={c.id} size={30} /></div>
-      <div class="min-w-0 flex-1">
-        <div class="text-sm text-[var(--pd-content-breadcrumb)] truncate" class:hidden={headerless}>
-          <button type="button" class="hover:underline" onclick={(): void => onopen({ kind: 'connection', connId: c.id }, {})}>{c.name}</button>
-          <span class="mx-1">›</span>
-          <button type="button" class="hover:underline" onclick={(): void => onopen({ kind: 'list', connId: c.id, sectionId: s.id }, {})}>{s.label}</button>
-        </div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-xl font-bold text-[var(--pd-content-header)] truncate">{res.name}</h1>
-          <StatusDotIcon status={res.status === 'ready' ? 'running' : res.status} size="12" />
-          <span class="text-sm text-[var(--pd-content-sub-header)]">{res.status}</span>
-        </div>
-        <div class="text-sm text-[var(--pd-content-sub-header)] truncate">{res.sub}</div>
-      </div>
-      <div class="flex items-center gap-1 text-[var(--pd-action-button-details-text)]">
-        {#each [faStop, faRotateRight, faTrash] as ic, i (i)}
-          <button type="button" aria-label="Action {i}" class="w-7 h-7 rounded bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-action-button-details-hover-text)]"><AppIcon icon={ic} size="xs" /></button>
-        {/each}
-      </div>
-      <div role="radiogroup" aria-label="View" class="flex items-center ml-2 p-0.5 rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)]">
-        {#each [['summary', 'Summary'], ['inspect', 'Inspect'], ['split', 'Split']] as [id, label] (id)}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={view === id}
-            class="px-2.5 h-6 rounded text-sm"
-            class:bg-[var(--pd-button-primary-bg)]={view === id}
-            class:text-[var(--pd-button-primary-text)]={view === id}
-            class:text-[var(--pd-tab-text)]={view !== id}
-            onclick={(): void => {
-              view = id as typeof view;
-            }}>{label}</button>
-        {/each}
-      </div>
-    </div>
-    <div class="flex-1 min-h-0 overflow-auto p-5 grid gap-4" class:grid-cols-2={view === 'split'}>
-      {#if view !== 'inspect'}
-        <div class="flex flex-col gap-4 min-w-0">
-          <div class="rounded-lg bg-[var(--pd-details-card-bg)] p-4">
-            <div class="text-lg font-semibold text-[var(--pd-details-card-header)] mb-2">Details</div>
-            <dl class="grid grid-cols-[140px_1fr] gap-y-1.5 text-[var(--pd-details-card-text)]">
-              <dt class="opacity-70">Name</dt><dd class="truncate">{res.name}</dd>
-              <dt class="opacity-70">Kind</dt><dd>{s.label}{#if s.ext} · via {s.ext.name}{/if}</dd>
-              <dt class="opacity-70">Connection</dt><dd class="flex items-center gap-1.5"><ConnIcon connId={c.id} size={14} ring="var(--pd-details-card-bg)" />{c.name} <span class="opacity-60">({c.product})</span></dd>
-              <dt class="opacity-70">Status</dt><dd>{res.status}</dd>
-              <dt class="opacity-70">Created</dt><dd>{res.age} ago</dd>
-              {#if res.group}<dt class="opacity-70">Group</dt><dd>{res.group}</dd>{/if}
-              <dt class="opacity-70">Info</dt><dd class="truncate">{res.sub}</dd>
-            </dl>
-          </div>
-          <div class="rounded-lg bg-[var(--pd-details-card-bg)] p-4">
-            <div class="text-lg font-semibold text-[var(--pd-details-card-header)] mb-2">Activity</div>
-            <div class="flex items-end gap-1 h-16">
-              {#each Array.from({ length: 36 }, (_, i) => 20 + ((i * 37 + res.name.length * 11) % 70)) as h, i (i)}
-                <span class="flex-1 rounded-sm bg-[var(--pd-tab-highlight)] opacity-70" style:height="{h}%"></span>
-              {/each}
-            </div>
-          </div>
-        </div>
-      {/if}
-      {#if view !== 'summary'}
-        <pre class="m-0 min-w-0 overflow-auto rounded-lg p-4 font-mono text-[12px] leading-5 bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)] border border-[var(--pd-code-block-border)]">{inspectJson()}</pre>
-      {/if}
-    </div>
-  </div>
+  {#key res.id}<ResourceView {res} {c} {s} {onopen} />{/key}
 {:else if target.kind === 'connection' && c}
   <div class="h-full overflow-auto">
     <div class="flex items-center gap-3 px-5 pt-4 pb-3">

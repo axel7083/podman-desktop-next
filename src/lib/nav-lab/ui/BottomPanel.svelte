@@ -10,6 +10,7 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 
 import { conn as findConn, type PanelSession } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
+import { logLine } from '../r3/live.svelte.ts';
 import ConnIcon from './ConnIcon.svelte';
 
 interface Props {
@@ -33,6 +34,26 @@ $effect.pre(() => {
   active = initial[0]?.id ?? '';
 });
 
+// Sessions queued from a resource (Open terminal / Show logs): add and focus.
+$effect(() => {
+  const p = lab.pending;
+  if (!p) return;
+  sessions.push(p);
+  active = p.id;
+  lab.pending = undefined;
+});
+
+// Logs sessions opened with `stream` keep appending lines while active.
+$effect(() => {
+  const s = sessions.find(x => x.id === active);
+  if (!s?.stream || !lab.panel) return;
+  const timer = setInterval(() => {
+    s.lines.push(logLine(s.title, s.lines.length));
+    if (s.lines.length > 400) s.lines.splice(0, 100);
+  }, 900);
+  return (): void => clearInterval(timer);
+});
+
 const ICON = { terminal: faTerminal, logs: faAlignLeft, yaml: faCode };
 
 const layout = $derived.by(() => {
@@ -47,6 +68,9 @@ const layout = $derived.by(() => {
       used += w;
     } else hidden.push(s);
   }
+  // Keep the active session visible (a session just opened from a resource).
+  const ai = hidden.findIndex(s => s.id === active);
+  if (ai >= 0 && visible.length) hidden.splice(ai, 1, visible.splice(visible.length - 1, 1, hidden[ai])[0]);
   return { visible, hidden };
 });
 
@@ -152,11 +176,12 @@ function newTerminal(): void {
         <button type="button" title="Hide panel (`)" aria-label="Hide panel" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => { lab.panel = false; }}><AppIcon icon={faXmark} /></button>
       </div>
     </div>
-    <div class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5 text-[var(--pd-terminal-foreground)]">
+    <div data-testid="nav-lab-panel-body" class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5 text-[var(--pd-terminal-foreground)]">
       {#if current}
         <div class="mb-1 text-[11px] opacity-60">{current.kind === 'logs' ? 'Following logs' : current.kind === 'yaml' ? 'Editing (apply with ⌘S)' : 'Terminal'} · {findConn(current.connId)?.name}</div>
         {#each current.lines as line, i (i)}
-          <div class="whitespace-pre" class:text-[var(--pd-status-degraded)]={/WARN|error/.test(line)}>{line}{#if i === current.lines.length - 1 && current.kind === 'terminal'}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</div>
+          <div class="whitespace-pre" class:text-[var(--pd-status-degraded)]={/WARN|error/.test(line)}
+            class:text-[var(--pd-status-dead)]={/ERROR/.test(line)}>{line}{#if i === current.lines.length - 1 && current.kind === 'terminal'}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</div>
         {/each}
       {/if}
     </div>

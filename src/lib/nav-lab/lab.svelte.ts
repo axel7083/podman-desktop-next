@@ -10,7 +10,8 @@ import type { IconRef } from '#lib/ext/types.ts';
 import DashboardIcon from '#lib/images/DashboardIcon.svelte';
 import SettingsIcon from '#lib/images/SettingsIcon.svelte';
 
-import { conn, CONNECTIONS, FEW_TABS, KINDS, type LabTarget, MANY_TABS, resource, section, targetKey, tool, WORKFLOWS } from './data.ts';
+import { conn, CONNECTIONS, FEW_TABS, KINDS, type LabTarget, MANY_TABS, type PanelSession, resource, section, targetKey, tool, WORKFLOWS } from './data.ts';
+import { findNode } from './r3/trees.ts';
 
 export type ProposalId = 'p1' | 'p2' | 'p5' | 'p6' | 'p7' | 'p8' | 'p9' | 'p10' | 'p12' | 'p13' | 'p14';
 export type RailMode = 'icons' | 'labels' | 'expanded';
@@ -47,6 +48,18 @@ class LabState {
   ctx = $state<string | undefined>(undefined);
   /** Dataset size for P12–P14: every connection, or only podman-machine-default. */
   conns = $state<'one' | 'many'>('many');
+  /** P13: what is installed on top of the vanilla app (built-ins only, or every extension). */
+  install = $state<'vanilla' | 'all'>('all');
+  /** P13: extensions installed from a promotion card / the catalog while in Vanilla. */
+  installed = $state<string[]>([]);
+  /** Session queued for the bottom panel (picked up by BottomPanel). */
+  pending = $state<PanelSession | undefined>(undefined);
+
+  /** Open the bottom panel and add a session to it (terminal / logs from a resource). */
+  addSession(s: PanelSession): void {
+    this.pending = s;
+    this.panel = true;
+  }
 
   init(params: URLSearchParams): void {
     const p = params.get('p');
@@ -63,6 +76,7 @@ class LabState {
     this.openKey = params.get('open') === 'on';
     this.ctx = params.get('ctx') ?? undefined;
     this.conns = params.get('conns') === 'one' ? 'one' : 'many';
+    this.install = params.get('install') === 'vanilla' ? 'vanilla' : 'all';
     this.applyTheme();
   }
 
@@ -92,6 +106,7 @@ class LabState {
     q.set('screen', String(this.screen));
     if (this.color) q.set('color', 'on');
     if (this.conns === 'one') q.set('conns', 'one');
+    if (this.install === 'vanilla') q.set('install', 'vanilla');
     return q.toString();
   }
 }
@@ -231,6 +246,10 @@ export function describe(t: LabTarget): TargetInfo {
     case 'workflow': {
       const w = WORKFLOWS.find(x => x.id === t.workflowId);
       return { title: w?.name ?? 'Workflow', icon: w?.icon ?? faFolderTree, crumb: ['Workflows'] };
+    }
+    case 'node': {
+      const n = findNode(t.nodeId);
+      return { title: n?.node.label ?? '?', icon: n?.node.icon ?? n?.root.icon ?? faBorderAll, connId: c?.id, crumb: [c?.name ?? '', ...(n?.path ?? [])] };
     }
     case 'tools':
       return { title: 'Tools', icon: faToolbox, crumb: [] };
