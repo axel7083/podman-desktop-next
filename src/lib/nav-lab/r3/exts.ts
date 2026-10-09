@@ -49,6 +49,7 @@ export const EXTENSIONS: LabExtension[] = [
   E('keycloak', 'Keycloak', 'redhat.keycloak.svg', 'Realms and clients'),
   E('aap', 'Ansible Automation Platform', 'redhat.aap.png', 'Job templates and inventories'),
   E('grype', 'Grype', 'podman-desktop.grype.png', 'Scan images for vulnerabilities'),
+  E('hummingbird', 'Hummingbird', 'redhat.hummingbird.png', 'Red Hat Hardened Images: minimal, zero-CVE images and hardened alternatives for your local images'),
   E('layers-explorer', 'Layers explorer', 'podman-desktop.layers-explorer.png', 'Browse image layers'),
 ];
 
@@ -111,7 +112,7 @@ export function visibleConns(): LabConnection[] {
 export function promotionsFor(c: LabConnection): LabExtension[] {
   const p = c.product.toLowerCase();
   let ids: string[];
-  if (p.includes('podman')) ids = ['bootc', 'quadlet', 'ai-lab', 'mcp'];
+  if (p.includes('podman')) ids = ['bootc', 'quadlet', 'hummingbird', 'ai-lab', 'mcp'];
   else if (p.includes('docker')) ids = ['ai-lab', 'mcp', 'grype'];
   else if (p.includes('openshift') || p.includes('sandbox')) ids = ['helm', 'pipelines', 'kube-dashboard'];
   else if (c.group === 'Kubernetes') ids = ['openshift-console', 'kube-dashboard', 'helm'];

@@ -15,7 +15,7 @@
  * "Install: Vanilla | All extensions" switches what is installed.
  * Design rules: docs/p13-design-rules.md (audit: docs/p13-audit.md).
  */
-import { faChevronDown, faChevronRight, faEllipsisVertical, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faChevronDown, faChevronRight, faEllipsisVertical, faHammer, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import { untrack } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -54,6 +54,8 @@ import SettingsView from '../r3/SettingsView.svelte';
 import ToolView from '../r3/ToolView.svelte';
 import { connActions, isUp, live, type MenuItem, openMenu, resActions, resStatus } from '../r3/live.svelte.ts';
 import NodeView from '../r3/NodeView.svelte';
+import { hbImage } from '../r3/hb-data.ts';
+import { pullHardened, pullState, rebuildOnHardened, rebuildState } from '../r3/hummingbird.ts';
 import { OVERVIEW_ICON, TREE_PROVIDERS, type TreeNode, treeRoot } from '../r3/trees.ts';
 import BottomPanel from '../ui/BottomPanel.svelte';
 import Content from '../ui/Content.svelte';
@@ -154,6 +156,7 @@ function select(id: string): void {
 
 function rows(sectionId: string): LabResource[] {
   if (!c) return [];
+  void live.added;
   return resourcesOf(c.id, sectionId).filter(r => !live.deleted.includes(r.id) && (!f || r.name.toLowerCase().includes(f)));
 }
 
@@ -167,8 +170,16 @@ function flat(x: TreeNode): TreeNode[] {
 
 function nodeMenu(n: TreeNode): MenuItem[] {
   const st = n.status ? (live.status[n.id] ?? n.status) : undefined;
+  const openIt = { label: 'Open', run: (): void => open({ kind: 'node', connId: c?.id, nodeId: n.id }) };
+  // Hummingbird nodes: hardened image (pull) / local image alternative (compare, rebuild).
+  const hb = hbImage(n.data?.hb);
+  if (hb && c) return [openIt, { label: 'Pull image', icon: faArrowCircleDown, disabled: !!pullState(hb), run: (): void => pullHardened(hb, c.id), sep: true }];
+  if (n.data?.local && c) {
+    const local = n.data.local;
+    return [{ ...openIt, label: 'Compare' }, { label: 'Rebuild on hardened image', icon: faHammer, disabled: rebuildState(local) === 'rebuilding', run: (): void => rebuildOnHardened(local, c.id), sep: true }];
+  }
   return [
-    { label: 'Open', run: (): void => open({ kind: 'node', connId: c?.id, nodeId: n.id }) },
+    openIt,
     { label: 'Start', icon: faPlay, disabled: !st || isUp(st), run: (): void => void (live.status[n.id] = 'running'), sep: true },
     { label: 'Stop', icon: faStop, disabled: !st || !isUp(st), run: (): void => void (live.status[n.id] = 'stopped') },
   ];
@@ -253,7 +264,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
 {#snippet sectionRows(s: LabSection)}
   {@const list = rows(s.id)}
   {@const sOpen = open1.includes(s.id) || !!f}
-  {@render row(0, s.label, { key: s.id, chevron: list.length > 0, open: sOpen, target: { kind: 'list', connId: c!.id, sectionId: s.id }, icon: s.ext?.icon ?? s.icon, count: f ? list.length : s.count - live.deleted.filter(id => id.startsWith(`${c!.id}/${s.id}/`)).length })}
+  {@render row(0, s.label, { key: s.id, chevron: list.length > 0, open: sOpen, target: { kind: 'list', connId: c!.id, sectionId: s.id }, icon: s.ext?.icon ?? s.icon, count: f ? list.length : s.count + live.added.filter(id => id.startsWith(`${c!.id}/${s.id}/`)).length - live.deleted.filter(id => id.startsWith(`${c!.id}/${s.id}/`)).length })}
   {#if sOpen}
     {#each list.slice(0, 40) as r (r.id)}
       {@render row(1, r.name, { target: { kind: 'resource', connId: c!.id, sectionId: s.id, resId: r.id }, status: resStatus(r), dim: r.group })}

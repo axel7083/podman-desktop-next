@@ -213,9 +213,13 @@ function subOf(r: LabRow): string[] {
 {/snippet}
 
 {#snippet acts(r: LabRow)}
-  <div class="acts">
+  <div class="acts" class:always={r.buttons.some(b => b.label)}>
     {#each r.buttons as b (b.title)}
-      <button type="button" class="ghost" class:danger={b.danger} title={b.title} aria-label={b.title} disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(); }}><AppIcon icon={b.icon} size="xs" /></button>
+      {#if b.label}
+        <button type="button" class="ghost-txt lbl" data-testid="row-btn" disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(); }}><AppIcon icon={b.icon} size="xs" />{b.title}</button>
+      {:else}
+        <button type="button" class="ghost" class:danger={b.danger} title={b.title} aria-label={b.title} disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(); }}><AppIcon icon={b.icon} size="xs" /></button>
+      {/if}
     {/each}
     {#if r.menu}
       <button type="button" class="ghost" title="More actions" aria-label="More actions for {r.title}" onclick={(e): void => openMenu(e, r.menu!())}><AppIcon icon={faEllipsisVertical} size="xs" /></button>
@@ -660,7 +664,8 @@ function subOf(r: LabRow): string[] {
 }
 .item:hover .acts,
 .grp:hover .acts,
-.hl .acts {
+.hl .acts,
+.acts.always {
   opacity: 1;
 }
 .ghost {
@@ -713,6 +718,14 @@ function subOf(r: LabRow): string[] {
   padding: 0 8px;
   border-radius: 4px;
   color: var(--pd-content-header);
+}
+.ghost-txt.lbl {
+  white-space: nowrap;
+  border: 1px solid var(--pd-button-secondary-border, var(--pd-content-divider));
+  border-radius: 6px;
+}
+.ghost-txt:disabled {
+  opacity: 0.4;
 }
 .ghost-txt:hover {
   background: var(--pd-action-button-details-bg);

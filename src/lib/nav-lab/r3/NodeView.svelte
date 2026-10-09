@@ -19,6 +19,7 @@ import { conn as findConn, type LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import ActBtn from './ActBtn.svelte';
 import BootcView from './BootcView.svelte';
+import HummingbirdView from './HummingbirdView.svelte';
 import Btn from './Btn.svelte';
 import Card from './Card.svelte';
 import type { LabRow } from './cells/types.ts';
@@ -193,6 +194,8 @@ function openParent(): void {
   {#if f.node === f.root}<QuadletList {f} {onopen} />{:else}<QuadletView {f} {onopen} />{/if}
 {:else if f && f.provider.id === 'bootc'}
   <BootcView {f} {onopen} />
+{:else if f && f.provider.id === 'hummingbird'}
+  {#key f.node.id}<HummingbirdView {f} {onopen} />{/key}
 {:else if f && n}
   <div data-testid="node-view" data-shape={shape} class="flex flex-col h-full min-h-0">
     {#if shape === 'list'}

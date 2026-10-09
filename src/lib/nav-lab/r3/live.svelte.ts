@@ -23,7 +23,8 @@ import type { IconRef } from '#lib/ext/types.ts';
 
 import { conn as findConn, type ConnStatus, type LabConnection, type LabResource, type LabTarget, section as findSection } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
-import { ext, isInstalled } from './exts.ts';
+import { ext, installExt, isInstalled } from './exts.ts';
+import { altFor, HB_CONN, hbNodeId } from './hb-data.ts';
 
 export interface MenuItem {
   label: string;
@@ -39,6 +40,8 @@ class Live {
   /** Status overrides (`resId` or `conn:<id>`). */
   status = $state<Record<string, string>>({});
   deleted = $state<string[]>([]);
+  /** Resources added at runtime (pulled / rebuilt images), already pushed to RESOURCES. */
+  added = $state<string[]>([]);
   menu = $state<{ x: number; y: number; items: MenuItem[] } | undefined>(undefined);
   /** Requested view for a resource tab (Inspect from a menu, Logs…). */
   view = $state<Record<string, string>>({});
@@ -221,6 +224,15 @@ export function imageMenu(r: LabResource, onopen: (t: LabTarget, o: { preview?: 
     { label: 'Push image to Kind cluster', icon: ext('kind')?.icon, run: () => lab.openCreate(`Push ${r.name} to kind-dev`) },
   ];
   items.push({ label: isInstalled('grype') ? 'Scan vulnerabilities' : 'Scan vulnerabilities (install Grype)', icon: ext('grype')?.icon, run: () => scanRes(r, onopen), sep: true });
+  if (altFor(r.name) && r.connId === HB_CONN)
+    items.push({
+      label: isInstalled('hummingbird') ? 'Find hardened alternative' : 'Find hardened alternative (install Hummingbird)',
+      icon: ext('hummingbird')?.icon,
+      run: () => {
+        installExt('hummingbird');
+        onopen({ kind: 'node', connId: r.connId, nodeId: hbNodeId(r.connId, 'Alternatives', r.name) }, {});
+      },
+    });
   if (lab.install === 'all') items.push({ label: 'Push to Quay', icon: 'icons/redhat.quay.png', run: () => lab.openCreate(`Push ${r.name} to quay.io`) });
   if (isInstalled('bootc')) items.push({ label: 'Build disk image', icon: ext('bootc')?.icon, run: () => onopen({ kind: 'tool', toolId: 'bootc' }, {}) });
   return items;

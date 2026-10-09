@@ -10,6 +10,8 @@ export interface ActionBtn {
   run: () => void;
   enabled?: boolean;
   danger?: boolean;
+  /** Labelled secondary button (always visible), e.g. catalog "Pull image". */
+  label?: boolean;
 }
 
 export interface LabRow {

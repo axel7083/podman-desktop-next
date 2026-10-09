@@ -26,7 +26,9 @@ import type { LabRow } from './cells/types.ts';
 import { containerInfo, hash, imageInfo } from './details.ts';
 import ActBtn from './ActBtn.svelte';
 import Btn from './Btn.svelte';
-import { ext } from './exts.ts';
+import { ext, installExt, isInstalled } from './exts.ts';
+import { altFor, HB_CONN } from './hb-data.ts';
+import LabIcon from '../ui/LabIcon.svelte';
 import Head from './Head.svelte';
 import { can, deleteRes, imageMenu, isUp, live, openMenu, resActions, resStatus, showGroupLogs, startRes, stopRes } from './live.svelte.ts';
 import RowsTable from './RowsTable.svelte';
@@ -44,7 +46,13 @@ let search = $state('');
 let filter = $state('all');
 
 const icon = $derived(s.ext?.icon ?? s.icon);
-const all = $derived(resourcesOf(c.id, s.id).filter(r => !live.deleted.includes(r.id)));
+const all = $derived.by(() => {
+  void live.added;
+  return resourcesOf(c.id, s.id).filter(r => !live.deleted.includes(r.id));
+});
+/** Vanilla: Hummingbird promotion above the Images list of its connection (rule E21, once per surface). */
+const hbPromo = $derived(s.id === 'images' && c.id === HB_CONN && !isInstalled('hummingbird'));
+const hbCount = $derived(all.filter(r => altFor(r.name)).length);
 const tabs = $derived<[string, string][]>(
   s.id === 'containers' || s.id === 'pods' ? [['all', 'All'], ['running', 'Running'], ['stopped', 'Stopped']] : s.id === 'images' || s.id === 'volumes' ? [['all', 'All'], ['used', 'Used'], ['unused', 'Unused']] : [],
 );
@@ -224,6 +232,16 @@ const modern = $derived(lab.table !== 'classic');
       {#each tabs as [id, label] (id)}
         <Button type="tab" selected={filter === id} onclick={(): void => { filter = id; }}>{label}</Button>
       {/each}
+    </div>
+  {/if}
+  {#if hbPromo && hbCount}
+    <div data-testid="hb-promo" class="flex items-center gap-3 mx-4 mt-3 p-3 rounded-lg bg-[var(--pd-content-card-bg)] shrink-0">
+      <LabIcon icon={ext('hummingbird')?.icon ?? ''} size={32} />
+      <div class="flex-1 min-w-0">
+        <div class="text-[14px] font-semibold text-[var(--pd-content-header)]">Hardened alternatives for {hbCount} of your images</div>
+        <div class="text-[13px] text-[var(--pd-table-body-text)]">Hummingbird finds a minimal, zero-CVE Red Hat Hardened Image for your local images and rebuilds them on it.</div>
+      </div>
+      <Btn icon={faDownload} testid="hb-promo-install" onclick={(): void => installExt('hummingbird')}>Install Hummingbird</Btn>
     </div>
   {/if}
   <div class="flex flex-1 min-h-0 overflow-auto" class:px-2={!modern} class:pb-2={!modern}>

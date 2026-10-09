@@ -5,6 +5,8 @@
  */
 import {
   faBook,
+  faBookOpen,
+  faCodeCompare,
   faBoxArchive,
   faCircleInfo,
   faClockRotateLeft,
@@ -24,6 +26,8 @@ import ImageIcon from '#lib/images/ImageIcon.svelte';
 import NetworkIcon from '#lib/images/NetworkIcon.svelte';
 import PodIcon from '#lib/images/PodIcon.svelte';
 import VolumeIcon from '#lib/images/VolumeIcon.svelte';
+
+import { altFor, HB_ALTS, HB_CATALOG, HB_CONN } from './hb-data.ts';
 
 /**
  * Icon rule: an extension root uses the extension logo; every child uses a
@@ -175,11 +179,29 @@ const bootc = (): Raw[] => [
   { label: 'Examples', icon: faBook, detail: '6' },
 ];
 
+/** Hummingbird (Red Hat Hardened Images): Overview, Catalog (hardened images), Alternatives (local images). */
+const hummingbird = (): Raw[] => [
+  overview(),
+  {
+    label: 'Catalog',
+    icon: faBookOpen,
+    detail: String(HB_CATALOG.length),
+    children: HB_CATALOG.map(h => ({ label: `hummingbird/${h.name}`, icon: ImageIcon, detail: h.tags[0], data: { hb: h.name } })),
+  },
+  {
+    label: 'Alternatives',
+    icon: faCodeCompare,
+    detail: String(HB_ALTS.length),
+    children: HB_ALTS.map(a => ({ label: a.local, icon: ImageIcon, detail: `→ ${altFor(a.local)?.hb}`, data: { local: a.local } })),
+  },
+];
+
 export const TREE_PROVIDERS: TreeProvider[] = [
   { id: 'bootc', extId: 'bootc', label: 'Bootable containers', icon: 'icons/redhat.bootc.png', connIds: ['podman-machine-default'], replaces: ['bootc'], build: bootc },
   { id: 'quadlets', extId: 'quadlet', label: 'Quadlets', icon: 'icons/podman-desktop.quadlet.png', connIds: ['podman-machine-default'], replaces: ['quadlets'], build: quadlets },
   { id: 'ai-lab', extId: 'ai-lab', label: 'AI Lab', icon: 'icons/redhat.ai-lab.png', connIds: ['podman-machine-default'], replaces: [], build: aiLab },
   { id: 'mcp', extId: 'mcp', label: 'MCP servers', icon: 'icons/podman-desktop.mcp.png', connIds: ['podman-machine-default', 'mcp-gateway'], replaces: ['mcpservers', 'mcptools'], build: mcp },
+  { id: 'hummingbird', extId: 'hummingbird', label: 'Hummingbird', icon: 'icons/redhat.hummingbird.png', connIds: [HB_CONN], replaces: [], build: hummingbird },
   { id: 'helm', extId: 'helm', label: 'Helm releases', icon: 'icons/podman-desktop.helm.png', connIds: ['kind-dev', 'openshift-local', 'ocp-dev', 'ocp-prod'], replaces: ['helm'], build: helm },
 ];
 

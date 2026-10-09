@@ -39,6 +39,7 @@ const PROMO_TEXT: Record<string, [string, string, string]> = {
   'ai-lab': ['No AI models', 'Run open models locally, try recipes and chat with them in playgrounds, then serve them with an OpenAI-compatible API.', 'podman-desktop.io/docs/ai-lab'],
   'kube-dashboard': ['No Kubernetes dashboard', 'See workloads, events and metrics of this cluster at a glance.', 'podman-desktop.io/extensions'],
   'openshift-console': ['No OpenShift Console', 'Install the OpenShift web console on this local cluster to browse workloads, logs and events in your browser.', 'github.com/openshift/console'],
+  hummingbird: ['No hardened images', 'Find a minimal, zero-CVE Red Hat Hardened Image for your local images and rebuild them on it.', 'hummingbird-project.io'],
   helm: ['No Helm releases', 'Install charts and manage releases and revisions on this cluster.', 'helm.sh'],
 };
 

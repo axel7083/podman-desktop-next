@@ -165,7 +165,7 @@ export const CONNECTIONS: LabConnection[] = [
     status: 'running',
     color: '#8b5cf6',
     initials: 'PM',
-    sections: engineSections(30, 20, 3, [
+    sections: engineSections(30, 22, 3, [
       S('compose', 'Compose', faLayerGroup, 2, EXT.compose),
       S('quadlets', 'Quadlets', faListCheck, 5, EXT.quadlet),
       S('bootc', 'Bootable images', faServer, 2, EXT.bootc),
@@ -515,6 +515,8 @@ const PODMAN_IMAGES = [
   'quay.io/acme/orders-ui:1.4',
   'quay.io/acme/frontend:2.1',
   'quay.io/acme/hello-quarkus:dev',
+  'registry.access.redhat.com/ubi9/python-312:latest',
+  'docker.io/library/python:3.12',
   'registry.redhat.io/ubi10/ubi:latest',
   'registry.redhat.io/ubi10/nginx-126:latest',
   'registry.redhat.io/rhel10/postgresql-16:latest',
@@ -760,6 +762,8 @@ export interface PanelSession {
   target?: LabTarget;
   /** Kind icon of the source (container, pod, quadlet…). */
   icon?: IconRef;
+  /** Task output (P13): lines appended in order while streaming, then the stream stops. */
+  script?: string[];
 }
 
 export const PANEL_SESSIONS: PanelSession[] = [

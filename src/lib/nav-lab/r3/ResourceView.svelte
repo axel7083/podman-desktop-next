@@ -28,7 +28,9 @@ import Card from './Card.svelte';
 import type { LabRow } from './cells/types.ts';
 import CodeView from './CodeView.svelte';
 import { composeDir, composeFile, composeServices, composeVolumes, composeYaml, containerInfo, hash, imageInfo, inspectText, isKube, kubeConditions, kubeEvents, relatedPods } from './details.ts';
-import { ext } from './exts.ts';
+import { ext, installExt, isInstalled } from './exts.ts';
+import { altFor, cveTotal, HB_CONN, hbImage, mb } from './hb-data.ts';
+import { openAlternative } from './hummingbird.ts';
 import Head from './Head.svelte';
 import KV from './KV.svelte';
 import {
@@ -90,6 +92,9 @@ const views = $derived<[string, string][]>([
   ...xviews.map(v => [v.id, v.label] as [string, string]),
 ]);
 const h = $derived(hash(res.name));
+/** Hummingbird: hardened alternative of this image (only computed on the Hummingbird connection). */
+const hbAlt = $derived(isImage && c.id === HB_CONN ? altFor(res.name) : undefined);
+const hbAltImg = $derived(hbImage(hbAlt?.hb));
 const icon = $derived(s.ext?.icon ?? s.icon);
 const repoTag = $derived(res.name.split(/:(?=[^:/]+$)/));
 const shortId = $derived((h * 2654435761).toString(16).slice(0, 12).padEnd(12, '0'));
@@ -199,6 +204,7 @@ function kubeYaml(): string[] {
     <ActBtn icon={faPlay} label="Run image" onclick={(): void => lab.openCreate(`Run ${res.name}`)} />
     <ActBtn icon={faArrowUp} label="Push image" onclick={(): void => lab.openCreate(`Push ${res.name}`)} />
     <ActBtn icon={ext('grype')?.icon ?? faTrash} label="Scan vulnerabilities" onclick={(): void => scanRes(res, onopen)} />
+    {#if hbAlt && isInstalled('hummingbird')}<ActBtn icon={ext('hummingbird')?.icon ?? faTrash} label="Find hardened alternative" onclick={(): void => openAlternative(res.name, c.id, onopen)} />{/if}
     <ActBtn icon={faTrash} label="Delete image" danger onclick={(): void => deleteRes(res)} />
     <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, imageMenu(res, onopen))} />
   {:else if isCompose}
@@ -273,6 +279,23 @@ function kubeYaml(): string[] {
           )}
           cols={[['Result', 'result', '120px']]} />
       </Section>
+      <Card title="Hardened alternative · Hummingbird">
+        <div data-testid="check-hb" class="flex items-center gap-3 text-[13px]">
+          {#if !isInstalled('hummingbird')}
+            <span class="flex-1 text-[var(--pd-table-body-text)]">Install Hummingbird to find a minimal, zero-CVE Red Hat Hardened Image for this image.</span>
+            <Btn icon={ext('hummingbird')?.icon} testid="check-hb-install" onclick={(): void => installExt('hummingbird')}>Install Hummingbird</Btn>
+          {:else if hbAlt && hbAltImg}
+            <span class="w-2 h-2 rounded-full shrink-0 bg-[var(--pd-status-degraded)]"></span>
+            <span class="flex-1 text-[var(--pd-content-header)]">hummingbird/{hbAltImg.name}:{hbAltImg.tags[0]} available · CVEs {cveTotal(hbAlt)} → 0 · size {mb(hbAlt.sizeMB)} → {mb(hbAltImg.sizeMB)}</span>
+            <Btn icon={ext('hummingbird')?.icon} testid="check-hb-compare" onclick={(): void => openAlternative(res.name, c.id, onopen)}>Compare</Btn>
+          {:else if res.name.includes('hummingbird')}
+            <span class="w-2 h-2 rounded-full shrink-0 bg-[var(--pd-status-running)]"></span>
+            <span class="flex-1 text-[var(--pd-content-header)]">Already built on a hardened image.</span>
+          {:else}
+            <span class="flex-1 text-[var(--pd-table-body-text)]">No hardened alternative in the catalog for this image.</span>
+          {/if}
+        </div>
+      </Card>
       <Card title="Vulnerabilities · Grype">
         <div class="flex items-center gap-3 text-[13px]">
           <span class="flex-1 text-[var(--pd-table-body-text)]">Scan the OS packages and language dependencies of this image for known CVEs.</span>

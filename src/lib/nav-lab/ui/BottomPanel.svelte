@@ -62,6 +62,12 @@ $effect(() => {
   if (!shown.length || !lab.panel) return;
   const timer = setInterval(() => {
     for (const s of shown) {
+      if (s.script) {
+        // Task output: next scripted lines, then stop streaming.
+        s.lines.push(...s.script.splice(0, 2));
+        if (!s.script.length) s.stream = false;
+        continue;
+      }
       s.lines.push(logLine(s.title, s.lines.length));
       if (s.lines.length > 400) s.lines.splice(0, 100);
     }
