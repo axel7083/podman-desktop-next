@@ -4,13 +4,17 @@
  * title + the same `Tab` as the editor strip (32px, kind icon + provider
  * badge, source name, close, context menu) + toolbar; one pane by default; Split (or dragging a tab onto the body) shows panes
  * side by side. Each pane has its own toolbar with the source chip.
+ * "Ask Lightspeed" opens a RHEL Lightspeed chat session (kind 'chat').
  */
 import { faAlignLeft, faChevronDown, faCode, faPlus, faTableColumns, faTerminal, faUpRightAndDownLeftFromCenter, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 
+import type { IconRef } from '#lib/ext/types.ts';
+
 import type { LabTarget, PanelSession } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
+import { chatClosed } from '../r3/lightspeed.svelte.ts';
 import { logLine, type MenuItem } from '../r3/live.svelte.ts';
 import Tab from './Tab.svelte';
 import TabIcon from './TabIcon.svelte';
@@ -65,7 +69,12 @@ $effect(() => {
       if (s.script) {
         // Task output: next scripted lines, then stop streaming.
         s.lines.push(...s.script.splice(0, 2));
-        if (!s.script.length) s.stream = false;
+        if (!s.script.length) {
+          s.stream = false;
+          const done = s.ondone;
+          s.ondone = undefined;
+          done?.();
+        }
         continue;
       }
       s.lines.push(logLine(s.title, s.lines.length));
@@ -93,7 +102,7 @@ function closePane(id: string): void {
   if (active === id) active = panes.at(-1) ?? '';
 }
 
-const ICON = { terminal: faTerminal, logs: faAlignLeft, yaml: faCode };
+const ICON: Record<PanelSession['kind'], IconRef> = { terminal: faTerminal, logs: faAlignLeft, yaml: faCode, chat: 'icons/redhat.rhel-lightspeed.png' };
 
 const layout = $derived.by(() => {
   const avail = width - 150;
@@ -131,6 +140,7 @@ function startResize(e: PointerEvent): void {
 
 function close(id: string): void {
   const idx = sessions.findIndex(s => s.id === id);
+  if (sessions[idx]?.kind === 'chat') chatClosed(id);
   sessions.splice(idx, 1);
   panes = panes.filter(x => x !== id);
   if (active === id) active = panes.at(-1) ?? (sessions[idx] ?? sessions[idx - 1])?.id ?? '';

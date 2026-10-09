@@ -50,13 +50,16 @@ export function sessionSource(s: PanelSession): SessionSource {
  * resource chip (kind icon, name, status: opens / focuses the resource tab)
  * and connection chip (provider icon, name: opens the connection Overview),
  * rule F25; then for logs: time range, level, follow, timestamps, wrap,
- * find (Ctrl+F), download, clear.
+ * find (Ctrl+F), download, clear. Logs and terminals offer "Ask Lightspeed"
+ * (inline on error lines, right-click menu, failed-command row); chat
+ * sessions render the RHEL Lightspeed chat.
  */
 import {
   faAnglesDown,
   faBan,
   faChevronDown,
   faClock,
+  faCopy,
   faDownload,
   faMagnifyingGlass,
   faTextHeight,
@@ -67,8 +70,11 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 
 import { STATUS_DOT } from '../data.ts';
 import CodeView from '../r3/CodeView.svelte';
+import { askLabel, askLightspeed, clearChat, ERROR_LINE, failedBlocks, lastFailed, LS_ICON } from '../r3/lightspeed.svelte.ts';
+import { type MenuItem, openMenu } from '../r3/live.svelte.ts';
 import ConnIcon from './ConnIcon.svelte';
 import LabIcon from './LabIcon.svelte';
+import LightspeedChat from './LightspeedChat.svelte';
 
 interface Props {
   session: PanelSession;
@@ -143,7 +149,61 @@ function download(): void {
 function clear(): void {
   session.lines.splice(0, session.lines.length);
 }
+
+let paneEl = $state<HTMLDivElement>();
+
+/** Failed command blocks of a terminal, keyed by their last output line. */
+const failed = $derived(session.kind === 'terminal' ? new Map(failedBlocks(session.lines).map(b => [b.end, b])) : new Map<number, { start: number; end: number }>());
+
+function ask(context: string): void {
+  askLightspeed(context, session.connId, `${src.name} ${session.kind === 'logs' ? 'logs' : 'terminal'}`);
+}
+
+/** Context of a terminal line: the failed command block it belongs to, else the line. */
+function lineContext(i: number): string {
+  if (session.kind !== 'terminal') return session.lines[i] ?? '';
+  for (const b of failed.values()) if (i >= b.start && i <= b.end) return session.lines.slice(b.start, b.end + 1).join('\n');
+  return session.lines[i] ?? '';
+}
+
+/** Text selected inside this pane. */
+function selection(): string {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !paneEl?.contains(sel.anchorNode)) return '';
+  return sel.toString().trim();
+}
+
+function paneMenu(e: MouseEvent, line?: string): void {
+  const sel = selection();
+  const items: MenuItem[] = [];
+  if (sel) items.push({ label: askLabel('Ask Lightspeed about selection'), icon: LS_ICON, run: (): void => ask(sel) });
+  if (line?.trim()) items.push({ label: askLabel('Ask Lightspeed about this line'), icon: LS_ICON, run: (): void => ask(line) });
+  if (session.kind === 'terminal') {
+    const f = lastFailed(session.lines);
+    items.push({ label: askLabel('Explain last failed command'), icon: LS_ICON, disabled: !f, run: (): void => {
+        if (f) ask(f);
+      } });
+  }
+  items.push({ label: 'Copy', icon: faCopy, sep: true, disabled: !sel && !line, run: (): void => void navigator.clipboard?.writeText(sel || line || '') });
+  if (session.kind === 'logs') items.push({ label: 'Find…', icon: faMagnifyingGlass, run: (): void => code?.find() });
+  openMenu(e, items);
+}
 </script>
+
+{#snippet askInline(line: string, i: number)}
+  {@const err = ERROR_LINE.test(line)}
+  {#if line.trim() && !(session.kind === 'terminal' && /^\S*\$\s*$|\]\$\s*$/.test(line))}
+    <button
+      type="button"
+      data-testid="ask-lightspeed-inline"
+      class="ask {err ? 'inline-flex' : 'hidden group-hover:inline-flex'}"
+      title="Ask RHEL Lightspeed about this line"
+      onclick={(e): void => {
+        e.stopPropagation();
+        ask(session.kind === 'terminal' ? lineContext(i) : line);
+      }}><LabIcon icon={LS_ICON} size={14} />Ask Lightspeed</button>
+  {/if}
+{/snippet}
 
 {#snippet tool(icon: IconRef, label: string, run: () => void, pressed?: boolean, testid?: string)}
   <button
@@ -161,7 +221,7 @@ function clear(): void {
 {/snippet}
 
 <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
-<div data-testid="panel-pane" data-kind={session.kind} data-session={session.id} class="flex flex-col flex-1 min-w-0 min-h-0" onclick={onfocus}>
+<div bind:this={paneEl} data-testid="panel-pane" data-kind={session.kind} data-session={session.id} class="flex flex-col flex-1 min-w-0 min-h-0" onclick={onfocus}>
   <div data-testid="pane-toolbar" class="relative flex items-center gap-1 h-8 shrink-0 pl-1.5 pr-1 text-[12px] border-b border-[color-mix(in_srgb,var(--pd-content-divider)_60%,transparent)]" class:bg-[color-mix(in_srgb,var(--pd-content-card-bg)_55%,transparent)]={active}>
     {#if src.target && src.target.kind !== 'connection'}
       <button
@@ -251,18 +311,58 @@ function clear(): void {
       {@render tool(faDownload, 'Download', download, undefined, 'logs-download')}
       {@render tool(faBan, 'Clear', clear, undefined, 'logs-clear')}
     {/if}
+    {#if session.kind === 'chat'}
+      {@render tool(faBan, 'Clear chat', () => clearChat(session.id), undefined, 'ls-clear')}
+    {/if}
     {#if closable}
       <span class="sep"></span>
       {@render tool(faXmark, 'Close pane', () => onclose?.(), undefined, 'pane-close')}
     {/if}
   </div>
   {#if session.kind === 'logs'}
-    <CodeView bind:this={code} {lines} lang="log" follow={follow && range === 'live'} {wrap} findButton={false} testid="panel-logs" class="bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)]" />
+    <div class="contents" role="presentation" oncontextmenu={(e): void => paneMenu(e)}>
+      <CodeView
+        bind:this={code}
+        {lines}
+        lang="log"
+        follow={follow && range === 'live'}
+        {wrap}
+        findButton={false}
+        testid="panel-logs"
+        class="bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)]"
+        lineaction={askInline}
+        onlinecontextmenu={(e, l): void => paneMenu(e, l)} />
+    </div>
+  {:else if session.kind === 'chat'}
+    <LightspeedChat {session} />
+  {:else if session.kind === 'terminal'}
+    <div class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5" role="presentation" oncontextmenu={(e): void => paneMenu(e)}>
+      {#each session.lines as line, i (i)}
+        <div class="group flex items-center gap-3 min-h-5 whitespace-pre" role="presentation" oncontextmenu={(e): void => paneMenu(e, line)}>
+          <span class="min-w-0">{line}{#if i === session.lines.length - 1}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</span>
+          {@render askInline(line, i)}
+        </div>
+        {#if failed.has(i)}
+          {@const b = failed.get(i)!}
+          <button
+            type="button"
+            data-testid="ask-lightspeed-failed"
+            class="flex items-center gap-1.5 h-6 my-1 px-2 rounded font-sans text-[12px] text-[var(--pd-table-body-text)] bg-[var(--pd-content-card-bg)] hover:text-[var(--pd-content-header)] hover:bg-[var(--pd-content-card-hover-bg)]"
+            title="Explain this failure with RHEL Lightspeed"
+            onclick={(e): void => {
+              e.stopPropagation();
+              ask(session.lines.slice(b.start, b.end + 1).join('\n'));
+            }}>
+            <span class="w-1.5 h-1.5 rounded-full shrink-0 {STATUS_DOT.error ?? STATUS_DOT.stopped}"></span>Command failed<span class="opacity-60">·</span><LabIcon icon={LS_ICON} size={14} /><span class="text-[var(--pd-content-header)]">{askLabel()}</span>
+          </button>
+        {/if}
+      {/each}
+    </div>
   {:else}
     <div class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5">
       {#if session.kind === 'yaml'}<div class="mb-1 text-[11px] opacity-60">Editing (apply with ⌘S)</div>{/if}
       {#each session.lines as line, i (i)}
-        <div class="whitespace-pre">{line}{#if i === session.lines.length - 1 && session.kind === 'terminal'}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</div>
+        <div class="whitespace-pre">{line}</div>
       {/each}
     </div>
   {/if}
@@ -300,6 +400,22 @@ function clear(): void {
   opacity: 1;
   color: var(--pd-button-primary-bg);
   background: color-mix(in srgb, var(--pd-button-primary-bg) 14%, transparent);
+}
+.ask {
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  height: 20px;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 11px;
+  color: var(--pd-content-header);
+  background: var(--pd-content-card-bg);
+}
+.ask:hover {
+  background: var(--pd-content-card-hover-bg);
 }
 .sep {
   width: 1px;

@@ -6,7 +6,7 @@
  * highlighted matches, Escape closes.
  */
 import { faArrowDown, faArrowUp, faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { tick } from 'svelte';
+import { type Snippet, tick } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 
@@ -25,9 +25,13 @@ interface Props {
   wrap?: boolean;
   /** Show the floating find button (off when a toolbar owns it). */
   findButton?: boolean;
+  /** Optional trailing content of a line (e.g. an inline action), right-aligned. */
+  lineaction?: Snippet<[line: string, index: number]>;
+  /** Optional right-click handler of a line (index in `lines`). */
+  onlinecontextmenu?: (e: MouseEvent, line: string, index: number) => void;
 }
 
-let { lines, lang = 'plain', numbered = false, class: cls = 'bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)]', testid, follow = false, wrap = false, findButton = true }: Props = $props();
+let { lines, lang = 'plain', numbered = false, class: cls = 'bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)]', testid, follow = false, wrap = false, findButton = true, lineaction, onlinecontextmenu }: Props = $props();
 
 let open = $state(false);
 let query = $state('');
@@ -191,9 +195,16 @@ function onkey(e: KeyboardEvent): void {
   </div>
   <div bind:this={scroller} class="flex-1 min-h-0 overflow-auto py-3 font-mono text-[12px] leading-5">
     {#each view.rows as segs, i (i)}
-      <div class="flex pr-4 {wrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'}" class:pl-4={!numbered}>
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="flex pr-4 {wrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'}"
+        class:pl-4={!numbered}
+        class:group={!!lineaction}
+        class:items-center={!!lineaction}
+        oncontextmenu={onlinecontextmenu ? (e): void => onlinecontextmenu(e, lines[i], i) : undefined}>
         {#if numbered}<span class="w-10 shrink-0 pr-3 text-right select-none opacity-40">{i + 1}</span>{/if}
         <span>{#each segs as s, j (j)}{#if s.m !== undefined}<mark data-m={s.m} class="rounded-sm text-inherit {s.c ?? ''} {s.m === current ? 'bg-[var(--pd-status-degraded)] !text-black' : 'bg-[color-mix(in_srgb,var(--pd-status-degraded)_35%,transparent)]'}">{s.t}</mark>{:else if s.c}<span class={s.c}>{s.t}</span>{:else}{s.t}{/if}{/each}</span>
+        {#if lineaction}{@render lineaction(lines[i], i)}{/if}
       </div>
     {/each}
   </div>
