@@ -3,33 +3,27 @@
  * P12 Switcher at the top of the nav bar (shadcn/ui sidebar team switcher,
  * docs version switcher): the first element of today's PD kinds nav is the
  * connection switcher (icon tile + name + subtitle + chevrons). The dropdown
- * is anchored under it, same width as the nav. Everything below is scoped to
+ * (SimpleSwitcher: plain grouped list + Add / Manage) is anchored under it,
+ * same width as the nav. Everything below is scoped to
  * the selected connection. Collapsed nav: the icon tile only.
  */
-import { faChevronUp } from '@fortawesome/free-solid-svg-icons';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
-
-import AppIcon from '#lib/components/AppIcon.svelte';
-
 import { conn as findConn, type LabTarget, PANEL_SESSIONS } from '../data.ts';
 import { HOME, lab, Workbench } from '../lab.svelte.ts';
-import ConnPicker from '../r2/ConnPicker.svelte';
-import { CTX_LABEL, ctxColor, defaultKind, ENGINES, scopeLabel } from '../r2/ctx.ts';
+import { defaultKind } from '../r2/ctx.ts';
 import Dashboard from '../r2/Dashboard.svelte';
 import ExtPages from '../r2/ExtPages.svelte';
 import Frame from '../r2/Frame.svelte';
 import KindsNav from '../r2/KindsNav.svelte';
+import SimpleSwitcher from '../r2/SimpleSwitcher.svelte';
+import { labConns } from '../r2/simple.ts';
 import { favEntries, listToKind, navEntries, navIdOf, navTarget, tintFor } from '../r2/nav.ts';
 import BottomPanel from '../ui/BottomPanel.svelte';
-import ConnIcon from '../ui/ConnIcon.svelte';
 import Content from '../ui/Content.svelte';
 import TabStrip from '../ui/TabStrip.svelte';
 
 const wb = new Workbench();
 // svelte-ignore state_referenced_locally
 let scope = $state<string[]>(lab.ctx ? [lab.ctx] : ['podman-machine-default']);
-// svelte-ignore state_referenced_locally
-let pickerOpen = $state(lab.openKey);
 let favs = $state<string[]>(['ai-lab', 'mta']);
 wb.home = { kind: 'kind', kindId: lab.ctx ? defaultKind(findConn(lab.ctx)) : 'containers' };
 $effect.pre(() => {
@@ -38,8 +32,10 @@ $effect.pre(() => {
 
 const homeId = $derived(navIdOf(wb.home));
 const expandKube = $derived(wb.home?.kind === 'kind' && wb.home.kindId === 'kubernetes');
-const entries = $derived(navEntries(scope, { expandKube, contributed: true }));
-const tint = $derived(tintFor(scope));
+// one connection in the lab dataset: always podman-machine-default
+const cur = $derived(labConns().some(x => x.id === scope[0]) ? scope : [labConns()[0].id]);
+const entries = $derived(navEntries(cur, { expandKube, contributed: true }));
+const tint = $derived(tintFor(cur));
 
 function go(t: LabTarget): void {
   wb.goHome(t);
@@ -77,32 +73,12 @@ function open(t: LabTarget, opts: { preview?: boolean } = {}): void {
   wb.open(t, opts);
 }
 
-const single = $derived(scope.length === 1 ? findConn(scope[0]) : undefined);
+const single = $derived(findConn(cur[0]));
 </script>
 
 {#snippet switcher()}
-  <div class="relative px-2 pt-2 pb-1 bg-[var(--pd-global-nav-bg)] border-r border-[var(--pd-global-nav-bg-border)] {lab.rail === 'icons' ? 'w-12 px-1.5' : 'w-[200px]'}">
-    <button
-      type="button"
-      aria-haspopup="listbox"
-      aria-expanded={pickerOpen}
-      title={single ? single.name : scopeLabel(scope)}
-      class="w-full flex items-center gap-2 p-1.5 rounded-lg text-left hover:bg-[var(--pd-global-nav-icon-selected-bg)] {pickerOpen ? 'bg-[var(--pd-global-nav-icon-selected-bg)]' : ''}"
-      onclick={(): void => { pickerOpen = !pickerOpen; }}>
-      <span class="w-8 h-8 shrink-0 rounded-md flex items-center justify-center bg-[var(--pd-content-card-bg)] border border-[var(--pd-global-nav-bg-border)]">
-        {#if single}<ConnIcon connId={single.id} size={18} />{:else}<ConnIcon connId={scope[0]} size={18} dot={false} />{/if}
-      </span>
-      {#if lab.rail !== 'icons'}
-        <span class="flex-1 min-w-0 leading-tight">
-          <span class="block font-semibold truncate text-[var(--pd-global-nav-icon-selected)]">{single ? single.name : 'All connections'}</span>
-          <span class="block text-xs opacity-60 truncate">{single ? `${single.product} · ${single.status}` : `${scope.length} connections`}</span>
-        </span>
-        <span class="flex flex-col text-[8px] opacity-60 leading-none"><AppIcon icon={faChevronUp} /><AppIcon icon={faChevronDown} /></span>
-      {/if}
-    </button>
-    {#if pickerOpen}
-      <ConnPicker allowAll selected={scope} onchange={setScope} onkind={jump} onclose={(): void => { pickerOpen = false; }} class="left-2 top-full mt-0.5 {lab.rail === 'icons' ? 'w-72' : 'w-[184px] min-w-72'}" />
-    {/if}
+  <div class="px-2 pt-2 pb-1 bg-[var(--pd-global-nav-bg)] border-r border-[var(--pd-global-nav-bg-border)] {lab.rail === 'icons' ? 'w-12 !px-1' : 'w-[200px]'}">
+    <SimpleSwitcher selected={cur[0]} onselect={(id): void => setScope([id])} onmanage={(): void => wb.open({ kind: 'settings' })} collapsed={lab.rail === 'icons'} surface="var(--pd-global-nav-bg)" />
   </div>
 {/snippet}
 
@@ -114,13 +90,13 @@ const single = $derived(scope.length === 1 ? findConn(scope[0]) : undefined);
   <div class="flex flex-col flex-1 min-w-0 h-full">
     <TabStrip {wb} />
     <div class="flex-1 min-h-0 overflow-hidden">
-      {#key wb.active === HOME ? JSON.stringify(wb.home) + scope.join() : wb.active}
+      {#key wb.active === HOME ? JSON.stringify(wb.home) + cur.join() : wb.active}
         {#if wb.active === HOME && wb.home?.kind === 'dashboard'}
-          <Dashboard selected={scope} hint="Click a card to scope to it." onpick={(id, k): void => jump(id, k ?? defaultKind(findConn(id)))} />
+          <Dashboard selected={cur} hint="Click a card to scope to it." onpick={(id, k): void => jump(id, k ?? defaultKind(findConn(id)))} />
         {:else if wb.active === HOME && wb.home?.kind === 'extensions'}
           <ExtPages {favs} ontoggle={(id): void => { favs = favs.includes(id) ? favs.filter(x => x !== id) : [...favs, id]; }} onopen={(id): void => wb.open({ kind: 'tool', toolId: id })} />
         {:else}
-          <Content target={wb.activeTarget} onopen={open} {scope} />
+          <Content target={wb.activeTarget} onopen={open} scope={cur} />
         {/if}
       {/key}
     </div>

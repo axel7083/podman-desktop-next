@@ -29,20 +29,6 @@ const CARDS: Record<ProposalId, Card> = {
     risks: ['Feedback: too many nav bars (rail + secondary nav + tabs)', 'Rail mixes connections and tools; 18 connections overflow', 'At 1280 two nav columns take ~31% of the width'],
     actions: 'Rail ocp-dev (1) → Pods in secondary nav (2) → checkout-1b58 (3).',
   },
-  p3: {
-    idea: 'Same rail and secondary nav as v1, but every navigation opens a tab like a browser (lists too). Tabs are grouped and coloured by connection; an address row shows back/forward and the breadcrumb.',
-    precedent: 'Chrome tab groups, Arc spaces.',
-    strengths: ['Simple mental model ("it is a browser")', 'Connection groups make 16+ tabs readable', 'Address bar makes the provider explicit'],
-    risks: ['Tab explosion: lists create tabs too', 'Group chips eat horizontal space at 1280px', 'Address row costs ~50px of height'],
-    actions: 'Rail ocp-dev (1) → Pods (2, opens a tab) → checkout-1b58 (3).',
-  },
-  p4: {
-    idea: "Today's PD: a rail of resource kinds (Containers, Pods, Images, Kubernetes, VMs, Models…). Lists span all connections with a multi-select connection scope bar and a Connection column; opened items are tabs with a provider badge.",
-    precedent: 'Docker Desktop kinds nav, Aptakube multi-cluster lists.',
-    strengths: ['Best continuity for current PD users', 'Cross-connection lists answer "what runs where"', 'Rail size does not grow with connections'],
-    risks: ['Provider only visible inside lists', 'Contributed, provider-specific sections fit badly in kinds', 'Scope bar overflows with many connections'],
-    actions: 'Pods (1) → ocp-dev scope chip (2) → checkout-1b58 (3).',
-  },
   p5: {
     idea: 'Lens: a thin hotbar of connection avatars (colour + initials + provider icon + status dot), an activity column with grouped sections for the selected connection, a Catalog home, tabs and a bottom dock (terminal, logs, Edit YAML).',
     precedent: 'Lens / OpenLens hotbar + dock.',
@@ -86,19 +72,26 @@ const CARDS: Record<ProposalId, Card> = {
     risks: ['Bottom-left is the least discovered spot for newcomers', 'Single context only (no multi-select)', 'Status bar is "dark" chrome: picker theming, small hit target'],
     actions: 'Status context (1) → ocp-dev › Pods shortcut (2) → checkout-1b58 (3).',
   },
-  p11: {
-    idea: 'A big title-bar omnibox is the primary navigation: live results over the dataset, `@` connections (with connection › Kind pairs), `>` commands, `#` extension pages, `@ocp-dev checkout` searches inside a connection. Results carry connection icon + colour. The left nav keeps Dashboard, Extensions, Settings + favourites (kinds, extension pages, connection › kind pairs; ★ on any list).',
-    precedent: 'k9s `:` command mode, Linear ⌘K, Docker Desktop Quick Search, VS Code Command Center, AWS service search + favourites bar.',
-    strengths: ['Fastest for experts; scales to any number of connections/pages', 'Left nav is user-shaped (favourites)', 'Disambiguates same names across clusters via icon + colour'],
-    risks: ['Newcomers do not know what to type; empty nav at first run', 'Kinds disappear from the nav unless favourited', 'Everything hinges on search quality'],
-    actions: '⌘K / click omnibox (1) → type "@ocp-dev checkout" (2) → pick checkout-1b58 (3).',
-  },
   p12: {
-    idea: 'The first item of today\'s PD left nav is a connection switcher (icon tile + name + "Podman · running" + chevrons). Its dropdown lists All connections and every connection grouped, with search. Everything below it is scoped to the selected connection. Collapsed nav: just the icon tile.',
+    idea: 'The first item of today\'s PD left nav is a connection switcher (icon tile + name + "Podman · running" + chevrons). Its dropdown is a plain list as wide as the nav: connections under Engines / Kubernetes / Other (icon, name, status dot, check on the current one), a filter only above 8 connections, then "Add connection" and "Manage connections". Everything below it is scoped to the selected connection. Collapsed nav: just the icon tile.',
     precedent: 'shadcn/ui sidebar team switcher, docs version switchers, Slack/Linear/Vercel workspace switcher, Postman workspace switcher.',
     strengths: ['One nav bar; context lives where the user already looks', 'With a single connection it is just a label (no useless chrome)', 'Familiar SaaS pattern; kinds nav unchanged below it'],
-    risks: ['One connection at a time unless "All connections" is chosen', 'Context hidden when the nav is collapsed (icon only)', 'Long dropdown at 20 connections needs search'],
+    risks: ['One connection at a time (cross-connection views live on the Dashboard)', 'Context hidden when the nav is collapsed (icon only)', 'Long dropdown at 20 connections needs search'],
     actions: 'Click switcher (1) → pick ocp-dev (2) → Pods → checkout-1b58 (3).',
+  },
+  p13: {
+    idea: 'P1 without the rail. Kept from P1: editor tabs with italic preview tabs and provider badges, Summary | Inspect | Split details, bottom panel, the tree feel. Dropped: the activity rail and the Explorer / Workflows / Tools concepts. One left panel: the P12 switcher on top, a filter, then the selected connection as a tree (Overview, Containers ▸ items, Pods, Images…, contributed sections) and an Extensions sub-header with the pages relevant to it (AI Lab, MTA…). Dashboard is the home icon in the title bar; notifications, Extensions, Accounts and Settings are title-bar icons.',
+    precedent: 'P1 (VS Code / JetBrains tree + tabs) with the P12 switcher (shadcn sidebar, Slack/Linear workspace switcher); title-bar icons as in VS Code, Docker Desktop, Lens 2025.',
+    strengths: ['One left panel, no rail: nothing new to learn', 'Tree jumps straight to a resource from the nav', 'With one connection the switcher is just a label', 'Global pages where every desktop app puts them'],
+    risks: ['One connection at a time in the tree', 'Deep trees get long (filter needed)', 'Title-bar icons are small targets and compete with OS window controls'],
+    actions: 'Switcher (1) → ocp-dev (2) → expand Pods, click checkout-1b58 (3).',
+  },
+  p14: {
+    idea: 'P5\'s secondary nav without the hotbar. Kept from P5: the per-connection column (Overview, Workloads / Images & storage / Network / Config / Cluster groups, contributed sections), tabs and the bottom dock with Edit YAML. Replaced: the hotbar by the P12 switcher at the top of that column (icon tile + name + "Podman · running" + chevrons). Extension pages for the connection under an Extensions group. Dashboard home icon and global icons in the title bar.',
+    precedent: 'P5 (Lens dock + grouped sections) with the P12 switcher; Rancher Desktop / OpenShift console perspective switcher at the top of the nav.',
+    strengths: ['Only one nav column (220px)', 'Grouped sections stay readable for big clusters', 'Same switcher and title bar as P13: easy to compare'],
+    risks: ['Lists only (no tree): one more click than P13 to reach a resource', 'Group headers add height for small engines', 'One connection at a time'],
+    actions: 'Switcher (1) → ocp-dev (2) → Pods (3) → checkout-1b58.',
   },
 };
 
@@ -123,11 +116,13 @@ const SHOTS_R2 = [
     <h1 class="text-3xl font-bold text-[var(--pd-content-header)]">Nav lab: v2 navigation proposals</h1>
     <p class="text-[var(--pd-content-sub-header)] mt-1">Throwaway. Same fake dataset everywhere: 18 connections, 28 extension pages, ~400 resources, 16 pre-opened tabs, 4 terminals + 2 log streams. Use the lime bar to switch proposal, colour overlay H, theme, nav mode, tabs, panel (`) and screen width. Journey everywhere: <b>pod checkout-1b58 on cluster ocp-dev in ≤3 actions</b>. Docs: <code>docs/nav-lab-research-2.md</code>, reviews <code>docs/nav-lab-review.md</code> and <code>docs/nav-lab-review-2.md</code>.</p>
   </div>
-  {#each [2, 1] as round (round)}
+  {#each [3, 2, 1] as round (round)}
     <h2 class="text-2xl font-bold mt-4 text-[var(--pd-content-header)]">
-      {round === 2 ? "Round 2: fewer nav bars, today's PD concepts, beyond the left edge" : 'Round 1'}
+      {round === 3 ? 'Round 3: no rail, P1 / P5 iterated with the simple switcher' : round === 2 ? "Round 2: fewer nav bars, today's PD concepts, beyond the left edge" : 'Round 1'}
     </h2>
-    {#if round === 2}
+    {#if round === 3}
+      <p class="-mt-2 text-[var(--pd-content-sub-header)]">Feedback: no primary rail, no invented concepts (Explorer, Workflows, Tools). Global destinations go where PD and desktop apps already put them: Dashboard as a home icon at the left of the title bar, notifications / Extensions / Accounts / Settings at the right. Extension pages appear in the nav under "Extensions" for the selected connection. Try <b>Connections: 1</b> in the lime bar.</p>
+    {:else if round === 2}
       <p class="-mt-2 text-[var(--pd-content-sub-header)]">Answers the round-1 feedback (P2 "too many nav bars", P5 "Lens moved away", P1 "new concepts"). No connection rail, no hotbar, no Workflows/Tools: Dashboard, Containers, Pods, Images, Volumes, Networks, Kubernetes, Extensions, Accounts, Settings only. Toggle <b>Colour (H)</b> in the lime bar on any proposal (round 1 tabs too).</p>
     {/if}
     {#each PROPOSALS.filter(p => p.round === round) as p (p.id)}
@@ -146,14 +141,14 @@ const SHOTS_R2 = [
           <div><div class="font-semibold mb-1 text-[var(--pd-status-degraded)]">Risks</div><ul class="list-disc pl-5 flex flex-col gap-0.5">{#each card.risks as s (s)}<li>{s}</li>{/each}</ul></div>
         </div>
         <p class="text-[var(--pd-content-card-text)]"><b>3 actions</b> (pod checkout-1b58 on ocp-dev): {card.actions}</p>
-        <div class="grid gap-2" class:grid-cols-4={round === 1} class:grid-cols-6={round === 2}>
+        {#if round < 3}<div class="grid gap-2" class:grid-cols-4={round === 1} class:grid-cols-6={round === 2}>
           {#each shots as [id, label] (id)}
             <figure class="m-0">
               <img src={assetUrl(`nav-lab/${p.id}-${id}.png`)} alt="{p.name} {label}" class="w-full rounded-md border border-[var(--pd-content-card-border)]" loading="lazy" onerror={(e): void => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
               <figcaption class="text-sm text-[var(--pd-content-sub-header)] mt-1">{label}</figcaption>
             </figure>
           {/each}
-        </div>
+        </div>{/if}
       </section>
     {/each}
   {/each}

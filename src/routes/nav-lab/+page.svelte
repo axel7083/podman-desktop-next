@@ -10,16 +10,15 @@ import NavLabIndex from '#lib/nav-lab/NavLabIndex.svelte';
 import { lab } from '#lib/nav-lab/lab.svelte.ts';
 import P1 from '#lib/nav-lab/proposals/P1.svelte';
 import P2 from '#lib/nav-lab/proposals/P2.svelte';
-import P3 from '#lib/nav-lab/proposals/P3.svelte';
-import P4 from '#lib/nav-lab/proposals/P4.svelte';
 import P5 from '#lib/nav-lab/proposals/P5.svelte';
 import P6 from '#lib/nav-lab/proposals/P6.svelte';
 import P7 from '#lib/nav-lab/proposals/P7.svelte';
 import P8 from '#lib/nav-lab/proposals/P8.svelte';
 import P9 from '#lib/nav-lab/proposals/P9.svelte';
 import P10 from '#lib/nav-lab/proposals/P10.svelte';
-import P11 from '#lib/nav-lab/proposals/P11.svelte';
 import P12 from '#lib/nav-lab/proposals/P12.svelte';
+import P13 from '#lib/nav-lab/proposals/P13.svelte';
+import P14 from '#lib/nav-lab/proposals/P14.svelte';
 import CreateModal from '#lib/nav-lab/ui/CreateModal.svelte';
 import LabBar from '#lib/nav-lab/ui/LabBar.svelte';
 import { appUrl } from '#lib/nav.ts';
@@ -32,7 +31,7 @@ $effect.pre(() => {
   untrack(() => lab.init(new URLSearchParams(q)));
 });
 
-const views = { p1: P1, p2: P2, p3: P3, p4: P4, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9, p10: P10, p11: P11, p12: P12 };
+const views = { p1: P1, p2: P2, p5: P5, p6: P6, p7: P7, p8: P8, p9: P9, p10: P10, p12: P12, p13: P13, p14: P14 };
 const View = $derived(lab.proposal ? views[lab.proposal] : undefined);
 
 function onkey(e: KeyboardEvent): void {

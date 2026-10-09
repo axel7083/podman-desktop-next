@@ -17,8 +17,10 @@ interface Props {
   children: Snippet;
   /** Next to the logo (P6 scope chip). */
   titleLeft?: Snippet;
-  /** Replaces the default search box (P11 omnibox). */
+  /** Replaces the default search box. */
   titleCenter?: Snippet;
+  /** Replaces the default right-side bell (P13/P14 global icons). */
+  titleRight?: Snippet;
   /** Leading status-bar item (P10 context). */
   statusLeft?: Snippet;
   /** Single-connection colour: thin tinted title-bar border (overlay H). */
@@ -27,7 +29,7 @@ interface Props {
   statusTint?: string;
 }
 
-let { children, titleLeft, titleCenter, statusLeft, tint, statusTint }: Props = $props();
+let { children, titleLeft, titleCenter, titleRight, statusLeft, tint, statusTint }: Props = $props();
 
 const running = CONNECTIONS.filter(c => c.status === 'running').length;
 const errors = CONNECTIONS.filter(c => c.status === 'error').length;
@@ -49,7 +51,7 @@ const errors = CONNECTIONS.filter(c => c.status === 'error').length;
         <AppIcon icon={faMagnifyingGlass} size="xs" /><span class="flex-1 text-left truncate">Search</span><kbd class="opacity-70">⌘K</kbd>
       </button>
     {/if}
-    <div class="flex items-center justify-end gap-3 text-[var(--pd-titlebar-icon)]"><AppIcon icon={faBell} /></div>
+    {#if titleRight}{@render titleRight()}{:else}<div class="flex items-center justify-end gap-3 text-[var(--pd-titlebar-icon)]"><AppIcon icon={faBell} /></div>{/if}
   </header>
   <div class="flex flex-1 min-h-0 min-w-0">
     {@render children()}

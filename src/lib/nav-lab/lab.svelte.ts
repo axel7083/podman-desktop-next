@@ -12,23 +12,22 @@ import SettingsIcon from '#lib/images/SettingsIcon.svelte';
 
 import { conn, CONNECTIONS, FEW_TABS, KINDS, type LabTarget, MANY_TABS, resource, section, targetKey, tool, WORKFLOWS } from './data.ts';
 
-export type ProposalId = 'p1' | 'p2' | 'p3' | 'p4' | 'p5' | 'p6' | 'p7' | 'p8' | 'p9' | 'p10' | 'p11' | 'p12';
+export type ProposalId = 'p1' | 'p2' | 'p5' | 'p6' | 'p7' | 'p8' | 'p9' | 'p10' | 'p12' | 'p13' | 'p14';
 export type RailMode = 'icons' | 'labels' | 'expanded';
 export type ScreenWidth = 1440 | 1280 | 1024;
 
-export const PROPOSALS: { id: ProposalId; name: string; short: string; defaultRail: RailMode; round: 1 | 2 }[] = [
+export const PROPOSALS: { id: ProposalId; name: string; short: string; defaultRail: RailMode; round: 1 | 2 | 3 }[] = [
   { id: 'p1', name: 'P1 · IDE / Explorer', short: 'IDE / Explorer', defaultRail: 'labels', round: 1 },
   { id: 'p2', name: 'P2 · Provider rail + tabs (hybrid)', short: 'Hybrid', defaultRail: 'expanded', round: 1 },
-  { id: 'p3', name: 'P3 · Browser-style', short: 'Browser', defaultRail: 'expanded', round: 1 },
-  { id: 'p4', name: 'P4 · Kind-first + scoping', short: 'Kind-first', defaultRail: 'expanded', round: 1 },
   { id: 'p5', name: 'P5 · Lens-style hotbar', short: 'Hotbar', defaultRail: 'icons', round: 1 },
   { id: 'p6', name: 'P6 · Scope chip in the title bar', short: 'Scope chip', defaultRail: 'expanded', round: 2 },
   { id: 'p7', name: 'P7 · Breadcrumb header', short: 'Breadcrumb', defaultRail: 'expanded', round: 2 },
   { id: 'p8', name: 'P8 · Aggregated + connection facets', short: 'Facets', defaultRail: 'expanded', round: 2 },
   { id: 'p9', name: 'P9 · Dashboard launcher + tab groups', short: 'Tab groups', defaultRail: 'icons', round: 2 },
   { id: 'p10', name: 'P10 · Status-bar context', short: 'Status bar', defaultRail: 'expanded', round: 2 },
-  { id: 'p11', name: 'P11 · Command-first omnibox', short: 'Omnibox', defaultRail: 'expanded', round: 2 },
   { id: 'p12', name: 'P12 · Switcher at the top of the nav', short: 'Nav switcher', defaultRail: 'expanded', round: 2 },
+  { id: 'p13', name: 'P13 · P1 without the rail', short: 'Tree, no rail', defaultRail: 'expanded', round: 3 },
+  { id: 'p14', name: 'P14 · P5 nav + switcher', short: 'Nav + switcher', defaultRail: 'expanded', round: 3 },
 ];
 
 class LabState {
@@ -46,6 +45,8 @@ class LabState {
   openKey = $state(false);
   /** Capture helper: initial single-connection context for round-2 proposals. */
   ctx = $state<string | undefined>(undefined);
+  /** Dataset size for P12–P14: every connection, or only podman-machine-default. */
+  conns = $state<'one' | 'many'>('many');
 
   init(params: URLSearchParams): void {
     const p = params.get('p');
@@ -61,6 +62,7 @@ class LabState {
     this.color = params.get('color') === 'on';
     this.openKey = params.get('open') === 'on';
     this.ctx = params.get('ctx') ?? undefined;
+    this.conns = params.get('conns') === 'one' ? 'one' : 'many';
     this.applyTheme();
   }
 
@@ -89,6 +91,7 @@ class LabState {
     q.set('panel', this.panel ? 'on' : 'off');
     q.set('screen', String(this.screen));
     if (this.color) q.set('color', 'on');
+    if (this.conns === 'one') q.set('conns', 'one');
     return q.toString();
   }
 }
