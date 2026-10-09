@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/podman-desktop-next/next/icons/podman-desktop.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Podman Desktop · next (mockup)</title>
+    <script>
+      // apply theme before first paint (URL param > stored > dark).
+      // Storage is namespaced per version (`pdn:<version>:theme`, see src/lib/version.ts); the
+      // deployed version is the last path segment (`/podman-desktop-next/v1/`), `dev` at the root.
+      (function () {
+        try {
+          var p = new URLSearchParams(location.search).get('theme');
+          var seg = location.pathname.split('/').filter(Boolean);
+          var v = seg.length > 1 ? seg[seg.length - 1] : 'dev';
+          var t = p || JSON.parse(localStorage.getItem('pdn:' + v + ':theme') || '"dark"');
+          document.documentElement.className = t === 'light' ? 'light' : 'dark';
+        } catch (e) {}
+      })();
+    </script>
+    <link href="/podman-desktop-next/next/_app/immutable/entry/start.C3Zy21IK.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/entry/payload.DSmR2FwN.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/BaNbYf_w.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/JU8xm_zn.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/Tl0eg6Qn.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/0V8WuR8Q.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/BIcDIlTn.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/DlLl70fb.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/entry/app.DqEQrLHS.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/nodes/0.BRWlLgtL.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/efQY8aPp.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/DbHkspNT.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/B1JiKDG5.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/D5a1CVua.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/mofTkEpc.js" rel="modulepreload">
+		<link href="/podman-desktop-next/next/_app/immutable/chunks/ExtCXwTd.js" rel="modulepreload">
+		
+		<link href="/podman-desktop-next/next/_app/immutable/assets/data.AQp3DVkc.css" rel="stylesheet">
+		<link href="/podman-desktop-next/next/_app/immutable/assets/0.4_e3vCui.css" rel="stylesheet">
+  </head>
+  <body data-sveltekit-preload-data="hover">
+    <div style="display: contents">
+			<script>
+				{
+					__sveltekit_ri0frx = {
+						base: new URL('.', location).pathname.slice(0, -1),
+						version: "1791537674552",
+						assets: "/podman-desktop-next/next"
+					};
+
+					const element = document.currentScript.parentElement;
+
+					import("/podman-desktop-next/next/_app/immutable/entry/start.C3Zy21IK.js").then(async (kit) => {
+						kit.init(__sveltekit_ri0frx);
+						const app = await import("/podman-desktop-next/next/_app/immutable/entry/app.DqEQrLHS.js");
+						kit.start(app, element);
+					});
+				}
+			</script>
+		</div>
+  </body>
+</html>
