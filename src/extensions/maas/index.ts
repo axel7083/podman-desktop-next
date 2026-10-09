@@ -49,7 +49,7 @@ const extension: MockExtension = {
     connectionFactories: [
       {
         id: 'maas-endpoint',
-        label: 'Add MaaS endpoint',
+        label: 'Models-as-a-Service endpoint',
         providerId: 'maas',
         kind: 'service',
         description: 'An OpenShift AI Models-as-a-Service gateway (or any OpenAI-compatible endpoint).',

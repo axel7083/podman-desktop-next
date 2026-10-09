@@ -9,7 +9,6 @@ import { NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podma
 
 import { registry } from '#lib/ext/registry.svelte.ts';
 import KubeIcon from '#lib/images/KubeIcon.svelte';
-import { statusLabel } from '#lib/nav.ts';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import StatusCell from '#lib/table/StatusCell.svelte';
@@ -30,9 +29,17 @@ interface Row extends OcmCluster {
 const rows: Row[] = $derived(
   CLUSTERS.filter(c => c.name.includes(searchTerm.toLowerCase()) || (c.display_name ?? '').toLowerCase().includes(searchTerm.toLowerCase())).map(c => {
     const conn = registry.getConnection(c.name);
-    return { ...c, connection: { label: conn ? statusLabel(conn) : c.state === 'ready' ? 'Not connected' : '—', busy: conn?.status === 'starting' } };
+    return { ...c, connection: { label: connectionLabel(conn?.status), busy: conn?.status === 'starting' } };
   }),
 );
+
+/** The Connection column describes the kubeconfig connection, never the cluster. */
+function connectionLabel(status: string | undefined): string {
+  if (status === 'started') return 'Connected';
+  if (status === 'starting') return 'Connecting…';
+  if (status === 'error') return 'Connection failed';
+  return 'Not connected';
+}
 
 /**
  * Cluster state → PD StatusIcon variant: in-progress states (installing, resuming)
@@ -53,7 +60,7 @@ const columns = [
   new TableColumn<Row, NameCellData>('Name', {
     width: '2fr',
     renderer: NameCell,
-    renderMapping: (c): NameCellData => ({ title: c.name, sub: c.display_name ? [c.display_name] : [], href: registry.getConnection(c.name) ? `/c/${c.name}` : undefined }),
+    renderMapping: (c): NameCellData => ({ title: c.name, sub: [(STATE_LABEL[c.state] ?? c.state).toUpperCase(), ...(c.display_name ? [c.display_name] : [])], href: registry.getConnection(c.name) ? `/c/${c.name}` : undefined }),
     comparator: (a, b): number => a.name.localeCompare(b.name),
   }),
   new TableColumn<Row, string>('Product', { width: '1.6fr', renderer: TableSimpleColumn, renderMapping: (c): string => productLabel(c) }),
