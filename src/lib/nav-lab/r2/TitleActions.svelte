@@ -10,6 +10,7 @@ import LabIcon from '../ui/LabIcon.svelte';
 import type { IconRef } from '#lib/ext/types.ts';
 
 import type { LabTarget } from '../data.ts';
+import { flows } from '../r3/flows.svelte.ts';
 import { ACCOUNTS_ICON, DASHBOARD_ICON, EXTENSIONS_ICON, SETTINGS_ICON } from './ctx.ts';
 
 interface Props {
@@ -52,6 +53,12 @@ const RIGHT: [LabTarget['kind'], string, IconRef][] = [
 {:else}
   <div class="flex items-center justify-end gap-1 text-[var(--pd-titlebar-icon)]">
     {@render icon('notifications', 'Notifications', faBell)}
-    {#each RIGHT as [k, l, ic] (k)}{@render icon(k, l, ic)}{/each}
+    {#each RIGHT as [k, l, ic] (k)}
+      {#if k === 'accounts' && flows.account}
+        <button type="button" aria-label="Accounts · {flows.account.email}" title="Red Hat · {flows.account.email}" data-testid="title-avatar" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-[var(--pd-titlebar-hover-bg)]" onclick={(): void => onopen({ kind: 'accounts' })}>
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold text-white bg-[#ee0000]">AD</span>
+        </button>
+      {:else}{@render icon(k, l, ic)}{/if}
+    {/each}
   </div>
 {/if}

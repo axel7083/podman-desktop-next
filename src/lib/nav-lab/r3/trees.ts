@@ -27,6 +27,7 @@ import NetworkIcon from '#lib/images/NetworkIcon.svelte';
 import PodIcon from '#lib/images/PodIcon.svelte';
 import VolumeIcon from '#lib/images/VolumeIcon.svelte';
 
+import { flows } from './flows.svelte.ts';
 import { altFor, HB_ALTS, HB_CATALOG, HB_CONN } from './hb-data.ts';
 
 /**
@@ -159,6 +160,10 @@ const aiLab = (): Raw[] => [
     children: [
       { label: 'granite inference', icon: faServer, status: 'running', detail: ':35000' },
       { label: 'whisper inference', icon: faServer, status: 'stopped', detail: ':35001' },
+      // Served with Red Hat AI Inference Server (vLLM) from a model's "Serve with…" action.
+      ...Object.entries(flows.state)
+        .filter(([k, v]) => k.startsWith('ai:served:') && v === 'running')
+        .map(([k]) => ({ label: `${k.slice(10).split('-instruct')[0]} vLLM`, icon: 'icons/redhat.ai-inference-server.png', status: 'running', detail: ':8000', data: { runtime: 'Red Hat AI Inference Server (vLLM)', endpoint: 'http://localhost:8000/v1' } })),
     ],
   },
   {
@@ -174,9 +179,9 @@ const aiLab = (): Raw[] => [
 
 const bootc = (): Raw[] => [
   overview(),
-  { label: 'Images', icon: ImageIcon, detail: '3' },
-  { label: 'Disk Images', icon: faHardDrive, detail: '2' },
-  { label: 'Examples', icon: faBook, detail: '6' },
+  { label: 'Images', icon: ImageIcon, detail: String(flows.bootc.length) },
+  { label: 'Disk Images', icon: faHardDrive, detail: String(flows.disks.length) },
+  { label: 'Examples', icon: faBook, detail: '8' },
 ];
 
 /** Hummingbird (Red Hat Hardened Images): Overview, Catalog (hardened images), Alternatives (local images). */
@@ -196,12 +201,16 @@ const hummingbird = (): Raw[] => [
   },
 ];
 
+/** OpenShift Console add-on: a single page per local cluster. */
+const consoleTree = (): Raw[] => [];
+
 export const TREE_PROVIDERS: TreeProvider[] = [
   { id: 'bootc', extId: 'bootc', label: 'Bootable containers', icon: 'icons/redhat.bootc.png', connIds: ['podman-machine-default'], replaces: ['bootc'], build: bootc },
   { id: 'quadlets', extId: 'quadlet', label: 'Quadlets', icon: 'icons/podman-desktop.quadlet.png', connIds: ['podman-machine-default'], replaces: ['quadlets'], build: quadlets },
   { id: 'ai-lab', extId: 'ai-lab', label: 'AI Lab', icon: 'icons/redhat.ai-lab.png', connIds: ['podman-machine-default'], replaces: [], build: aiLab },
   { id: 'mcp', extId: 'mcp', label: 'MCP servers', icon: 'icons/podman-desktop.mcp.png', connIds: ['podman-machine-default', 'mcp-gateway'], replaces: ['mcpservers', 'mcptools'], build: mcp },
   { id: 'hummingbird', extId: 'hummingbird', label: 'Hummingbird', icon: 'icons/redhat.hummingbird.png', connIds: [HB_CONN], replaces: [], build: hummingbird },
+  { id: 'console', extId: 'openshift-console', label: 'OpenShift Console', icon: 'icons/redhat.openshift-cluster-manager.svg', connIds: ['openshift-local', 'minc', 'kind-dev'], replaces: [], build: consoleTree },
   { id: 'helm', extId: 'helm', label: 'Helm releases', icon: 'icons/podman-desktop.helm.png', connIds: ['kind-dev', 'openshift-local', 'ocp-dev', 'ocp-prod'], replaces: ['helm'], build: helm },
 ];
 
@@ -217,11 +226,14 @@ const cache = new Map<string, TreeNode>();
 /** Root node of a provider for a connection (children have stable ids). */
 export function treeRoot(p: TreeProvider, connId: string): TreeNode {
   const key = `${p.id}@${connId}`;
-  let root = cache.get(key);
+  // Rebuilt when a flow changes extension data (bootc disks, AI Lab services…); ids stay stable.
+  const ck = `${key}#${flows.tree}`;
+  let root = cache.get(ck);
   if (!root) {
     const children = withIds(key, p.build(connId));
-    root = { id: key, label: p.label, icon: p.icon, detail: String(children.filter(x => x.label !== 'Overview').length), children };
-    cache.set(key, root);
+    const n = children.filter(x => x.label !== 'Overview').length;
+    root = { id: key, label: p.label, icon: p.icon, detail: n ? String(n) : undefined, children: children.length ? children : undefined };
+    cache.set(ck, root);
   }
   return root;
 }

@@ -18,6 +18,8 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { conn as findConn, type LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import ActBtn from './ActBtn.svelte';
+import AiLabView from './AiLabView.svelte';
+import ConsoleView from './ConsoleView.svelte';
 import BootcView from './BootcView.svelte';
 import HummingbirdView from './HummingbirdView.svelte';
 import Btn from './Btn.svelte';
@@ -30,6 +32,7 @@ import KV from './KV.svelte';
 import { isUp, live, type MenuItem, openMenu } from './live.svelte.ts';
 import ModernTable from './ModernTable.svelte';
 import QuadletList from './QuadletList.svelte';
+import ResourcesCard from './ResourcesCard.svelte';
 import QuadletView from './QuadletView.svelte';
 import Section from './Section.svelte';
 import SegFilter from './SegFilter.svelte';
@@ -194,6 +197,10 @@ function openParent(): void {
   {#if f.node === f.root}<QuadletList {f} {onopen} />{:else}<QuadletView {f} {onopen} />{/if}
 {:else if f && f.provider.id === 'bootc'}
   <BootcView {f} {onopen} />
+{:else if f && f.provider.id === 'ai-lab' && !f.node.children && (f.path.at(-1) === 'Models' || f.path.at(-1) === 'Playgrounds')}
+  {#key f.node.id}<AiLabView {f} {onopen} />{/key}
+{:else if f && f.provider.id === 'console'}
+  {#key f.connId}<ConsoleView connId={f.connId} {onopen} />{/key}
 {:else if f && f.provider.id === 'hummingbird'}
   {#key f.node.id}<HummingbirdView {f} {onopen} />{/key}
 {:else if f && n}
@@ -238,6 +245,7 @@ function openParent(): void {
                 { k: 'Connection', v: findConn(f.connId)?.name, onclick: (): void => onopen({ kind: 'connection', connId: f.connId }, {}) },
               ]} />
           </Card>
+          <ResourcesCard id={f.provider.extId} />
         </div>
       </div>
     {:else}

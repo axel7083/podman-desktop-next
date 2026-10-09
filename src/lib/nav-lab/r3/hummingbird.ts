@@ -6,6 +6,7 @@
 import { type LabResource, type LabTarget, RESOURCES } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { altFor, type HardenedImage, hbImage, hbNodeId, hbRef, mb } from './hb-data.ts';
+import { addChain } from './flows.svelte.ts';
 import { live } from './live.svelte.ts';
 
 const ICON = 'icons/redhat.hummingbird.png';
@@ -83,6 +84,7 @@ export function rebuildOnHardened(local: string, connId: string): void {
   ], { kind: 'node', connId, nodeId: hbNodeId(connId, 'Alternatives', local) });
   setTimeout(() => {
     addImage(connId, out, h.sizeMB);
+    addChain(out, { step: 'built', title: 'Rebuilt on Hummingbird', detail: `FROM ${from} · 0 CVEs`, at: 'just now' });
     live.status[key] = 'rebuilt';
   }, 3000);
 }

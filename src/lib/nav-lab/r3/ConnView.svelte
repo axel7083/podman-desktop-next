@@ -15,6 +15,9 @@ import Head from './Head.svelte';
 import KV from './KV.svelte';
 import { connActions, connStatus, isUp, openConnTerminal, openMenu, toggleConn } from './live.svelte.ts';
 import PromoEmpty from './PromoEmpty.svelte';
+import Btn from './Btn.svelte';
+import { flows, openModal } from './flows.svelte.ts';
+import LabIcon from '../ui/LabIcon.svelte';
 import StatGrid from './StatGrid.svelte';
 import { OVERVIEW_ICON, TREE_PROVIDERS, treeRoot } from './trees.ts';
 
@@ -78,6 +81,16 @@ function openExt(e: LabExtension): void {
           ]} />
       </Card>
     </div>
+    {#if c.product.includes('RHEL') && !flows.account}
+      <div data-testid="rh-promo" class="flex items-center gap-3 p-3 rounded-lg bg-[var(--pd-content-card-bg)]">
+        <LabIcon icon="icons/redhat.redhat-authentication.png" size={32} />
+        <div class="flex-1 min-w-0">
+          <div class="text-[14px] font-semibold text-[var(--pd-content-header)]">Register {c.name} with your Red Hat account</div>
+          <div class="text-[13px] text-[var(--pd-table-body-text)]">Sign in to register this RHEL system with an activation key, enable RHEL repositories and pull from registry.redhat.io.</div>
+        </div>
+        <Btn icon="icons/redhat.redhat-authentication.png" onclick={(): void => openModal('rh-signin')}>{isInstalled('redhat-account') ? 'Sign in with Red Hat' : 'Install Red Hat Authentication'}</Btn>
+      </div>
+    {/if}
     {#if missing}
       {@const txt = PROMO_TEXT[missing.id] ?? [`No ${missing.name}`, `${missing.description}.`, 'podman-desktop.io/extensions']}
       <div class="rounded-lg bg-[color-mix(in_srgb,var(--pd-content-card-bg)_40%,transparent)]">

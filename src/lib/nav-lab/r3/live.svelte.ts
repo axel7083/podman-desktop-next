@@ -24,6 +24,8 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { conn as findConn, type ConnStatus, type LabConnection, type LabResource, type LabTarget, section as findSection } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { ext, installExt, isInstalled } from './exts.ts';
+import { grypeGate } from './chain.ts';
+import { addChain, flows, openModal } from './flows.svelte.ts';
 import { altFor, HB_CONN, hbNodeId } from './hb-data.ts';
 
 export interface MenuItem {
@@ -206,7 +208,9 @@ export function extViews(sectionId: string): { id: string; label: string; extId:
 
 /** Grype scan of an image (or a container's image) in its own tab. */
 export function scanRes(r: LabResource, onopen: (t: LabTarget, o: { preview?: boolean }) => void): void {
-  onopen({ kind: 'scan', connId: r.connId, resId: r.id }, {});
+  const target: LabTarget = { kind: 'scan', connId: r.connId, resId: r.id };
+  if (r.sectionId === 'images' && isInstalled('grype')) addChain(r.name, { step: 'scanned', title: 'Scanned', detail: `Grype · ${grypeGate(r.name)[1]}`, at: 'just now', target });
+  onopen(target, {});
 }
 
 function showView(r: LabResource, view: string, onopen: (t: LabTarget, o: { preview?: boolean }) => void): void {
@@ -233,8 +237,20 @@ export function imageMenu(r: LabResource, onopen: (t: LabTarget, o: { preview?: 
         onopen({ kind: 'node', connId: r.connId, nodeId: hbNodeId(r.connId, 'Alternatives', r.name) }, {});
       },
     });
-  if (lab.install === 'all') items.push({ label: 'Push to Quay', icon: 'icons/redhat.quay.png', run: () => lab.openCreate(`Push ${r.name} to quay.io`) });
-  if (isInstalled('bootc')) items.push({ label: 'Build disk image', icon: ext('bootc')?.icon, run: () => onopen({ kind: 'tool', toolId: 'bootc' }, {}) });
+  items.push({ label: 'Check image', icon: 'icons/redhat.openshift-checker.png', run: () => showView(r, 'check', onopen) });
+  items.push({ label: isInstalled('quay') ? 'Push to Quay' : 'Push to Quay (install Quay)', icon: 'icons/redhat.quay.png', run: () => openModal('push-quay', { resId: r.id }), sep: true });
+  items.push({ label: 'Deploy to…', icon: 'icons/redhat.openshift-local.png', run: () => openModal('deploy', { resId: r.id }) });
+  const known = flows.bootc.some(b => r.name === `${b.name}:${b.tag}`);
+  if ((known || r.name.includes('bootc')) && isInstalled('bootc'))
+    items.push({
+      label: 'Build disk image',
+      icon: ext('bootc')?.icon,
+      run: () => {
+        const [name, tag] = r.name.split(/:(?=[^:/]+$)/);
+        if (!known) flows.bootc = [...flows.bootc, { name, tag: tag ?? 'latest', base: r.name.includes('redhat') ? 'RHEL' : 'Fedora', version: tag ?? 'latest', size: '1.8 GB', lint: 'pass', created: r.age }];
+        openModal('build-disk', { image: r.name });
+      },
+    });
   return items;
 }
 

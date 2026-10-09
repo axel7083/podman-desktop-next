@@ -10,8 +10,8 @@
  */
 import {
   faAlignLeft,
-  faArrowUp,
   faEllipsisVertical,
+  faRocket,
   faKeyboard,
   faPlay,
   faRotateRight,
@@ -31,6 +31,8 @@ import { composeDir, composeFile, composeServices, composeVolumes, composeYaml, 
 import { ext, installExt, isInstalled } from './exts.ts';
 import { altFor, cveTotal, HB_CONN, hbImage, mb } from './hb-data.ts';
 import { openAlternative } from './hummingbird.ts';
+import { chainOf, flows, openModal } from './flows.svelte.ts';
+import Timeline, { type TimelineStep } from './Timeline.svelte';
 import Head from './Head.svelte';
 import KV from './KV.svelte';
 import {
@@ -55,6 +57,7 @@ import {
 } from './live.svelte.ts';
 import ModernTable from './ModernTable.svelte';
 import Section from './Section.svelte';
+import LabIcon from '../ui/LabIcon.svelte';
 
 interface Props {
   res: LabResource;
@@ -169,6 +172,37 @@ const groupRef = $derived.by((): LabResource | undefined => {
   return resourcesOf(c.id, 'compose').find(x => x.name === res.group) ?? resourcesOf(c.id, 'pods').find(x => x.name === res.group);
 });
 
+/** Image provenance (rule F25 deep links): built → scanned → signed → pushed → deployed. */
+const provenance = $derived.by((): TimelineStep[] => {
+  const ev = chainOf(res.name);
+  const at = (step: string) => ev.filter(e => e.step === step);
+  const built = at('built')[0];
+  const scanned = at('scanned')[0];
+  const signed = at('signed')[0];
+  const pushed = at('pushed')[0];
+  const deployed = at('deployed');
+  const local = res.name.startsWith('quay.io/acme/') || res.name.startsWith('localhost/') || res.name.includes('hummingbird');
+  const showHistory = (): void => void (view = 'history');
+  return [
+    { id: 'built', label: built?.title ?? (local ? 'Built' : 'Pulled'), state: 'done', detail: built?.detail ?? (local ? 'podman build · Containerfile' : res.name.split('/')[0]), at: built?.at ?? `${res.age} ago`, icon: built ? ext('hummingbird')?.icon : undefined, onopen: showHistory },
+    scanned
+      ? { id: 'scanned', label: 'Scanned', state: 'done', detail: scanned.detail, at: scanned.at, icon: ext('grype')?.icon, onopen: (): void => scanRes(res, onopen) }
+      : { id: 'scanned', label: 'Scanned', state: 'todo', icon: ext('grype')?.icon, action: { label: 'Scan', run: (): void => scanRes(res, onopen) } },
+    signed
+      ? { id: 'signed', label: 'Signed', state: 'done', detail: signed.detail, at: signed.at, icon: 'icons/redhat.trusted-artifact-signer.png', href: signed.href }
+      : { id: 'signed', label: 'Signed', state: 'todo', icon: 'icons/redhat.trusted-artifact-signer.png', action: { label: 'Push and sign', run: (): void => openModal('push-quay', { resId: res.id }) } },
+    pushed
+      ? { id: 'pushed', label: 'Pushed', state: 'done', detail: pushed.detail, at: pushed.at, icon: 'icons/redhat.quay.png', href: pushed.href }
+      : { id: 'pushed', label: 'Pushed', state: 'todo', icon: 'icons/redhat.quay.png', action: { label: 'Push to Quay', run: (): void => openModal('push-quay', { resId: res.id }) } },
+    deployed.length
+      ? { id: 'deployed', label: deployed.at(-1)!.title, state: 'done', detail: deployed.at(-1)!.detail, at: deployed.length > 1 ? `${deployed.length} deployments` : deployed.at(-1)!.at, onopen: (): void => onopen(deployed.at(-1)!.target!, {}) }
+      : { id: 'deployed', label: 'Deployed', state: 'todo', action: { label: 'Deploy to…', run: (): void => openModal('deploy', { resId: res.id }) } },
+  ];
+});
+
+/** RHEL / UBI content: promote the Red Hat account (Vanilla: install it). */
+const rhContent = $derived(isImage && /registry\.(redhat|access\.redhat)\.(io|com)|ubi\d|rhel/.test(res.name) && !flows.account);
+
 function kubeYaml(): string[] {
   const ci = containerInfo(res);
   return [
@@ -202,11 +236,11 @@ function kubeYaml(): string[] {
 {#snippet actions()}
   {#if isImage}
     <ActBtn icon={faPlay} label="Run image" onclick={(): void => lab.openCreate(`Run ${res.name}`)} />
-    <ActBtn icon={faArrowUp} label="Push image" onclick={(): void => lab.openCreate(`Push ${res.name}`)} />
+    {#if hbAlt && isInstalled('hummingbird')}<ActBtn icon={ext('hummingbird')?.icon ?? faTrash} label="Rebase on Hummingbird (find hardened alternative)" onclick={(): void => openAlternative(res.name, c.id, onopen)} />{/if}
     <ActBtn icon={ext('grype')?.icon ?? faTrash} label="Scan vulnerabilities" onclick={(): void => scanRes(res, onopen)} />
-    {#if hbAlt && isInstalled('hummingbird')}<ActBtn icon={ext('hummingbird')?.icon ?? faTrash} label="Find hardened alternative" onclick={(): void => openAlternative(res.name, c.id, onopen)} />{/if}
-    <ActBtn icon={faTrash} label="Delete image" danger onclick={(): void => deleteRes(res)} />
-    <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, imageMenu(res, onopen))} />
+    <ActBtn icon="icons/redhat.quay.png" label="Push to Quay" onclick={(): void => openModal('push-quay', { resId: res.id })} />
+    <ActBtn icon={faRocket} label="Deploy to…" onclick={(): void => openModal('deploy', { resId: res.id })} />
+    <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, [...imageMenu(res, onopen), { label: 'Delete image', icon: faTrash, danger: true, sep: true, run: (): void => deleteRes(res) }])} />
   {:else if isCompose}
     <ActBtn icon={faAlignLeft} label="See logs" onclick={composeLogs} />
     {#if upCount}
@@ -357,7 +391,7 @@ function kubeYaml(): string[] {
           <Card title="Environment ({ci.env.length})"><KV rows={ci.env.map(e => ({ k: e, v: '•••', mono: true }))} /></Card>
         {:else if isImage}
           {@const im = imageInfo(res)}
-          <Card title="Details">
+          <Card title="Details" testid="image-details">
             <KV
               rows={[
                 { k: 'Name', v: repoTag[0] },
@@ -423,6 +457,17 @@ function kubeYaml(): string[] {
         </Section>
       {:else if isImage}
         {@const im = imageInfo(res)}
+        {#if rhContent}
+          <div data-testid="rh-promo" class="flex items-center gap-3 p-3 rounded-lg bg-[var(--pd-content-card-bg)]">
+            <LabIcon icon="icons/redhat.redhat-authentication.png" size={32} />
+            <div class="flex-1 min-w-0">
+              <div class="text-[14px] font-semibold text-[var(--pd-content-header)]">Red Hat content</div>
+              <div class="text-[13px] text-[var(--pd-table-body-text)]">This image comes from Red Hat. Sign in with your Red Hat account to pull updates from registry.redhat.io and get subscribed RHEL content in builds.</div>
+            </div>
+            <Btn icon="icons/redhat.redhat-authentication.png" testid="rh-promo-btn" onclick={(): void => openModal('rh-signin')}>{isInstalled('redhat-account') ? 'Sign in with Red Hat' : 'Install Red Hat Authentication'}</Btn>
+          </div>
+        {/if}
+        <Card title="Provenance" testid="provenance"><Timeline steps={provenance} testid="provenance-timeline" /></Card>
         <Section title="Used by" count={im.usedBy.length} testid="used-by">
           {#if im.usedBy.length}
             <ModernTable {variant} readonly initialSort="" rows={im.usedBy.map(u => refRow(u, u.name, { status: resStatus(u), age: u.age }))} cols={[['Status', 'status', '110px'], ['Age', 'age', '110px', true]]} />
