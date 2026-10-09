@@ -7,7 +7,7 @@ import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import StatusCell from '#lib/table/StatusCell.svelte';
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
-import { humanAge, humanSize, shortImage, toast, world } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo, humanSize, shortImage, toast, world } from '#lib/world.svelte.ts';
 
 import { isPushed, REPOSITORIES, ROBOTS } from '../data.ts';
 
@@ -39,14 +39,14 @@ const repoColumns = [
   }),
   new TableColumn<Repo, string>('Tags', { width: '80px', renderer: TableSimpleColumn, renderMapping: (r): string => String(r.tags) }),
   new TableColumn<Repo, string>('Pulls (30d)', { width: '100px', renderer: TableSimpleColumn, renderMapping: (r): string => String(r.popularity * 37) }),
-  new TableColumn<Repo, string>('Last modified', { renderer: TableSimpleColumn, renderMapping: (r): string => `${humanAge(new Date(r.last_modified).getTime())} ago` }),
+  new TableColumn<Repo, string>('Last modified', { renderer: TableSimpleColumn, renderMapping: (r): string => timeAgo(new Date(r.last_modified).getTime()) }),
 ];
 
 const robotColumns = [
   new TableColumn<Robot, StatusCellData>('Status', { align: 'center', width: '70px', renderer: StatusCell, renderMapping: (): StatusCellData => ({ status: 'USED', icon: faKey }) }),
   new TableColumn<Robot, NameCellData>('Robot account', { width: '2fr', renderer: NameCell, renderMapping: (r): NameCellData => ({ title: r.name, sub: [r.description] }) }),
   new TableColumn<Robot, string>('Repositories', { renderer: TableSimpleColumn, renderMapping: (r): string => `${r.repositories} (write)` }),
-  new TableColumn<Robot, string>('Last accessed', { renderer: TableSimpleColumn, renderMapping: (r): string => `${humanAge(new Date(r.last_accessed).getTime())} ago` }),
+  new TableColumn<Robot, string>('Last accessed', { renderer: TableSimpleColumn, renderMapping: (r): string => timeAgo(new Date(r.last_accessed).getTime()) }),
   new TableColumn<Robot, ActionsCellData>('Actions', {
     align: 'right',
     width: '80px',

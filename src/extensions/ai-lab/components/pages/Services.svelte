@@ -57,7 +57,7 @@ function create(): void {
 }
 </script>
 
-<NavPage title="Model Services" searchEnabled={false}>
+<NavPage title="Model services" searchEnabled={false}>
   {#snippet additionalActions()}<Button icon={faRocket} onclick={create}>New Model Service</Button>{/snippet}
   {#snippet content()}
     <div class="flex min-w-full grow">

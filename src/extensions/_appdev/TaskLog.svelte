@@ -23,7 +23,7 @@ $effect(() => {
 </script>
 
 {#if task}
-  <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-3 space-y-2" aria-label={label}>
+  <div class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-3 space-y-2" aria-label={label}>
     <div class="flex justify-between text-[var(--pd-content-card-text)]">
       <span class="font-medium">{task.status === 'in-progress' ? (task.step ?? 'Working') : task.status === 'success' ? 'Done' : (task.error ?? 'Canceled')}</span>
       <span class="tabular-nums">{task.progress}%</span>

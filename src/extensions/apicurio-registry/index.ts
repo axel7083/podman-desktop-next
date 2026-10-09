@@ -54,6 +54,7 @@ const extension: MockExtension = {
   id: APICURIO_EXT,
   displayName: 'Apicurio Registry',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Run a local schema/API registry; browse groups, artifacts, versions and rules used by Kafka SerDes.',
   version: '0.2.0',
   icon: 'icons/redhat.apicurio-registry.svg',

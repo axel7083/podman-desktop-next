@@ -11,5 +11,11 @@ let { object }: Props = $props();
 </script>
 
 {#key object.status + String(object.icon)}
-  <StatusIcon icon={object.icon} status={object.status} />
+  {#if object.label}
+    <span class="inline-flex" title={object.label} aria-label={object.label} role="img">
+      <StatusIcon icon={object.icon} status={object.status} />
+    </span>
+  {:else}
+    <StatusIcon icon={object.icon} status={object.status} />
+  {/if}
 {/key}

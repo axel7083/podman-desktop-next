@@ -52,6 +52,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'Kind',
   publisher: 'podman-desktop',
+  category: 'Kubernetes & OpenShift',
   description: 'Create and run local Kubernetes clusters with Kind (Kubernetes in containers).',
   version: '1.29.0',
   icon: 'icons/podman-desktop.kind.png',
@@ -125,7 +126,7 @@ const extension: MockExtension = {
         },
       },
     ],
-    groupers: [{ id: 'kind-cluster', label: 'io.x-k8s.kind.cluster', typeName: 'kind cluster', icon: 'icons/podman-desktop.kind.png' }],
+    groupers: [{ id: 'kind-cluster', label: 'io.x-k8s.kind.cluster', typeName: 'kind cluster', chip: 'Kind', icon: 'icons/podman-desktop.kind.png' }],
     cliTools: [
       {
         id: 'kind',

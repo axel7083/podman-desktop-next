@@ -27,6 +27,7 @@ const extension: MockExtension = {
   id: AAP_ID,
   displayName: 'Ansible Automation Platform',
   publisher: 'redhat',
+  category: 'Automation',
   description: 'Connect to your AAP, launch job templates and follow job output, and expose AAP to your AI agents through the AAP MCP server.',
   version: '0.2.0',
   icon: 'icons/redhat.aap.png',

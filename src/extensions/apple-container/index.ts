@@ -16,6 +16,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'Apple container',
   publisher: 'redhat',
+  category: 'Containers & engines',
   description: 'List and manage Apple containers (one lightweight VM per container) on macOS with Apple silicon.',
   version: '0.2.0',
   icon: 'icons/redhat.apple-container.png',

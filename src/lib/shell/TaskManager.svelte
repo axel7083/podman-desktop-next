@@ -12,7 +12,7 @@ import { getExtension } from '#lib/ext/registry.svelte.ts';
 import TaskIcon from '#lib/images/TaskIcon.svelte';
 import { navigate } from '#lib/nav.ts';
 import { ui } from '#lib/ui.svelte.ts';
-import { cancelTask, clearCompletedTasks, humanAge, type Task, world } from '#lib/world.svelte.ts';
+import { cancelTask, clearCompletedTasks, humanAge, timeAgo, type Task, world } from '#lib/world.svelte.ts';
 
 let searchTerm = $state('');
 let tab = $state<'all' | 'running' | 'done'>('all');
@@ -95,7 +95,7 @@ function onKeydown(e: KeyboardEvent): void {
                   <div class="text-xs text-[var(--pd-table-body-text)] flex items-center gap-2">
                     {#if ext}<span class="flex items-center gap-1"><AppIcon icon={ext.icon} size="11px" />{ext.displayName}</span>{/if}
                     <span>{task.status === 'in-progress' ? (task.step ?? 'Running') : task.status === 'success' ? 'Completed' : task.status === 'failure' ? (task.error ?? 'Failed') : 'Canceled'}</span>
-                    <span>· {humanAge(task.started)} ago</span>
+                    <span>· {timeAgo(task.started)}</span>
                   </div>
                 </div>
                 {#if task.status === 'in-progress'}
@@ -111,7 +111,7 @@ function onKeydown(e: KeyboardEvent): void {
                 {/if}
               </div>
               {#if expandedTask === task.id}
-                <pre class="mt-2 max-h-40 overflow-auto rounded-md bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] p-2 text-xs font-mono">{task.logs.join('\n') || 'No output'}</pre>
+                <pre class="mt-2 max-h-40 overflow-auto rounded-md bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)] text-[var(--pd-code-block-text)] p-2 text-xs font-mono">{task.logs.join('\n') || 'No output'}</pre>
               {/if}
             </div>
           {/each}

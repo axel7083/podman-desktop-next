@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Data Grid › Caches (P2): REST v2 detailed list + stats; create / clear / reset stats / delete as tasks. */
 import { faDatabase, faEraser, faPlusCircle, faRotateLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, Input, NavPage } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, Input, NavPage } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import { confirm, withConfirmation } from '#lib/confirm.svelte.ts';
 import type { ConnectionView } from '#lib/ext/types.ts';

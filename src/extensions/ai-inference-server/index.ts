@@ -16,6 +16,7 @@ const extension: MockExtension = {
   id: RHAII,
   displayName: 'Red Hat AI Inference',
   publisher: 'redhat',
+  category: 'AI',
   description: 'Serve LLMs locally with the enterprise vLLM images (registry.redhat.io/rhaii, vLLM 0.18) and an OpenAI-compatible API.',
   version: '3.4.1',
   icon: 'icons/redhat.ai-inference-server.png',

@@ -18,9 +18,18 @@ export async function journey(t) {
 
   await page.goto(page.url().replace(/\/c\/kind-dev\/[^?]*/, '/c/kind-dev').replace(/\?.*/, '') + '?tab=addons&template=on&inspect=on&chrome=off');
   await page.getByRole('button', { name: 'Install' }).first().click();
+  // add-ons with a `confirm` text ask first
+  const confirm = page.getByRole('dialog').getByRole('button', { name: 'Install', exact: true });
+  if (await confirm.isVisible().catch(() => false)) await confirm.click();
   await t.shot('addons');
 
-  await page.getByRole('link', { name: 'Example tool' }).first().click();
+  // TOOLS is capped (docs/ia.md scaling rules): the tool may sit in "More"
+  const toolLink = page.getByRole('link', { name: 'Example tool' }).first();
+  if (await toolLink.isVisible()) await toolLink.click();
+  else {
+    await page.getByRole('button', { name: 'More Tools' }).click();
+    await page.getByRole('menuitem', { name: 'Example tool' }).click();
+  }
   await t.shot('tool');
 
   await page.getByRole('link', { name: 'podman-machine-default' }).first().click();

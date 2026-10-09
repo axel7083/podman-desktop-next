@@ -16,6 +16,7 @@ const extension: MockExtension = {
   id: HELM_ID,
   displayName: 'Helm',
   publisher: 'podman-desktop',
+  category: 'Kubernetes & OpenShift',
   description: 'Browse Artifact Hub, install charts into your Kubernetes contexts and manage releases.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.helm.png',

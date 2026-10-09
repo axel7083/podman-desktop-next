@@ -19,6 +19,7 @@ const extension: MockExtension = {
   id: MODELCAR,
   displayName: 'ModelCar Builder',
   publisher: 'redhat',
+  category: 'AI',
   description: 'Package model weights as OCI ModelCar images, push them and deploy them on KServe / OpenShift AI with storageUri: oci://.',
   version: '0.1.0',
   icon: 'icons/redhat.modelcar.png',

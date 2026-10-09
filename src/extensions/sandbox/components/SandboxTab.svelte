@@ -36,7 +36,7 @@ function open(url: string): void {
       {#each QUOTA as q (q.resource)}
         <div class="flex flex-col gap-1 text-sm">
           <div class="flex justify-between"><span>{q.label} <span class="text-[var(--pd-content-card-title)]">({q.resource})</span></span><span class="tabular-nums">{q.used} / {q.hard} {q.unit}</span></div>
-          <div class="h-1.5 rounded-full bg-[var(--pd-content-card-inset-bg)] overflow-hidden" role="progressbar" aria-label={q.label} aria-valuenow={q.used} aria-valuemax={q.hard}>
+          <div class="h-1.5 rounded-full bg-[var(--pd-content-card-inset-surface)] overflow-hidden" role="progressbar" aria-label={q.label} aria-valuenow={q.used} aria-valuemax={q.hard}>
             <div class="h-full {q.used / q.hard > 0.8 ? 'bg-[var(--pd-state-warning)]' : 'bg-[var(--pd-status-running)]'}" style:width="{Math.round((q.used / q.hard) * 100)}%"></div>
           </div>
         </div>

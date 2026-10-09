@@ -5,7 +5,8 @@
  * task (P15); on completion the new connection appears in the primary nav.
  */
 import { faCircleExclamation, faCircleInfo, faFolderOpen, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, FormPage, Input, LinearProgress } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, FormPage, Input, LinearProgress } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
@@ -72,8 +73,19 @@ function browse(f: FormField): void {
   values[f.id] = f.id === 'image' ? 'C:\\Users\\dev\\Downloads\\rhel-9.6-x86_64-wsl.tar.gz' : '/home/user/file';
 }
 
+let stepCount = $state(0);
+const stepIndex = $derived(task ? task.logs.filter(l => l.startsWith('▸ ')).length : 0);
+
+/** Keep the newest log line in view (the header names the current step). */
+function followLog(node: HTMLElement): void {
+  // attachments re-run when the state they read changes
+  void task?.logs.length;
+  node.scrollTop = node.scrollHeight;
+}
+
 function create(): void {
   const snapshot = { ...values };
+  stepCount = factory.steps(snapshot).length;
   const def = factory.createConnection(snapshot);
   taskId = runTask({
     name: `${factory.label}: ${def.name}`,
@@ -107,7 +119,7 @@ function openResult(): void {
           {#if factory.description}<p class="text-[var(--pd-content-card-text)]">{factory.description}</p>{/if}
           {#snippet issueList(list: FactoryIssue[])}
             {#each list as issue, i (i)}
-              <div class="flex items-start gap-2 rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)] px-3 py-2 text-sm" role={issue.level === 'error' ? 'alert' : 'status'} aria-label="{issue.level}: {issue.message}">
+              <div class="flex items-start gap-2 rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-surface)] px-3 py-2 text-sm" role={issue.level === 'error' ? 'alert' : 'status'} aria-label="{issue.level}: {issue.message}">
                 <span class="mt-0.5 {ISSUE_CLASS[issue.level]}"><Icon icon={ISSUE_ICON[issue.level]} /></span>
                 <div class="grow text-[var(--pd-content-card-text)]">
                   <div class="font-semibold {ISSUE_CLASS[issue.level]}">{issue.message}</div>
@@ -149,13 +161,13 @@ function openResult(): void {
           {/each}
 
           {#if task}
-            <div class="rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)] p-3 space-y-2" aria-label="Creation progress">
+            <div class="rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-surface)] p-3 space-y-2" aria-label="Creation progress">
               <div class="flex justify-between text-[var(--pd-content-card-text)]">
-                <span>{task.status === 'in-progress' ? (task.step ?? 'Working') : task.status === 'success' ? 'Done' : (task.error ?? 'Canceled')}</span>
+                <span>{task.status === 'in-progress' ? `Step ${stepIndex} of ${stepCount} · ${task.step ?? 'Working'}` : task.status === 'success' ? 'Done' : (task.error ?? 'Canceled')}</span>
                 <span class="tabular-nums">{task.progress}%</span>
               </div>
               {#if running}<LinearProgress />{/if}
-              <pre class="max-h-32 overflow-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--pd-content-card-text)]">{task.logs.join('\n')}</pre>
+              <pre {@attach followLog} class="max-h-32 overflow-auto whitespace-pre-wrap break-all text-xs font-mono text-[var(--pd-content-card-text)]">{task.logs.join('\n')}</pre>
             </div>
           {/if}
 

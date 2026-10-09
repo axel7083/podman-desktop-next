@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Engine › Bootable containers (P2): disk images built with bootc-image-builder + build form with the lint gate. */
 import { faCircleExclamation, faDesktop, faHammer, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, EmptyScreen, Input, NavPage, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, EmptyScreen, Input, NavPage, Spinner } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
@@ -116,7 +117,7 @@ const STATUS_CLASS: Record<string, string> = { success: 'text-[var(--pd-status-r
               <Input id="bootc-user" value={user} oninput={onUser} />
             </div>
           </div>
-          <div class="rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-bg)] p-3 text-sm" aria-label="bootc container lint">
+          <div class="rounded-md border border-[var(--pd-content-divider)] bg-[var(--pd-content-card-inset-surface)] p-3 text-sm" aria-label="bootc container lint">
             <div class="font-semibold mb-1">bootc container lint · {shortImage(image.name)}:{image.tag}</div>
             {#each lintResults as r (r.name)}
               <div class={r.status === 'fail' ? 'text-[var(--pd-state-error)]' : r.status === 'warning' ? 'text-[var(--pd-state-warning)]' : 'text-[var(--pd-state-success)]'}>

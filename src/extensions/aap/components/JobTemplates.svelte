@@ -9,7 +9,7 @@ import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svel
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import type { ActionsCellData, NameCellData } from '#lib/table/types.ts';
-import { humanAge, toast } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo, toast } from '#lib/world.svelte.ts';
 
 import { AAP_URL, type JobTemplate, store } from '../data.ts';
 import LaunchDialog from './LaunchDialog.svelte';
@@ -53,7 +53,7 @@ const columns = [
   new TableColumn<JobTemplate, string>('Execution environment', { width: '1.5fr', renderer: TableSimpleColumn, renderMapping: (t): string => t.execution_environment }),
   new TableColumn<JobTemplate, string>('Last ran', {
     renderer: TableSimpleColumn,
-    renderMapping: (t): string => (t.last_job_run ? `${humanAge(t.last_job_run)} ago` : '–'),
+    renderMapping: (t): string => (t.last_job_run ? timeAgo(t.last_job_run) : '–'),
   }),
   new TableColumn<JobTemplate, ActionsCellData>('Actions', {
     align: 'right',

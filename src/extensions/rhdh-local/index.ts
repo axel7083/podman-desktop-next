@@ -60,6 +60,7 @@ const extension: MockExtension = {
   id: RHDH_EXT,
   displayName: 'RHDH Local',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Run a local Red Hat Developer Hub (Backstage) with Podman Compose, manage dynamic plugins and catalog entities, and test software templates.',
   version: '0.3.0',
   icon: 'icons/redhat.rhdh-local.png',

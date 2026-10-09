@@ -17,6 +17,7 @@ const extension: MockExtension = {
   id: 'redhat.rhads-pack',
   displayName: 'Red Hat Advanced Developer Suite',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'Trusted software supply chain on your laptop: dependency analytics, signing, SBOM analysis, policy and Developer Hub.',
   version: '1.0.0',
   icon: 'icons/redhat.rhads-pack.png',

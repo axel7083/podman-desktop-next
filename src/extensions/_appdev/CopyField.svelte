@@ -22,7 +22,7 @@ function copy(): void {
 <div class="flex flex-col gap-1">
   {#if label}<span class="text-sm text-[var(--pd-content-card-text)]">{label}</span>{/if}
   <div class="flex items-center gap-2">
-    <code class="grow min-w-0 truncate rounded-md px-2 py-1.5 text-sm font-mono bg-[var(--pd-content-card-inset-bg)] text-[var(--pd-content-card-text)]" title={value}>{value}</code>
+    <code class="grow min-w-0 truncate rounded-md px-2 py-1.5 text-sm font-mono bg-[var(--pd-content-card-inset-surface)] text-[var(--pd-content-card-text)]" title={value}>{value}</code>
     <Button type="secondary" icon={faCopy} onclick={copy} aria-label="Copy {label ?? 'value'}" title="Copy">Copy</Button>
   </div>
 </div>

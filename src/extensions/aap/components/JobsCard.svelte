@@ -1,7 +1,7 @@
 <script lang="ts">
 /** Dashboard card "AAP jobs" (P17): last 5 jobs on acme-prod. */
 import { href } from '#lib/nav.ts';
-import { humanAge } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo } from '#lib/world.svelte.ts';
 
 import { CONN_ID, store } from '../data.ts';
 import StatusDot from './StatusDot.svelte';
@@ -20,7 +20,7 @@ const last = $derived([...jobs].sort((a, b) => b.id - a.id).slice(0, 5));
       <span class="w-28 shrink-0"><StatusDot object={{ status: j.status }} /></span>
       <span class="text-[var(--pd-content-card-text)] tabular-nums w-10">{j.id}</span>
       <span class="text-[var(--pd-content-card-header-text)] grow truncate">{j.name}</span>
-      <span class="text-[var(--pd-content-card-text)] text-xs">{j.started ? `${humanAge(j.started)} ago` : 'pending'}</span>
+      <span class="text-[var(--pd-content-card-text)] text-xs">{j.started ? timeAgo(j.started) : 'pending'}</span>
     </a>
   {/each}
 </div>

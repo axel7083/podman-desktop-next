@@ -33,7 +33,7 @@ const COLOR: Record<string, string> = {
     <ol class="flex items-center gap-2 flex-wrap">
       {#each tasks as t, i (t.name)}
         <li class="flex items-center gap-2">
-          <span class="flex items-center gap-2 rounded-md px-3 py-2 bg-[var(--pd-content-card-inset-bg)] {COLOR[t.reason] ?? ''}" title="{t.name}: {t.reason}">
+          <span class="flex items-center gap-2 rounded-md px-3 py-2 bg-[var(--pd-content-card-inset-surface)] {COLOR[t.reason] ?? ''}" title="{t.name}: {t.reason}">
             {#if t.reason === 'Running'}<Spinner size="12px" />{:else}<Icon icon={ICON[t.reason]} />{/if}
             <span class="text-[var(--pd-content-card-text)]">{t.name}</span>
             {#if t.durationS}<span class="text-xs text-[var(--pd-content-card-title)]">{t.durationS >= 60 ? `${Math.floor(t.durationS / 60)}m ${t.durationS % 60}s` : `${t.durationS}s`}</span>{/if}
@@ -46,7 +46,7 @@ const COLOR: Record<string, string> = {
   {#if failed}
     <section class="rounded-lg bg-[var(--pd-content-card-bg)] p-4" aria-label="Failed task log">
       <h2 class="text-lg font-semibold text-[var(--pd-content-card-header-text)] mb-2">Log of {failed.name}</h2>
-      <pre class="text-sm font-mono whitespace-pre-wrap bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)] rounded-md p-3">{failed.name === 'acs-image-check' ? ACS_STEP_LOG.join('\n') : 'Error: context deadline exceeded (PipelineRunTimeout after 1h0m0s)'}</pre>
+      <pre class="text-sm font-mono whitespace-pre-wrap bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)] text-[var(--pd-code-block-text)] rounded-md p-3">{failed.name === 'acs-image-check' ? ACS_STEP_LOG.join('\n') : 'Error: context deadline exceeded (PipelineRunTimeout after 1h0m0s)'}</pre>
       {#if failed.name === 'acs-image-check'}<p class="text-sm mt-2">Run the same ACS policy check locally from the image's Security tab before pushing.</p>{/if}
     </section>
   {/if}

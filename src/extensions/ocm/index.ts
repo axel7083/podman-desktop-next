@@ -55,6 +55,7 @@ const extension: MockExtension = {
   id: OCM_ID,
   displayName: 'OpenShift Cluster Manager',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: "See your organization's OpenShift, ROSA and OSD clusters and connect to them with one sign-in.",
   version: '0.3.0',
   icon: 'icons/redhat.openshift-cluster-manager.svg',

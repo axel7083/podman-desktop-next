@@ -180,7 +180,7 @@ function reset(): void {
           {/if}
           {#if showFile}
             <Card title="configs/dynamic-plugins/dynamic-plugins.override.yaml">
-              <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto" aria-label="Override file">{overrideYaml(plugins)}</pre>
+              <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto" aria-label="Override file">{overrideYaml(plugins)}</pre>
             </Card>
           {/if}
         </div>

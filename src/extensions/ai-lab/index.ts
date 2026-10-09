@@ -20,6 +20,7 @@ const extension: MockExtension = {
   id: AI_LAB,
   displayName: 'Podman AI Lab',
   publisher: 'redhat',
+  category: 'AI',
   description: 'Run open models locally (llama.cpp, OpenVINO, Red Hat AI Inference), try them in playgrounds and start AI recipes as pods.',
   version: '1.10.0',
   icon: 'icons/redhat.ai-lab.png',
@@ -29,8 +30,8 @@ const extension: MockExtension = {
   contributes: {
     tools: [{ id: 'ai-lab', label: 'AI Lab', icon: 'icons/redhat.ai-lab.png', description: 'Recipes, models, services and playgrounds', component: AiLabTool, badge: (): number | undefined => ai().services.filter(s => s.status === 'running').length || undefined }],
     groupers: [
-      { id: 'ai-lab-recipe', label: 'ai-lab-recipe-id', typeName: 'AI Lab app', icon: 'icons/redhat.ai-lab.png' },
-      { id: 'ai-lab-services', label: 'ai-lab.group', typeName: 'AI Lab', icon: 'icons/redhat.ai-lab.png' },
+      { id: 'ai-lab-recipe', label: 'ai-lab-recipe-id', typeName: 'AI Lab app', chip: 'AI Lab app', icon: 'icons/redhat.ai-lab.png' },
+      { id: 'ai-lab-services', label: 'ai-lab.group', typeName: 'AI Lab', chip: 'AI Lab', icon: 'icons/redhat.ai-lab.png' },
     ],
     columns: [{ id: 'ai-lab-model', title: 'Model', target: 'container', width: '1.4fr', value: (row): string | undefined => {
       const id = (row as Container).labels?.['ai-lab-model-id'];

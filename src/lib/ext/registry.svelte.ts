@@ -38,7 +38,7 @@ export function getExtension(id: string): MockExtension | undefined {
 }
 
 export function meta(ext: MockExtension): ExtensionMeta {
-  return { id: ext.id, displayName: ext.displayName, icon: ext.icon };
+  return { id: ext.id, displayName: ext.displayName, icon: ext.icon, category: ext.category };
 }
 
 /** Transitive dependencies (incl. pack members) of an extension (excluding itself). Unknown ids are skipped. */
@@ -197,23 +197,38 @@ class Registry {
     const fromUrl = parseScenarioParam(url.searchParams.get('scenario'));
     const stored = load<ScenarioId[]>('pdn.scenarios');
     const firstVisit = !fromUrl && !stored;
-    this.applyScenarios(fromUrl ?? stored ?? ['community'], !!fromUrl);
+    this.applyScenarios(fromUrl ?? stored ?? ['community']);
     this.ready = true;
     return firstVisit;
   }
 
   setScenarios(ids: ScenarioId[]): void {
-    this.applyScenarios(ids.length ? ids : ['community'], false);
+    this.applyScenarios(ids.length ? ids : ['community']);
   }
 
-  private applyScenarios(ids: ScenarioId[], resetEnabled: boolean): void {
+  /**
+   * Enabled set = scenario preset + the user's overrides for this selection
+   * (`pdn.overrides.<key>`: extensions installed/enabled on top of the preset,
+   * preset extensions disabled). Re-opening a scenario (URL or picker) keeps
+   * the user's changes; "Reset extensions" drops the overrides.
+   */
+  private applyScenarios(ids: ScenarioId[]): void {
     this.scenarios = ids;
     save('pdn.scenarios', ids);
-    const storedEnabled = resetEnabled ? undefined : load<string[]>(`pdn.enabled.${this.key}`);
-    this.enabled = (storedEnabled ?? this.preset).filter(id => byId.has(id));
-    save(`pdn.enabled.${this.key}`, this.enabled);
+    const overrides = load<{ on: string[]; off: string[] }>(`pdn.overrides.${this.key}`) ?? { on: [], off: [] };
+    const set = new Set([...this.preset, ...overrides.on]);
+    overrides.off.forEach(id => set.delete(id));
+    this.enabled = ALL_EXTENSIONS.map(e => e.id).filter(id => set.has(id));
     loadWorld(this.key);
     this.seedMissing();
+  }
+
+  /** Persist the difference between the enabled set and the preset. */
+  private saveOverrides(): void {
+    save(`pdn.overrides.${this.key}`, {
+      on: this.enabled.filter(id => !this.preset.includes(id)),
+      off: this.preset.filter(id => !this.enabled.includes(id)),
+    });
   }
 
   private seedMissing(): void {
@@ -232,7 +247,7 @@ class Registry {
   enable(id: string): void {
     const deps = dependenciesOf(id).filter(d => !this.enabled.includes(d));
     this.enabled = [...this.enabled, ...deps, id].filter((v, i, a) => a.indexOf(v) === i);
-    save(`pdn.enabled.${this.key}`, this.enabled);
+    this.saveOverrides();
     this.seedMissing();
     if (deps.length) {
       toast({
@@ -246,7 +261,7 @@ class Registry {
   disable(id: string): void {
     const dependents = dependentsOf(id).filter(d => this.enabled.includes(d));
     this.enabled = this.enabled.filter(e => e !== id && !dependents.includes(e));
-    save(`pdn.enabled.${this.key}`, this.enabled);
+    this.saveOverrides();
     if (dependents.length) {
       toast({
         type: 'warning',
@@ -264,7 +279,7 @@ class Registry {
   /** Restore the scenario's preset enabled set. */
   resetExtensions(): void {
     this.enabled = [...this.preset];
-    save(`pdn.enabled.${this.key}`, this.enabled);
+    this.saveOverrides();
     this.seedMissing();
   }
 

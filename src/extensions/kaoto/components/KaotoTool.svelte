@@ -162,7 +162,7 @@ function exportQuarkus(): void {
           {/each}
         </nav>
 
-        <section class="rounded-lg bg-[var(--pd-content-card-inset-bg)] overflow-auto" aria-label={view === 'design' ? 'Route canvas' : 'Source'}>
+        <section class="rounded-lg bg-[var(--pd-content-card-inset-surface)] overflow-auto" aria-label={view === 'design' ? 'Route canvas' : 'Source'}>
           {#if file}
             <div class="flex items-center gap-2 px-4 pt-3 text-sm text-[var(--pd-content-text)]">
               <span class="font-semibold text-[var(--pd-content-header)]">{file.id}</span>
@@ -184,7 +184,7 @@ function exportQuarkus(): void {
                       aria-pressed={s.id === selectedStep}
                       aria-label="{s.name} step"
                       onclick={selectStep.bind(undefined, s)}>
-                      <span class="flex items-center justify-center w-9 h-9 rounded-full bg-[var(--pd-content-card-inset-bg)] text-[var(--pd-content-card-header-text)]"><AppIcon icon={s.icon} /></span>
+                      <span class="flex items-center justify-center w-9 h-9 rounded-full bg-[var(--pd-content-card-inset-surface)] text-[var(--pd-content-card-header-text)]"><AppIcon icon={s.icon} /></span>
                       <span class="flex flex-col min-w-0">
                         <span class="text-xs uppercase opacity-70">{s.category}</span>
                         <span class="font-semibold text-[var(--pd-content-card-header-text)]">{s.name}</span>
@@ -218,7 +218,7 @@ function exportQuarkus(): void {
         {#if ws.running.length === 0}
           <p class="text-sm">No integration is running. Use "Run with Camel JBang" to start the selected route in dev mode.</p>
         {:else}
-          <div class="rounded-md overflow-hidden bg-[var(--pd-content-card-inset-bg)]" role="table" aria-label="Running integrations">
+          <div class="rounded-md overflow-hidden bg-[var(--pd-content-card-inset-surface)]" role="table" aria-label="Running integrations">
             <div class="grid grid-cols-[80px_1.5fr_70px_100px_80px_70px_60px_80px_90px] gap-2 px-3 py-2 text-xs uppercase text-[var(--pd-table-header-text)] font-semibold" role="row">
               <span role="columnheader">PID</span><span role="columnheader">Name</span><span role="columnheader">Ready</span><span role="columnheader">Status</span><span role="columnheader">Age</span><span role="columnheader">Total</span><span role="columnheader">Fail</span><span role="columnheader">Inflight</span><span role="columnheader" class="text-right">Actions</span>
             </div>
@@ -237,7 +237,7 @@ function exportQuarkus(): void {
             {/each}
           </div>
           <p class="text-sm mt-3 mb-1">camel get route</p>
-          <div class="rounded-md overflow-hidden bg-[var(--pd-content-card-inset-bg)]" role="table" aria-label="Routes">
+          <div class="rounded-md overflow-hidden bg-[var(--pd-content-card-inset-surface)]" role="table" aria-label="Routes">
             <div class="grid grid-cols-[70px_1fr_1fr_1.6fr_80px_70px_60px_50px] gap-2 px-3 py-2 text-xs uppercase text-[var(--pd-table-header-text)] font-semibold" role="row">
               <span role="columnheader">PID</span><span role="columnheader">Name</span><span role="columnheader">ID</span><span role="columnheader">From</span><span role="columnheader">Status</span><span role="columnheader">Age</span><span role="columnheader">Total</span><span role="columnheader">Fail</span>
             </div>

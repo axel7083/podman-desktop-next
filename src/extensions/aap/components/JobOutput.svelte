@@ -131,7 +131,7 @@ function runLocallyClick(): void {
       <h2 class="text-base font-semibold text-[var(--pd-content-header)]">Output</h2>
       <pre
         bind:this={scroller}
-        class="h-96 overflow-auto rounded-lg p-3 text-xs font-mono leading-5 whitespace-pre-wrap bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)]"
+        class="h-96 overflow-auto rounded-lg p-3 text-xs font-mono leading-5 whitespace-pre-wrap bg-[var(--pd-code-block-bg)] ring-1 ring-inset ring-[var(--pd-code-block-border)] text-[var(--pd-code-block-text)]"
         role="log"
         aria-label="Job output">{lines.join('\n')}{#if !done}{'\n'}▍{/if}</pre>
     </section>

@@ -28,9 +28,12 @@ $effect(() => {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   switch (placement) {
-    case 'right-start':
-      style = `left:${r.right + 4}px; top:${Math.min(r.top, vh - 80)}px;`;
+    case 'right-start': {
+      // keep the whole panel on screen (above the 24px status bar)
+      const h = panel?.offsetHeight ?? 0;
+      style = `left:${r.right + 4}px; top:${Math.max(44, Math.min(r.top, vh - h - 32))}px;`;
       break;
+    }
     case 'bottom-start':
       style = `left:${r.left}px; top:${r.bottom + 4}px;`;
       break;
@@ -64,7 +67,7 @@ function onKeydown(e: KeyboardEvent): void {
     bind:this={panel}
     role="menu"
     tabindex="-1"
-    class="fixed z-50 rounded-md shadow-lg {surface === 'dropdown'
+    class="fixed z-50 rounded-md shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto {surface === 'dropdown'
       ? 'bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)]'
       : 'bg-[var(--pd-modal-bg)] border border-[var(--pd-modal-border)]'} {className}"
     style={style}>

@@ -26,6 +26,7 @@ const extension: MockExtension = {
   id: BOOTC_EXT,
   displayName: 'Bootable Container',
   publisher: 'redhat',
+  category: 'RHEL & image mode',
   description: 'Support for bootable OS containers (bootc) and generating disk images.',
   version: '1.12.0',
   icon: 'icons/redhat.bootc.png',

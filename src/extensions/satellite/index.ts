@@ -10,6 +10,7 @@ const extension: MockExtension = {
   id: 'redhat.satellite',
   displayName: 'Red Hat Satellite',
   publisher: 'redhat',
+  category: 'RHEL & image mode',
   description: 'Use your company Satellite as container registry and as the subscription/registration target for RHEL machines and VMs.',
   version: '0.1.0',
   icon: 'icons/redhat.satellite.svg',

@@ -34,6 +34,7 @@ const extension: MockExtension = {
   id: MINC_ID,
   displayName: 'MicroShift (minc)',
   publisher: 'minc-org',
+  category: 'Kubernetes & OpenShift',
   description: 'MicroShift in a single Podman container; optional upstream OpenShift Console add-on.',
   version: '0.5.0',
   icon: 'icons/minc-org.minc.png',

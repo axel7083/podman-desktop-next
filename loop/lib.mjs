@@ -12,7 +12,7 @@ export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
  * Launch headless Chromium at 1440×900 @2x. Every console error / page error
  * is recorded; `assertNoErrors()` throws if any happened (smoke test).
  */
-export async function launch({ baseUrl, run, scenario, theme }) {
+export async function launch({ baseUrl, run, scenario, theme, name = scenario }) {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: theme });
   const page = await context.newPage();
@@ -21,7 +21,7 @@ export async function launch({ baseUrl, run, scenario, theme }) {
     if (msg.type() === 'error') errors.push(`console: ${msg.text()}`);
   });
   page.on('pageerror', err => errors.push(`pageerror: ${err.message}`));
-  const outDir = path.join(ROOT, 'loop', 'runs', run, scenario, theme);
+  const outDir = path.join(ROOT, 'loop', 'runs', run, name, theme);
   await mkdir(outDir, { recursive: true });
   let step = 0;
   const shots = [];

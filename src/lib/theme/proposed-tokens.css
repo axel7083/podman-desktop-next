@@ -11,6 +11,20 @@
   --pdn-mockup-bg: #c4f82a;
   --pdn-mockup-text: #0f0f11;
   --pdn-inspect-outline: #c4f82a;
+  /* inset tiles / chips on a card (PD's inset-bg is #fff on a #fefefe card in light) */
+  --pd-content-card-inset-surface: #000;
+  /* code, YAML and log snippets inside cards and dialogs */
+  --pd-code-block-bg: #0f0f11;
+  --pd-code-block-border: #3f3f46;
+  --pd-code-block-text: #e4e4e7;
+  /* one severity ramp, identical in both themes: critical = deepest red (white text,
+     heaviest), high = orange, medium = amber; low/info stay neutral (--pd-label-*) */
+  --pd-severity-critical-bg: #b91c1c;
+  --pd-severity-critical-text: #ffffff;
+  --pd-severity-high-bg: #f97316;
+  --pd-severity-high-text: #1c1917;
+  --pd-severity-medium-bg: #fbbf24;
+  --pd-severity-medium-text: #1c1917;
 }
 .light {
   --pd-nav-group-header: #5c5c5c;
@@ -20,4 +34,26 @@
   --pdn-mockup-bg: #c4f82a;
   --pdn-mockup-text: #0f0f11;
   --pdn-inspect-outline: #4d7c0f;
+  --pd-content-card-inset-surface: #eeeef0;
+  --pd-code-block-bg: #f4f4f5;
+  --pd-code-block-border: #d4d4d8;
+  --pd-code-block-text: #18181b;
+  /* one severity ramp, identical in both themes: critical = deepest red (white text,
+     heaviest), high = orange, medium = amber; low/info stay neutral (--pd-label-*) */
+  --pd-severity-critical-bg: #b91c1c;
+  --pd-severity-critical-text: #ffffff;
+  --pd-severity-high-bg: #f97316;
+  --pd-severity-high-text: #1c1917;
+  --pd-severity-medium-bg: #fbbf24;
+  --pd-severity-medium-text: #1c1917;
+}
+
+/* Overrides of existing PD tokens. themes.css defines tokens inside @scope, which wins
+   over an unscoped rule of equal specificity, so these use html.<theme> (0,1,1).
+   One tab style: Button type="tab" strips (NavPage, palette) match DetailsPage tabs:
+   neutral unselected text, highlight text + accent underline when selected. */
+html.light,
+html.dark {
+  --pd-button-tab-text: var(--pd-tab-text);
+  --pd-button-tab-text-selected: var(--pd-tab-text-highlight);
 }

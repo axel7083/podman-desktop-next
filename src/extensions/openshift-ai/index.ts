@@ -27,6 +27,7 @@ const extension: MockExtension = {
   id: RHOAI,
   displayName: 'Red Hat OpenShift AI',
   publisher: 'redhat',
+  category: 'AI',
   description: 'Data science projects, workbenches, deployed models (KServe) and the model registry of OpenShift AI clusters.',
   version: '0.3.0',
   icon,

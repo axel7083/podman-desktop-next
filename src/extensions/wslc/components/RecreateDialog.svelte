@@ -4,7 +4,8 @@
  * container and recreate it on a Podman machine, as a task (P15).
  */
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, CloseButton, Dropdown, Modal } from '@podman-desktop/ui-svelte';
+import { Button, CloseButton, Dropdown, Modal } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import { mkContainer } from '#lib/ext/helpers.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
@@ -125,7 +126,7 @@ function setStop(checked: boolean): void {
         <span class="font-semibold">Target engine</span>
         <Dropdown bind:value={target} {options} ariaLabel="Target engine" />
       </label>
-      <div class="flex items-start gap-2 rounded-md p-2 bg-[var(--pd-content-card-inset-bg)]">
+      <div class="flex items-start gap-2 rounded-md p-2 bg-[var(--pd-content-card-inset-surface)]">
         <code class="grow font-mono text-xs wrap-anywhere" aria-label="Equivalent command">{command}</code>
         <Button type="link" icon={faCopy} title="Copy command" aria-label="Copy command" onclick={copy}></Button>
       </div>

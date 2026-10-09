@@ -15,6 +15,7 @@ const extension: MockExtension = {
   id: EM_EXT,
   displayName: 'Red Hat Edge Manager',
   publisher: 'redhat',
+  category: 'RHEL & image mode',
   description: 'Build a bootc image with the flightctl agent, boot it as a local device, enroll it and roll fleet updates.',
   version: '0.1.0',
   icon: 'icons/redhat.edge-manager.svg',

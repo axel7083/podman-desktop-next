@@ -1,5 +1,5 @@
 <script lang="ts">
-/** Dashboard card (P17) – mirrors PD's dashboard provider card with an update action. */
+/** Compact dashboard card (P17): PD's provider update notice as a one-line row. */
 import { faCircleArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@podman-desktop/ui-svelte';
 
@@ -25,18 +25,14 @@ function update(): void {
 }
 </script>
 
-<div class="flex items-center gap-4">
-  <AppIcon icon="icons/podman-desktop.podman.png" size="56px" />
-  <div class="flex flex-col gap-1 grow">
-    <div class="flex items-baseline gap-2">
-      <span class="text-lg text-[var(--pd-content-card-header-text)]">Podman</span>
-      <span class="text-sm text-[var(--pd-content-card-title)]">v{state.version}</span>
-    </div>
-    <div class="flex items-center gap-1.5 text-sm text-[var(--pd-status-running)]">
-      <span class="w-2.5 h-2.5 rounded-full bg-[var(--pd-status-running)]"></span>RUNNING
-    </div>
-  </div>
+<!-- compact one-line card: PD's provider update notice, never takes an extension-card slot -->
+<div class="flex items-center gap-3 text-sm">
+  <AppIcon icon="icons/podman-desktop.podman.png" size="24px" />
+  <span class="text-[var(--pd-content-card-header-text)] font-medium">Podman v{state.version}</span>
+  <span class="text-[var(--pd-content-card-text)] grow">
+    {state.version !== '5.7.0' ? 'Podman 5.7.0 is available.' : 'Podman is up to date.'}
+  </span>
   {#if state.version !== '5.7.0'}
-    <Button icon={faCircleArrowUp} inProgress={state.updating} onclick={update}>Update to 5.7.0</Button>
+    <Button type="link" icon={faCircleArrowUp} inProgress={state.updating} onclick={update}>Update to 5.7.0</Button>
   {/if}
 </div>

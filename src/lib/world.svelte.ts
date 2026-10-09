@@ -7,6 +7,9 @@ import { browser } from '$app/env';
 
 import type { ConnectionDef, ConnectionStatus } from '#lib/ext/types.ts';
 import { ui } from '#lib/ui.svelte.ts';
+import { duration, timeAgo } from '#lib/util.ts';
+
+export { timeAgo };
 
 /* ------------------------------------------------------------------ */
 /* Resource types                                                      */
@@ -164,6 +167,8 @@ export interface Toast {
   type: 'info' | 'success' | 'error' | 'warning';
   taskId?: string;
   action?: { label: string; href: string };
+  /** Task still running: the toast shows a spinner and is replaced by the outcome. */
+  progress?: boolean;
 }
 
 export interface Notification {
@@ -261,14 +266,40 @@ export function loadWorld(scenarioKey: string): void {
     }
   }
   if (data?.version !== WORLD_VERSION) data = emptyWorld();
-  // interrupted tasks cannot resume after a reload
+  settleTransients(data);
+  Object.assign(world, data);
+}
+
+/**
+ * Timers cannot survive a reload (D13): settle every intermediate state so the
+ * reloaded world never shows a spinner that will never end. Tasks become
+ * "interrupted", transitions jump to their target state.
+ */
+function settleTransients(data: WorldData): void {
   for (const task of data.tasks) {
     if (task.status === 'in-progress') {
       task.status = 'canceled';
-      task.error = 'Interrupted by reload';
+      task.ended = Date.now();
+      task.step = undefined;
+      task.error = 'Interrupted by reload. Run it again to finish.';
     }
   }
-  Object.assign(world, data);
+  const conn: Partial<Record<ConnectionStatus, ConnectionStatus>> = { starting: 'started', creating: 'started', stopping: 'stopped' };
+  for (const [id, status] of Object.entries(data.connStatus)) {
+    const next = conn[status];
+    if (next) data.connStatus[id] = next;
+  }
+  const containerNext: Partial<Record<ContainerState, ContainerState>> = { STARTING: 'RUNNING', RESTARTING: 'RUNNING', STOPPING: 'EXITED', DELETING: 'EXITED' };
+  for (const c of data.containers) {
+    const next = containerNext[c.state];
+    if (next) {
+      c.state = next;
+      if (next === 'RUNNING') c.startedAt ??= Date.now();
+    }
+  }
+  for (const [key, state] of Object.entries(data.addons)) {
+    if (state === 'installing') delete data.addons[key];
+  }
 }
 
 export function clearWorld(): void {
@@ -333,17 +364,9 @@ export function humanSize(bytes: number): string {
   return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unit]}`;
 }
 
+/** Age as a duration ("just now", "3 minutes"); use `timeAgo()` for "… ago". */
 export function humanAge(epochMs: number): string {
-  const seconds = Math.max(0, Math.round((Date.now() - epochMs) / 1000));
-  if (seconds < 60) return `${seconds} seconds`;
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''}`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''}`;
-  const days = Math.round(hours / 24);
-  if (days < 31) return `${days} day${days > 1 ? 's' : ''}`;
-  const months = Math.round(days / 30);
-  return `${months} month${months > 1 ? 's' : ''}`;
+  return duration(epochMs);
 }
 
 export function shortImage(image: string): string {
@@ -408,13 +431,35 @@ export function later(ms: number, fn: () => void): void {
   timers.add(timer);
 }
 
-export function toast(t: Omit<Toast, 'id'>, ttlMs = 5000): void {
-  const id = uid('toast');
-  toasts.push({ id, ...t });
-  setTimeout(() => dismissToast(id), ttlMs);
+/** At most this many toasts are visible; older ones go to the task manager / notifications. */
+export const MAX_TOASTS = 2;
+const toastTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+/**
+ * Show a toast. A toast with a `taskId` replaces the previous toast of the same
+ * task (started → completed). Success/info auto-dismiss after ~5 s, warnings
+ * after 8 s, errors persist until closed. At most {@link MAX_TOASTS} are kept
+ * (oldest non-error dropped first).
+ */
+export function toast(t: Omit<Toast, 'id'>, ttlMs?: number): void {
+  const existing = t.taskId ? toasts.findIndex(x => x.taskId === t.taskId) : -1;
+  const id = existing >= 0 ? toasts[existing].id : uid('toast');
+  const next: Toast = { id, ...t };
+  if (existing >= 0) toasts[existing] = next;
+  else toasts.push(next);
+  while (toasts.length > MAX_TOASTS) {
+    const victim = toasts.findIndex(x => x.type !== 'error');
+    dismissToast(toasts[victim >= 0 ? victim : 0].id);
+  }
+  clearTimeout(toastTimers.get(id));
+  toastTimers.delete(id);
+  const ttl = ttlMs ?? (t.type === 'error' ? 0 : t.type === 'warning' ? 8000 : 5000);
+  if (ttl > 0) toastTimers.set(id, setTimeout(() => dismissToast(id), ttl));
 }
 
 export function dismissToast(id: string): void {
+  clearTimeout(toastTimers.get(id));
+  toastTimers.delete(id);
   const index = toasts.findIndex(t => t.id === id);
   if (index >= 0) toasts.splice(index, 1);
 }
@@ -434,6 +479,8 @@ export interface RunTaskOptions {
   onDone?: (task: Task) => void;
   /** Link shown on the success toast / task row. */
   action?: { label: string; href: string };
+  /** Title of the success toast (default "<name> completed"), e.g. "kafka is running". */
+  doneTitle?: string;
   /** Fail at the given step index (for error-state demos). */
   failAt?: number;
   failMessage?: string;
@@ -465,7 +512,7 @@ export function runTask(options: RunTaskOptions): string {
       task.step = undefined;
       task.ended = Date.now();
       task.action = options.action;
-      toast({ type: 'success', title: `${options.name} completed`, taskId: id, action: options.action });
+      toast({ type: 'success', title: options.doneTitle ?? `${options.name} completed`, taskId: id, action: options.action });
       options.onDone?.(task);
       scheduleSave();
       return;
@@ -498,7 +545,7 @@ export function runTask(options: RunTaskOptions): string {
       });
     }
   };
-  toast({ type: 'info', title: `${options.name} started`, taskId: id }, 2500);
+  toast({ type: 'info', title: options.name, taskId: id, progress: true }, 4000);
   runStep(0);
   return id;
 }
@@ -508,7 +555,7 @@ export function cancelTask(id: string): void {
   if (task?.status === 'in-progress') {
     task.status = 'canceled';
     task.ended = Date.now();
-    toast({ type: 'warning', title: `${task.name} canceled` });
+    toast({ type: 'warning', title: `${task.name} canceled`, taskId: id });
   }
 }
 

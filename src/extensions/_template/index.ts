@@ -16,6 +16,7 @@ import TemplateCard from './components/TemplateCard.svelte';
 import TemplateSection from './components/TemplateSection.svelte';
 import TemplateTab from './components/TemplateTab.svelte';
 import TemplateTool from './components/TemplateTool.svelte';
+import { plural } from '#lib/util.ts';
 
 const ID = 'example.template';
 
@@ -24,6 +25,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'Example template',
   publisher: 'example',
+  category: 'Application development',
   description: 'Shows every contribution point of the mock extension model.',
   version: '0.1.0',
   // Copy the real icon to static/icons/<id>.png and record it in docs/assets.md.
@@ -117,6 +119,8 @@ const extension: MockExtension = {
         id: 'example-group',
         label: 'io.example.group',
         typeName: 'example',
+        // short chip label on the group row (icon + label); defaults to typeName
+        chip: 'Example',
         icon: 'icons/podman-desktop.svg',
         groupName: value => value.slice(0, 8),
         groupDetails: (_value, containers) => [`${containers.length} example containers`],
@@ -128,7 +132,7 @@ const extension: MockExtension = {
         id: 'example-checker',
         label: 'Example checker',
         durationMs: 800,
-        summary: (_image, findings) => `${findings.length} finding(s)`,
+        summary: (_image, findings) => plural(findings.length, 'finding'),
         check: image => [
           {
             id: 'EX-1',
@@ -165,6 +169,7 @@ const extension: MockExtension = {
     // CLI tool in Settings › CLI Tools (P17).
     cliTools: [{ id: 'example', name: 'example', displayName: 'Example CLI', description: 'Example command-line tool.', version: '1.0.0', latest: '1.1.0' }],
     // Dashboard card (P17).
+    // `compact: true` renders a one-line notice above the grid (no capped slot).
     dashboardCards: [{ id: 'example-card', title: 'Example', component: TemplateCard }],
     // Status-bar entry.
     statusItems: [{ id: 'example-status', align: 'right', icon: faFlask, text: () => 'Example', command: 'example.hello' }],

@@ -4,7 +4,7 @@
  * lifecycle actions, Summary / Add-ons (kube, P13) / extension tabs (P14).
  */
 import { faArrowsRotate, faCircleInfo, faPlay, faPuzzlePiece, faStop, faTrash, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, DetailsPage, EmptyScreen, Spinner } from '@podman-desktop/ui-svelte';
+import { Button, DetailsPage, DropdownMenu, EmptyScreen, Spinner, Tooltip } from '@podman-desktop/ui-svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 import { page } from '$app/state';
 
@@ -17,6 +17,7 @@ import { registry } from '#lib/ext/registry.svelte.ts';
 import type { AddonDef, ConnectionView, Contributed, ResourceContext } from '#lib/ext/types.ts';
 import { coreResourcesOf, href, KUBE_KINDS, navigate, startVerb, STATUS_DOT_CLASS, statusLabel } from '#lib/nav.ts';
 import ConnectionStoppedScreen from '#lib/resources/ConnectionStoppedScreen.svelte';
+import DetailsTabs from '#lib/resources/DetailsTabs.svelte';
 import { deleteConnection, restartConnection, runTask, startConnection, stopConnection, toast, world } from '#lib/world.svelte.ts';
 
 interface Props {
@@ -48,8 +49,8 @@ function count(id: string): number {
   return (world.kube[conn.id] ?? []).filter(o => kinds.includes(o.kind)).length;
 }
 
-function tabHref(id: string): string {
-  return href(`/c/${conn.id}${id === 'summary' ? '' : `?tab=${id}`}`);
+function tabPath(id: string): string {
+  return `/c/${conn.id}${id === 'summary' ? '' : `?tab=${id}`}`;
 }
 
 function start(): void {
@@ -75,8 +76,8 @@ function remove(): void {
   );
 }
 
-function close(): void {
-  navigate('/');
+function noop(): void {
+  // top-level page: Escape does not navigate away
 }
 
 function addonState(a: Contributed<AddonDef>): 'installed' | 'installing' | undefined {
@@ -140,13 +141,30 @@ function openTile(path: string): void {
   navigate(path);
 }
 
+// Contributed tiles follow core ones; zero-count contributed tiles sort last and render dimmed.
+const contributedTiles = $derived(
+  sections
+    .map(s => ({ id: s.id, label: s.label, icon: s.icon ?? s.ext.icon, count: s.counter?.(world, conn), path: `/c/${conn.id}/${s.id}`, ext: s.ext }))
+    .map(t => ({ ...t, dimmed: t.count === 0 }))
+    .sort((a, b) => Number(a.dimmed) - Number(b.dimmed)),
+);
 const tiles = $derived([
-  ...coreResourcesOf(conn).map(r => ({ id: r.id, label: r.label, icon: r.icon, count: count(r.id) as number | undefined, path: `/c/${conn.id}/${r.id}`, ext: undefined })),
-  ...sections.map(s => ({ id: s.id, label: s.label, icon: s.icon ?? s.ext.icon, count: s.counter?.(world, conn), path: `/c/${conn.id}/${s.id}`, ext: s.ext })),
+  ...coreResourcesOf(conn).map(r => ({ id: r.id, label: r.label, icon: r.icon, count: count(r.id) as number | undefined, path: `/c/${conn.id}/${r.id}`, ext: undefined, dimmed: false })),
+  ...contributedTiles,
 ]);
+/** Display labels for the connection kind (Details › Type). */
+const KIND_LABEL: Record<string, string> = { engine: 'Container engine', kubernetes: 'Kubernetes cluster', vm: 'Virtual machine', service: 'Service' };
 </script>
 
-<DetailsPage title={conn.name} subtitle="{conn.providerName}{conn.version ? ` ${conn.version}` : ''} · {conn.endpoint}" breadcrumbLeftPart="Dashboard" breadcrumbRightPart={conn.name} onclose={close} onbreadcrumbClick={close}>
+<!-- Connection home: one header (identity + lifecycle), Summary + contributed tabs. No breadcrumb/close: it is a top-level destination reached from the primary nav. -->
+<div class="h-full w-full [&_[aria-label=Header]_button[aria-label=Close]]:hidden">
+<DetailsPage title={conn.name} onclose={noop}>
+  {#snippet subtitleSnippet()}
+    <span class="text-sm leading-none line-clamp-1">
+      <span class="text-[var(--pd-content-card-text)]">{conn.providerName}{conn.version ? ` ${conn.version}` : ''} ·</span>
+      <span class="text-[var(--pd-link)]">{conn.endpoint}</span>
+    </span>
+  {/snippet}
   {#snippet iconSnippet()}
     <div class="relative">
       <AppIcon icon={conn.icon} size="32px" />
@@ -158,34 +176,37 @@ const tiles = $derived([
       {#if busy}
         <span class="flex items-center gap-2 text-sm text-[var(--pd-content-text)] pr-2"><Spinner size="1em" />{statusLabel(conn)}…</span>
       {/if}
-      <ListItemButtonIcon title={startVerb(conn)} icon={faPlay} detailed onClick={start} hidden={conn.status !== 'stopped'} />
-      <ListItemButtonIcon title="Stop" icon={faStop} detailed onClick={stop} hidden={conn.status !== 'started'} />
-      <ListItemButtonIcon title="Restart" icon={faArrowsRotate} detailed onClick={restart} enabled={conn.status === 'started'} />
-      {#each detailsMenus as m (m.ext.id + m.id)}
-        <Contribution ext={m.ext} kind="menu (details)" api="P4">
-          <ListItemButtonIcon title={m.label} icon={m.icon ?? faPuzzlePiece} detailed onClick={runMenu.bind(undefined, m)} />
-        </Contribution>
-      {/each}
-      <ListItemButtonIcon title="Delete" icon={faTrash} detailed onClick={remove} enabled={!busy} />
+      <!-- lifecycle icon buttons carry a visible tooltip; everything else (extension actions, delete) is labelled in the kebab menu -->
+      {#if conn.status === 'stopped'}
+        <Tooltip bottom tip="{startVerb(conn)} {conn.name}">
+          <ListItemButtonIcon title={startVerb(conn)} icon={faPlay} detailed onClick={start} />
+        </Tooltip>
+      {/if}
+      {#if conn.status === 'started'}
+        <Tooltip bottom tip="Stop {conn.name}">
+          <ListItemButtonIcon title="Stop" icon={faStop} detailed onClick={stop} />
+        </Tooltip>
+      {/if}
+      <Tooltip bottom tip="Restart {conn.name}">
+        <ListItemButtonIcon title="Restart" icon={faArrowsRotate} detailed onClick={restart} enabled={conn.status === 'started'} />
+      </Tooltip>
+      <DropdownMenu title="More actions" shownAsMenuActionItem={true}>
+        {#each detailsMenus as m (m.ext.id + m.id)}
+          <Contribution ext={m.ext} kind="menu (details)" api="P4">
+            <ListItemButtonIcon title={m.label} icon={m.icon ?? faPuzzlePiece} onClick={runMenu.bind(undefined, m)} menu={true} />
+          </Contribution>
+        {/each}
+        <ListItemButtonIcon title="Delete {conn.kind === 'kubernetes' ? 'cluster' : 'connection'}" icon={faTrash} onClick={remove} enabled={!busy} menu={true} />
+      </DropdownMenu>
     {/if}
   {/snippet}
   {#snippet tabsSnippet()}
-    {@const core = [{ id: 'summary', label: 'Summary' }, ...(conn.kind === 'kubernetes' ? [{ id: 'addons', label: 'Add-ons' }] : [])]}
-    {#each core as t (t.id)}
-      <div class="pb-1 border-b-[3px] whitespace-nowrap {tab === t.id ? 'border-[var(--pd-tab-highlight)]' : 'border-transparent hover:border-[var(--pd-tab-hover)]'}">
-        <a href={tabHref(t.id)} class="px-4 py-2 no-underline {tab === t.id ? 'text-[var(--pd-tab-text-highlight)]' : 'text-[var(--pd-tab-text)]'}">{t.label}{t.id === 'addons' && addons.length ? ` (${addons.length})` : ''}</a>
-      </div>
-    {/each}
-    {#if extTabs.length}
-      <div class="mx-2 my-1.5 border-l border-[var(--pd-content-divider)]" role="separator"></div>
-      {#each extTabs as t (t.ext.id + t.id)}
-        <Contribution ext={t.ext} kind="tab" api="P14">
-          <div class="pb-1 border-b-[3px] whitespace-nowrap {tab === t.id ? 'border-[var(--pd-tab-highlight)]' : 'border-transparent hover:border-[var(--pd-tab-hover)]'}">
-            <a href={tabHref(t.id)} class="px-4 py-2 no-underline {tab === t.id ? 'text-[var(--pd-tab-text-highlight)]' : 'text-[var(--pd-tab-text)]'}">{t.label}</a>
-          </div>
-        </Contribution>
-      {/each}
-    {/if}
+    <DetailsTabs
+      base="/c/{conn.id}"
+      current={tab}
+      core={[{ id: 'summary', label: 'Summary' }, ...(conn.kind === 'kubernetes' ? [{ id: 'addons', label: addons.length ? `Add-ons (${addons.length})` : 'Add-ons' }] : [])]}
+      ext={extTabs}
+      pathFor={tabPath} />
   {/snippet}
   {#snippet contentSnippet()}
     {#if conn.extensionDisabled}
@@ -203,15 +224,16 @@ const tiles = $derived([
           {#each tiles as t (t.id)}
             <button
               class="flex items-center gap-3 rounded-lg p-3 bg-[var(--pd-content-card-bg)] hover:bg-[var(--pd-content-card-hover-bg)] text-left"
+              class:opacity-60={t.dimmed}
+              title={t.ext ? `${t.label} · from ${t.ext.displayName}` : undefined}
               onclick={openTile.bind(undefined, t.path)}>
-              <span class="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--pd-content-card-inset-bg)] text-[var(--pd-content-card-icon)]">
+              <span class="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--pd-content-card-inset-surface)] text-[var(--pd-content-card-icon)]">
                 <AppIcon icon={t.icon as never} size="18" />
               </span>
               <span class="flex flex-col min-w-0">
                 <span class="text-xl font-semibold text-[var(--pd-content-card-header-text)] tabular-nums">{t.count ?? '–'}</span>
                 <span class="text-sm text-[var(--pd-content-card-text)] truncate">{t.label}</span>
               </span>
-              {#if t.ext}<span class="ml-auto self-start"><AppIcon icon={t.ext.icon} size="12px" title="From {t.ext.displayName}" /></span>{/if}
             </button>
           {/each}
         </div>
@@ -219,7 +241,7 @@ const tiles = $derived([
           <h2 class="text-lg font-semibold text-[var(--pd-content-card-header-text)] mb-2">Details</h2>
           <table class="w-full">
             <tbody>
-              {#each [['Status', statusLabel(conn)], ['Provider', conn.providerName], ['Type', conn.kind === 'engine' ? `${conn.engineType ?? ''} engine` : conn.kind], ['Endpoint', conn.endpoint], ['Version', conn.version ?? ''], ...Object.entries(conn.details ?? {}).filter(([k]) => !(parent && k === 'Runs on')), ['Contributed by', `${conn.ext.displayName} (${conn.ext.id})`]] as [label, value] (label)}
+              {#each [['Status', statusLabel(conn)], ['Provider', conn.providerName], ['Type', KIND_LABEL[conn.kind] ?? conn.kind], ['Endpoint', conn.endpoint], ['Version', conn.version ?? ''], ...Object.entries(conn.details ?? {}).filter(([k]) => !(parent && k === 'Runs on')), ['Contributed by', `${conn.ext.displayName} (${conn.ext.id})`]] as [label, value] (label)}
                 {#if value}
                   <tr><td class="py-1 w-48 text-[var(--pd-table-body-text)]">{label}</td><td class="py-1 wrap-anywhere">{value}</td></tr>
                 {/if}
@@ -286,3 +308,4 @@ const tiles = $derived([
     {/if}
   {/snippet}
 </DetailsPage>
+</div>

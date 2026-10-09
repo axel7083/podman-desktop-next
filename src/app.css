@@ -263,3 +263,12 @@ a {
 @utility fa-w-* {
   --fa-width: --value([length], [percentage]);
 }
+
+/* Sentence case as authored, consistent with nav labels: ui-svelte NavPage
+ * applies `capitalize` (Title Case) to h1 titles; keep only the first letter. */
+h1.capitalize {
+  text-transform: none;
+}
+h1.capitalize::first-letter {
+  text-transform: uppercase;
+}

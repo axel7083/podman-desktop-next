@@ -98,7 +98,7 @@ function openServiceAccount(): void {
       </Card>
       <Card title="Quarkus config" subtitle="application.properties for quarkus-oidc">
         {#snippet actions()}<Button type="secondary" icon={faCopy} onclick={copyConfig} aria-label="Copy properties">Copy</Button>{/snippet}
-        <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto" aria-label="Quarkus config">{config.join('\n')}</pre>
+        <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto" aria-label="Quarkus config">{config.join('\n')}</pre>
       </Card>
     </div>
   {/snippet}

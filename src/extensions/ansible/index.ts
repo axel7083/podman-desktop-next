@@ -31,6 +31,7 @@ const extension: MockExtension = {
   id: ANSIBLE_ID,
   displayName: 'Ansible',
   publisher: 'redhat',
+  category: 'Automation',
   description: 'Scaffold collections and playbooks, run them in an execution environment with ansible-navigator, build EEs, run rulebooks and export containers as playbooks — all on Podman.',
   version: '0.4.0',
   icon: 'icons/redhat.ansible.png',
@@ -61,7 +62,7 @@ const extension: MockExtension = {
       },
     ],
     groupers: [
-      { id: 'ansible-runner', label: 'ansible-runner', typeName: 'ansible run', icon: 'icons/redhat.ansible.png' },
+      { id: 'ansible-runner', label: 'ansible-runner', typeName: 'ansible run', chip: 'Ansible run', icon: 'icons/redhat.ansible.png' },
       { id: 'eda-activation', label: 'io.ansible.eda.activation', typeName: 'EDA activation', icon: 'icons/redhat.ansible.png' },
     ],
     menus: [

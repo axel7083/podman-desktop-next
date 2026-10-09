@@ -3,6 +3,7 @@ import { confirm } from '#lib/confirm.svelte.ts';
 import { runTask } from '#lib/world.svelte.ts';
 
 import { AMQ_EXT, type Broker, type Queue } from './data.ts';
+import { plural } from '#lib/util.ts';
 
 const CLI = '--user admin --password ******** --url tcp://localhost:61616';
 
@@ -42,7 +43,7 @@ export function sendTestMessage(connId: string, q: Queue): void {
 export function purgeQueue(q: Queue): void {
   confirm({
     title: 'Purge queue?',
-    message: `Are you sure you want to purge queue ${q.name}? ${q.messageCount} message(s) will be deleted.`,
+    message: `Are you sure you want to purge queue ${q.name}? ${plural(q.messageCount, 'message')} will be deleted.`,
     buttonLabel: 'Purge',
     variant: 'danger',
   })
@@ -65,11 +66,11 @@ export function purgeQueue(q: Queue): void {
 export function retryAll(data: Broker, dlq: Queue): void {
   const count = dlq.messageCount;
   runTask({
-    name: `Retry ${count} message(s) from ${dlq.name}`,
+    name: `Retry ${plural(count, 'message')} from ${dlq.name}`,
     ext: AMQ_EXT,
     steps: [
       { label: `exec ${dlq.name}/retryMessages()`, ms: 900, log: dlq.messages.map(m => `message ${m.messageID} → ${String(m.properties._AMQ_ORIG_ADDRESS)}`) },
-      { label: 'Waiting for consumers', ms: 900, log: [`${count} message(s) acknowledged by inventory-service`] },
+      { label: 'Waiting for consumers', ms: 900, log: [`${plural(count, 'message')} acknowledged by inventory-service`] },
     ],
     onDone: () => {
       for (const m of dlq.messages) {

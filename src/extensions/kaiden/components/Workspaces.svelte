@@ -1,7 +1,8 @@
 <script lang="ts">
 /** OpenShell gateway › Agent workspaces (Kaiden sandboxes) + "Start agent workspace". */
 import { faArrowUpRightFromSquare, faPlay, faPlus, faRobot, faStop } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, EmptyScreen, Input, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, EmptyScreen, Input, NavPage, Table, TableColumn, TableRow, TableSimpleColumn } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 
 import Dialog from '#lib/components/Dialog.svelte';
 import type { ConnectionView } from '#lib/ext/types.ts';

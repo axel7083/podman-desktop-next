@@ -22,6 +22,7 @@ const extension: MockExtension = {
   id: DEVC_EXT,
   displayName: 'Dev Containers',
   publisher: 'podman-desktop',
+  category: 'Application development',
   description: 'Detect .devcontainer/devcontainer.json in your projects, build and start them on Podman with the Dev Containers CLI, and see them as first-class containers.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.devcontainers.png',
@@ -60,7 +61,7 @@ const extension: MockExtension = {
       {
         id: 'devcontainer',
         label: FOLDER_LABEL,
-        typeName: 'dev container',
+        typeName: 'dev container', chip: 'Dev container',
         groupName: (value): string => basename(value),
         groupDetails: (value): string[] => {
           const p = projectByFolder(value);

@@ -10,7 +10,7 @@ import { navigate } from '#lib/nav.ts';
 import { containerActions } from '#lib/resources/actions.ts';
 import DetailsTabs from '#lib/resources/DetailsTabs.svelte';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
-import { type Container, humanAge, shortImage, world } from '#lib/world.svelte.ts';
+import { type Container, humanAge, timeAgo, shortImage, world } from '#lib/world.svelte.ts';
 
 import CodeView from './CodeView.svelte';
 import { containerAnswers, defaultLogs, logTail, toKubeYaml } from './fixtures.ts';
@@ -56,7 +56,7 @@ const summary = $derived([
       ['ID', container.id],
       ['Command', container.command],
       ['State', container.state],
-      ['Created', `${humanAge(container.created)} ago`],
+      ['Created', timeAgo(container.created)],
       ['Uptime', container.startedAt ? humanAge(container.startedAt) : undefined],
       ['Image', container.image],
       ['Ports', container.ports.map(p => `${p.host}:${p.container}/${p.protocol ?? 'tcp'}`).join(', ')],
@@ -77,7 +77,7 @@ const summary = $derived([
     <StatusIcon icon={ContainerIcon} size={24} status={container.state} />
   {/snippet}
   {#snippet subtitleSnippet()}
-    <Link aria-label="Image Details" onclick={openImage}>{shortImage(container.image)}</Link>
+    <Link aria-label="Image details" onclick={openImage}>{shortImage(container.image)}</Link>
   {/snippet}
   {#snippet actionsSnippet()}
     <ActionsCell object={containerActions(container, true)} />

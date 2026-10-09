@@ -4,7 +4,8 @@
  * integrations, Speed and Reset. Hidden with `?chrome=off`.
  */
 import { faChevronDown, faFlask } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox } from '@podman-desktop/ui-svelte';
+import { Button } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';

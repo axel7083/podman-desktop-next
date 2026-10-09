@@ -1,7 +1,7 @@
 /**
  * podman-desktop.wslc – WSL Containers (wslc.exe, GA in WSL 3.0.1): one engine
  * connection per WSLC session (P11 engine type `wslc`, no pods/secrets), a
- * "New WSLC session" factory, the wslc CLI, a capability matrix tab, a
+ * "Create WSLC session" factory, the wslc CLI, a capability matrix tab, a
  * "Recreate on Podman" container action and a dashboard card (P1, P11).
  */
 import { faArrowRightArrowLeft, faTerminal } from '@fortawesome/free-solid-svg-icons';
@@ -50,6 +50,7 @@ const extension: MockExtension = {
   id: WSLC_ID,
   displayName: 'WSL Containers',
   publisher: 'podman-desktop',
+  category: 'Containers & engines',
   description: 'See and manage the Linux containers you run with the built-in wslc engine of WSL, next to your Podman machines.',
   version: '0.1.0',
   icon: 'icons/podman-desktop.wslc.png',
@@ -63,7 +64,7 @@ const extension: MockExtension = {
     connectionFactories: [
       {
         id: 'wslc-session',
-        label: 'New WSLC session',
+        label: 'Create WSLC session',
         providerId: 'wslc',
         kind: 'engine',
         description: 'A WSL Containers session: its own lightweight Hyper-V VM with images, containers and volumes.',
@@ -141,7 +142,7 @@ const extension: MockExtension = {
     ],
     dashboardCards: [{ id: 'wslc', title: 'WSL Containers', component: () => import('./components/WslcCard.svelte') }],
     commands: [
-      { id: 'wslc.session.create', title: 'New WSLC session', category: 'WSL Containers', run: (): void => navigate('/settings/create/wslc-session') },
+      { id: 'wslc.session.create', title: 'Create WSLC session', category: 'WSL Containers', run: (): void => navigate('/settings/create/wslc-session') },
       { id: 'wslc.open', title: 'Open WSLC default containers', category: 'WSL Containers', run: (): void => navigate('/c/wslc-default/containers') },
     ],
   },

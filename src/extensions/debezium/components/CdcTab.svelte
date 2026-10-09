@@ -5,7 +5,8 @@
  * snapshot.mode, converter, Kafka connection) and the resulting connector.
  */
 import { faArrowUpRightFromSquare, faBolt, faCheck, faCircleExclamation, faPlay } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown, Input } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -247,7 +248,7 @@ function openConnectors(conn: string): void {
     </div>
     <details class="mt-3">
       <summary class="cursor-pointer text-sm text-[var(--pd-link)]">Connector configuration (JSON)</summary>
-      <pre class="mt-2 text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto">{JSON.stringify({ name, config }, null, 2)}</pre>
+      <pre class="mt-2 text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto">{JSON.stringify({ name, config }, null, 2)}</pre>
     </details>
     <div class="flex justify-end mt-3">
       <Button icon={faPlay} onclick={create} disabled={wal !== 'logical' || selected.length === 0 || creating} inProgress={creating}>Create connector</Button>

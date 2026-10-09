@@ -5,7 +5,8 @@
  * from the real world objects (name, image, ports, env, labels, pod).
  */
 import { faCopy, faFloppyDisk, faPlay, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox, Dropdown } from '@podman-desktop/ui-svelte';
+import { Button, Dropdown } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import Fa from 'svelte-fa';
 
 import AppIcon from '#lib/components/AppIcon.svelte';

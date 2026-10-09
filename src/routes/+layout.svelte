@@ -5,7 +5,7 @@ import { page } from '$app/state';
 import type { Snippet } from 'svelte';
 
 import { registry } from '#lib/ext/registry.svelte.ts';
-import { appPath } from '#lib/nav.ts';
+import { appPath, coreResourcesOf } from '#lib/nav.ts';
 import ConfirmHost from '#lib/shell/ConfirmHost.svelte';
 import CommandPalette from '#lib/shell/CommandPalette.svelte';
 import DialogHost from '#lib/shell/DialogHost.svelte';
@@ -33,6 +33,8 @@ if (registry.init(initialUrl) && initialUrl.searchParams.get('welcome') !== 'off
 const path = $derived(appPath(page.url.pathname));
 const conn = $derived(page.params.conn ? registry.getConnection(page.params.conn) : undefined);
 const inSettings = $derived(path.startsWith('/settings'));
+/** A connection with nothing but "Overview" (most VMs and services) needs no secondary nav. */
+const showSecondary = $derived(!!conn && (coreResourcesOf(conn).length > 0 || (!conn.extensionDisabled && registry.navSectionsFor(conn).length > 0)));
 
 $effect(() => {
   JSON.stringify(world);
@@ -44,7 +46,7 @@ $effect(() => {
   <TitleBar />
   <div class="flex flex-row w-full h-full min-h-0 overflow-hidden">
     <PrimaryNav />
-    {#if conn}
+    {#if conn && showSecondary}
       <SecondaryNav {conn} resource={page.params.resource} />
     {:else if inSettings}
       <SettingsNav section={page.params.section} />

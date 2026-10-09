@@ -9,7 +9,7 @@ import { page } from '$app/state';
 
 import { href, navigate } from '#lib/nav.ts';
 import type { ActionsCellData, NameCellData } from '#lib/table/types.ts';
-import { humanAge, humanSize, toast, world } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo, humanSize, toast, world } from '#lib/world.svelte.ts';
 
 import DataTable from '../../_appdev/DataTable.svelte';
 import Pill from '../../_appdev/Pill.svelte';
@@ -103,7 +103,7 @@ const recordingColumns: DataColumn<ActiveRecording>[] = [
   { title: 'State', width: '150px', value: (r): string => (r.state === 'RUNNING' && !r.continuous ? `RUNNING · ${remainingSeconds(r)} s left` : r.state) },
   { title: 'Template', width: '110px', value: (r): string => templateOf(r) },
   { title: 'Duration', width: '100px', value: (r): string => (r.continuous ? 'Continuous' : `${Math.round(r.duration / 1000)} s`) },
-  { title: 'Started', width: '120px', value: (r): string => `${humanAge(r.startTime)} ago` },
+  { title: 'Started', width: '120px', value: (r): string => timeAgo(r.startTime) },
 ];
 function recordingActions(r: ActiveRecording): ActionsCellData {
   return {
@@ -124,7 +124,7 @@ function archiveName(a: ArchivedRecording): NameCellData {
 }
 const archiveColumns: DataColumn<ArchivedRecording>[] = [
   { title: 'Size', width: '90px', value: (a): string => humanSize(a.size) },
-  { title: 'Archived', width: '130px', value: (a): string => `${humanAge(a.archivedTime)} ago` },
+  { title: 'Archived', width: '130px', value: (a): string => timeAgo(a.archivedTime) },
   { title: 'Top rule', width: '1fr', value: (a): string => `${a.report.rules[0]?.rule ?? ''} ${a.report.rules[0]?.score ?? ''}` },
 ];
 function viewReport(a: ArchivedRecording): void {

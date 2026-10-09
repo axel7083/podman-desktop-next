@@ -1,7 +1,8 @@
 <script lang="ts">
 /** Connection › Vulnerabilities (P14): CVEs affecting a registered RHEL system. */
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
-import { Button, Checkbox } from '@podman-desktop/ui-svelte';
+import { Button } from '@podman-desktop/ui-svelte';
+import Checkbox from '#lib/components/Checkbox.svelte';
 import { Icon } from '@podman-desktop/ui-svelte/icons';
 
 import type { ResourceContext } from '#lib/ext/types.ts';

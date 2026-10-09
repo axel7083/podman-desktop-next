@@ -15,6 +15,7 @@ const extension: MockExtension = {
   id: 'redhat.conforma',
   displayName: 'Conforma policy check',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: "Validate an image's signature, SLSA provenance and attestations against your release policy before you ship it.",
   version: '0.1.0',
   icon: 'icons/redhat.conforma.png',

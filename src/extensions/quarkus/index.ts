@@ -21,6 +21,7 @@ const extension: MockExtension = {
   id: QUARKUS_EXT,
   displayName: 'Quarkus',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Detect Quarkus projects, see the Dev Services containers they spawn, and run dev mode, build and image tasks (Red Hat build of Quarkus 3.33).',
   version: '0.3.0',
   icon: 'icons/redhat.quarkus.png',
@@ -31,7 +32,7 @@ const extension: MockExtension = {
       {
         id: 'devservices',
         label: PROCESS_UUID,
-        typeName: 'Dev Services',
+        typeName: 'Dev Services', chip: 'Quarkus Dev Services',
         icon: 'icons/redhat.quarkus.png',
         groupName: uuid => projectByUuid(uuid)?.name ?? `quarkus ${uuid.slice(0, 8)}`,
         groupDetails: uuid => {

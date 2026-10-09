@@ -53,7 +53,7 @@ function kindOf(t?: string): string {
             </div>
             <div class="flex flex-wrap gap-2 mt-2 pl-7">
               {#each r.tags as t (t)}
-                <button class="flex items-center gap-1 text-sm rounded-sm px-2 py-0.5 bg-[var(--pd-content-card-inset-bg)] hover:text-[var(--pd-link)]" title="Copy reference" aria-label="Copy localhost:5000/{r.name}:{t}" onclick={copy.bind(undefined, `localhost:5000/${r.name}:${t}`)}>
+                <button class="flex items-center gap-1 text-sm rounded-sm px-2 py-0.5 bg-[var(--pd-content-card-inset-surface)] hover:text-[var(--pd-link)]" title="Copy reference" aria-label="Copy localhost:5000/{r.name}:{t}" onclick={copy.bind(undefined, `localhost:5000/${r.name}:${t}`)}>
                   {t} <Icon icon={faCopy} size="xs" />
                 </button>
               {/each}

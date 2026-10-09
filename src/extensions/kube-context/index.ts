@@ -17,6 +17,7 @@ const extension: MockExtension = {
   id: 'podman-desktop.kube-context',
   displayName: 'Kube Context',
   publisher: 'podman-desktop',
+  category: 'Kubernetes & OpenShift',
   description: 'Display and switch the current Kubernetes context from the status bar.',
   version: '1.29.0',
   icon: 'icons/podman-desktop.kube-context.png',

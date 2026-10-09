@@ -41,6 +41,7 @@ const extension: MockExtension = {
   id: PG_EXT,
   displayName: 'PostgreSQL',
   publisher: 'podman-desktop',
+  category: 'Application development',
   description: 'Manage local PostgreSQL services for development.',
   version: '0.6.0-next',
   icon: 'icons/podman-desktop.postgresql.png',

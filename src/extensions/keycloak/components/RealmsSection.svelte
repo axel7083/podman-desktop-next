@@ -68,15 +68,15 @@ function exportRealm(r: KcRealm): void {
                 <Pill label={r.enabled ? 'Enabled' : 'Disabled'} tone={r.enabled ? 'success' : 'neutral'} />
               {/snippet}
               <div class="grid grid-cols-3 gap-2 mb-3">
-                <button class="rounded-md p-2 text-left bg-[var(--pd-content-card-inset-bg)] hover:bg-[var(--pd-content-card-hover-bg)]" onclick={openClients.bind(undefined, r)} aria-label="Open clients of realm {r.realm}">
+                <button class="rounded-md p-2 text-left bg-[var(--pd-content-card-inset-surface)] hover:bg-[var(--pd-content-card-hover-bg)]" onclick={openClients.bind(undefined, r)} aria-label="Open clients of realm {r.realm}">
                   <div class="text-xl font-semibold text-[var(--pd-content-card-header-text)] tabular-nums">{appClients(r)}</div>
                   <div class="text-sm">Clients <span class="opacity-70">(+{r.clients.length - appClients(r)} built-in)</span></div>
                 </button>
-                <button class="rounded-md p-2 text-left bg-[var(--pd-content-card-inset-bg)] hover:bg-[var(--pd-content-card-hover-bg)]" onclick={openUsers.bind(undefined, r)} aria-label="Open users of realm {r.realm}">
+                <button class="rounded-md p-2 text-left bg-[var(--pd-content-card-inset-surface)] hover:bg-[var(--pd-content-card-hover-bg)]" onclick={openUsers.bind(undefined, r)} aria-label="Open users of realm {r.realm}">
                   <div class="text-xl font-semibold text-[var(--pd-content-card-header-text)] tabular-nums">{r.users.length}</div>
                   <div class="text-sm">Users</div>
                 </button>
-                <div class="rounded-md p-2 bg-[var(--pd-content-card-inset-bg)]">
+                <div class="rounded-md p-2 bg-[var(--pd-content-card-inset-surface)]">
                   <div class="text-xl font-semibold text-[var(--pd-content-card-header-text)] tabular-nums">{r.roles.length}</div>
                   <div class="text-sm">Realm roles</div>
                 </div>

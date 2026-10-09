@@ -161,7 +161,7 @@ export async function journey(t) {
   await t.open('/tools/services');
   await page.getByRole('region', { name: 'Add a service' }).waitFor();
   await t.shot('services-catalog');
-  await page.getByRole('button', { name: 'Create Streams for Apache Kafka' }).click();
+  await page.getByRole('button', { name: 'Create Kafka cluster' }).click();
   await page.getByRole('textbox', { name: 'Name' }).waitFor();
   await t.shot('services-create-kafka');
 }

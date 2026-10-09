@@ -60,6 +60,7 @@ const extension: MockExtension = {
   id: KAFKA_EXT,
   displayName: 'Streams for Apache Kafka',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Run a single-node KRaft Kafka locally, browse topics, records, consumer groups and lag (StreamsHub Console).',
   version: '0.4.0',
   icon: 'icons/redhat.streams-kafka.svg',
@@ -75,7 +76,7 @@ const extension: MockExtension = {
         Console: 'http://localhost:3000',
       }),
     ],
-    connectionFactories: [{ ...serviceFactory(SPEC) }],
+    connectionFactories: [{ ...serviceFactory(SPEC), label: 'Create Kafka cluster' }],
     navSections: [
       {
         id: 'topics',

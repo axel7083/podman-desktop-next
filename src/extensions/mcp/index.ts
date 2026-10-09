@@ -19,6 +19,7 @@ const extension: MockExtension = {
   id: MCP,
   displayName: 'MCP Servers',
   publisher: 'podman-desktop',
+  category: 'AI',
   description: 'Browse the official MCP registry, run MCP servers as Podman containers or local processes and wire them into Claude Code, Cursor, VS Code and Kaiden.',
   version: '0.1.0',
   icon,
@@ -44,7 +45,7 @@ const extension: MockExtension = {
     navSections: [
       { id: 'rhoai-mcp', label: 'MCP servers', icon, when: (c: ConnectionView): boolean => !!c.capabilities?.includes('kube.crd:mcpservers'), component: RhoaiMcp, order: 30, counter: (w, c): number => (w.kube[c.id] ?? []).filter(o => o.kind === 'MCPServer').length },
     ],
-    groupers: [{ id: 'mcp-gateway', label: GROUP_LABEL, typeName: 'MCP', icon }],
+    groupers: [{ id: 'mcp-gateway', label: GROUP_LABEL, typeName: 'MCP', chip: 'MCP', icon }],
     commands: [
       { id: 'mcp.registry', title: 'Search the MCP registry', category: 'MCP', icon: faPlug, run: (): void => navigate(`${TOOL}?tab=registry`) },
       { id: 'mcp.installed', title: 'Open installed MCP servers', category: 'MCP', run: (): void => navigate(TOOL) },

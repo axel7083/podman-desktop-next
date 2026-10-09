@@ -35,13 +35,14 @@ let { href, title, selected, counter, dimmed = false, icon, badge }: Props = $pr
       {#if icon}
         <span class="w-4 shrink-0 flex justify-center">{@render icon()}</span>
       {/if}
-      <span class="block truncate">{title}</span>
+      <!-- labels never ellipsize at 170px: they wrap to two lines ("ConfigMaps & Secrets") -->
+      <span class="block min-w-0 leading-tight line-clamp-2 [overflow-wrap:anywhere]">{title}</span>
     </span>
     {#if badge}
       <span class="ml-1 shrink-0 flex items-center">{@render badge()}</span>
     {/if}
     {#if counter !== undefined}
-      <span class="ml-1.5 shrink-0 text-xs font-normal text-[var(--pd-content-sub-header)] tabular-nums">{counter}</span>
+      <span class="ml-1.5 shrink-0 text-xs font-normal text-[var(--pd-table-body-text)] tabular-nums">{counter}</span>
     {/if}
   </div>
 </a>

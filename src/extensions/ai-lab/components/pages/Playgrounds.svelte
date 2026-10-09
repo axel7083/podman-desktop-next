@@ -9,7 +9,7 @@ import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { navigate } from '#lib/nav.ts';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import type { ActionsCellData } from '#lib/table/types.ts';
-import { humanAge } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo } from '#lib/world.svelte.ts';
 
 import { ai, createPlayground, deletePlayground, type Playground, providerModelLabel, providers, toolHref } from '../../shared.ts';
 import ModelNameCell from '../ui/ModelNameCell.svelte';
@@ -38,7 +38,7 @@ const columns = [
   }),
   new TableColumn<Playground, string>('Provider', { width: '2fr', renderer: TableSimpleColumn, renderMapping: (p): string => all.find(x => x.id === p.providerId)?.label ?? 'Provider not running' }),
   new TableColumn<Playground, string>('Model', { width: '2fr', renderer: TableSimpleColumn, renderMapping: (p): string => providerModelLabel(all.find(x => x.id === p.providerId), p.model) }),
-  new TableColumn<Playground, string>('Updated', { renderer: TableSimpleColumn, renderMapping: (p): string => `${humanAge(p.updated)} ago` }),
+  new TableColumn<Playground, string>('Updated', { renderer: TableSimpleColumn, renderMapping: (p): string => timeAgo(p.updated) }),
   new TableColumn<Playground, ActionsCellData>('Actions', {
     align: 'right',
     width: '80px',
@@ -66,14 +66,14 @@ function create(): void {
 }
 </script>
 
-<NavPage title="Playground Environments" searchEnabled={false}>
+<NavPage title="Playground environments" searchEnabled={false}>
   {#snippet additionalActions()}<Button icon={faPlus} onclick={show}>New Playground</Button>{/snippet}
   {#snippet content()}
     <div class="flex min-w-full grow">
       {#if list.length}
         <Table kind="ai-playgrounds" data={list} {columns} {row} defaultSortColumn="Name" key={(p: Playground): string => p.id} label={(p: Playground): string => p.name} />
       {:else}
-        <EmptyScreen icon={faMessage} title="No Playground Environment" message="Playground environments allow for experimenting with available models in a local environment." />
+        <EmptyScreen icon={faMessage} title="No playground environment" message="Playground environments allow for experimenting with available models in a local environment." />
       {/if}
     </div>
   {/snippet}

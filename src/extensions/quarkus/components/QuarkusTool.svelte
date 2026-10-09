@@ -115,7 +115,7 @@ function openContainer(id: string): void {
             {#if services.length}
               <div class="grid grid-cols-4 gap-2">
                 {#each services as c (c.id)}
-                  <button class="rounded-md p-2 text-left bg-[var(--pd-content-card-inset-bg)] hover:bg-[var(--pd-content-card-hover-inset-bg)]" onclick={openContainer.bind(undefined, c.id)}>
+                  <button class="rounded-md p-2 text-left bg-[var(--pd-content-card-inset-surface)] hover:bg-[var(--pd-content-card-hover-inset-bg)]" onclick={openContainer.bind(undefined, c.id)}>
                     <div class="font-medium text-[var(--pd-content-card-header-text)]">{c.labels['io.quarkus.devservice']}</div>
                     <div class="text-xs truncate">{c.image.replace('docker.io/', '')}</div>
                     <div class="text-xs tabular-nums">localhost:{c.ports[0]?.host} · {c.state.toLowerCase()}</div>

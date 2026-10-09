@@ -54,6 +54,7 @@ const extension: MockExtension = {
   id: KC_EXT,
   displayName: 'Red Hat build of Keycloak',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Run a local Keycloak for development, import realms, and manage clients, users and roles for your apps.',
   version: '0.3.0',
   icon: 'icons/redhat.keycloak.svg',

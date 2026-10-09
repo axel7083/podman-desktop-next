@@ -179,7 +179,7 @@ function started(): string {
                 <span class="text-right tabular-nums">{pointsOf(v, resolved)}</span>
               </button>
               {#if open}
-                <div class="px-4 pb-3 pl-11 space-y-2 bg-[var(--pd-content-card-inset-bg)]" aria-label="Incidents of {v.ruleId}">
+                <div class="px-4 pb-3 pl-11 space-y-2 bg-[var(--pd-content-card-inset-surface)]" aria-label="Incidents of {v.ruleId}">
                   <div class="flex items-center gap-2 pt-3 text-sm">
                     <Pill label={v.category} tone={TONE[v.category]} />
                     {#each v.labels as l (l)}<Pill label={l} />{/each}

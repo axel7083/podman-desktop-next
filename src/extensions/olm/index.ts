@@ -18,6 +18,7 @@ const extension: MockExtension = {
   id: OLM_ID,
   displayName: 'Operators (OLM)',
   publisher: 'redhat',
+  category: 'Kubernetes & OpenShift',
   description: 'Browse catalogs and install operators on any connected cluster with OLM v1.',
   version: '0.2.0',
   icon: 'icons/redhat.olm.png',

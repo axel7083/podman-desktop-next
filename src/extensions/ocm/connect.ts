@@ -22,7 +22,7 @@ export function login(id: string): void {
   if (!cluster) return;
   setConnectionStatus(id, 'starting');
   runTask({
-    name: `oc login --web ${cluster.name}`,
+    name: `Log in to ${cluster.name}`,
     ext: OCM_ID,
     steps: [
       { label: `Opening browser: ${cluster.api.url.replace(':6443', '').replace('api.', 'oauth-openshift.apps.')}/oauth/authorize`, ms: 1400, log: [`$ oc login --web --server=${cluster.api.url}`] },

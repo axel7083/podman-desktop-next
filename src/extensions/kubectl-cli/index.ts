@@ -5,6 +5,7 @@ const extension: MockExtension = {
   id: 'podman-desktop.kubectl-cli',
   displayName: 'kubectl CLI',
   publisher: 'podman-desktop',
+  category: 'Kubernetes & OpenShift',
   description: 'Install and update the kubectl command-line tool.',
   version: '1.29.0',
   icon: 'icons/podman-desktop.kubectl-cli.png',

@@ -15,7 +15,7 @@ let { title, subtitle, actions, children, class: className = '', inset = false }
 </script>
 
 <section
-  class="rounded-lg p-4 text-[var(--pd-content-card-text)] {inset ? 'bg-[var(--pd-content-card-inset-bg)]' : 'bg-[var(--pd-content-card-bg)]'} {className}"
+  class="rounded-lg p-4 text-[var(--pd-content-card-text)] {inset ? 'bg-[var(--pd-content-card-inset-surface)]' : 'bg-[var(--pd-content-card-bg)]'} {className}"
   aria-label={title}>
   {#if title || actions}
     <div class="flex items-start gap-3 mb-3">

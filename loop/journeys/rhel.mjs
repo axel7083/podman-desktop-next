@@ -17,7 +17,8 @@ export async function journey(t) {
   await t.open('/settings/resources', { speed: '5' });
   await page.getByRole('region', { name: 'podman', exact: true }).waitFor();
   await t.shot('resources-podman-card');
-  await page.getByRole('button', { name: 'Create RHEL Podman machine' }).click();
+  await page.getByRole('button', { name: /^More ways to create \(Podman/ }).click();
+  await page.getByText('Create new RHEL Podman machine', { exact: true }).click();
   await page.locator('#field-provider').waitFor();
   await pick('field-provider', 'Hyper-V (Windows)');
   await page.getByRole('alert', { name: /provider hyperv is not supported/ }).waitFor();
@@ -34,7 +35,9 @@ export async function journey(t) {
   await t.shot('r4-rhel-10-engine');
   await page.getByRole('link', { name: 'Overview' }).first().click().catch(() => undefined);
   await page.waitForTimeout(500);
-  await page.getByRole('link', { name: 'Subscription' }).first().click();
+  // more than 3 extension tabs: Subscription sits under "More (n)" (docs/ia.md rule 3)
+  await page.getByRole('button', { name: 'More tabs' }).click();
+  await page.getByRole('menuitem', { name: /Subscription/ }).click();
   await page.getByRole('region', { name: 'Subscription status' }).waitFor();
   await t.shot('r4-rhel-10-subscription');
 
@@ -93,13 +96,19 @@ export async function journey(t) {
   await page.getByRole('button', { name: 'Start and register' }).click();
   await page.waitForTimeout(2500);
   await t.shot('rhel9-db-registered');
-  await page.locator('a', { hasText: 'Terminal' }).first().click();
+  // Terminal may sit in the "More" tabs menu (docs/ia.md rule 3)
+  const terminalTab = page.locator('a', { hasText: 'Terminal' }).first();
+  if (await terminalTab.isVisible()) await terminalTab.click();
+  else {
+    await page.getByRole('button', { name: 'More tabs' }).click();
+    await page.getByRole('menuitem', { name: /Terminal/ }).click();
+  }
   const input = page.getByRole('textbox', { name: 'Terminal input' });
   await input.fill('sudo subscription-manager status');
   await input.press('Enter');
   await t.shot('rhel9-db-terminal');
   await t.open('/settings/rhel-registration', { speed: '5' });
-  await page.getByRole('region', { name: 'Activation keys' }).waitFor();
+  await page.getByRole('region', { name: 'Registered systems' }).waitFor();
   await t.shot('settings-rhel-registration');
 
   /* ---- 5. bootc → edge device --------------------------------------- */

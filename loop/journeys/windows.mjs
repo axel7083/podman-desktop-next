@@ -61,7 +61,7 @@ export async function journey(t) {
   await t.shot('catalog-apple');
   await apple.getByRole('button', { name: 'Install' }).click();
   await page.waitForTimeout(300);
-  // stay in-app: t.open() with ?scenario= would reset the enabled extensions to the preset
+  // user installs persist per scenario (docs/decisions.md P6); staying in-app keeps the flow realistic
   await page.getByRole('link', { name: 'Dashboard' }).first().click();
   await page.getByRole('button', { name: 'Navigate to Apple' }).first().click();
   await page.locator('a', { hasText: 'Prerequisites' }).first().click();

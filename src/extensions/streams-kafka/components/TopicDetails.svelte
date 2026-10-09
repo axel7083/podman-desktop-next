@@ -122,7 +122,7 @@ function time(iso: string): string {
                 <span class="truncate font-mono">{r.value}</span>
               </button>
               {#if expanded === i}
-                <pre class="px-4 py-3 text-xs font-mono bg-[var(--pd-content-card-inset-bg)] text-[var(--pd-content-card-text)] overflow-auto">{JSON.stringify(JSON.parse(r.value), null, 2)}{r.headers ? `\n\nheaders: ${JSON.stringify(r.headers)}` : ''}</pre>
+                <pre class="px-4 py-3 text-xs font-mono bg-[var(--pd-content-card-inset-surface)] text-[var(--pd-content-card-text)] overflow-auto">{JSON.stringify(JSON.parse(r.value), null, 2)}{r.headers ? `\n\nheaders: ${JSON.stringify(r.headers)}` : ''}</pre>
               {/if}
             {/each}
           </div>
@@ -158,7 +158,7 @@ function time(iso: string): string {
       {:else if tab === 'schema' && schema}
         <Card title="{schema.artifact.name} · {schema.artifact.artifactType}" subtitle="{schema.artifact.groupId}/{schema.artifact.artifactId} · version {latest(schema.artifact).version} (globalId {latest(schema.artifact).globalId}) · compatibility {schema.compatibility}">
           {#snippet actions()}<Button type="secondary" onclick={openSchema}>Open in registry</Button>{/snippet}
-          <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto">{schema.artifact.content}</pre>
+          <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto">{schema.artifact.content}</pre>
         </Card>
       {/if}
     </div>

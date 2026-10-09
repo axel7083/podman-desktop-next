@@ -16,6 +16,7 @@ const extension: MockExtension = {
   id: KAOTO_EXT,
   displayName: 'Kaoto & Camel',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Design Camel integration routes visually with Kaoto, run them locally with Camel JBang against your Podman services, and export them to Quarkus.',
   version: '2.13.0',
   icon: 'icons/redhat.kaoto.svg',

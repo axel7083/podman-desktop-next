@@ -111,7 +111,7 @@ function sessionLabel(s: SessionView): string {
           {/each}
         </Card>
         <Card title="~/.testcontainers.properties">
-          <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto">docker.host=unix:///run/user/1000/podman/podman.sock
+          <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto">docker.host=unix:///run/user/1000/podman/podman.sock
 testcontainers.reuse.enable=true
 ryuk.container.privileged=true
 ryuk.container.timeout=30

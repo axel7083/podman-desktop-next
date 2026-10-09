@@ -60,6 +60,7 @@ export const ACTIVATION_KEYS: ActivationKey[] = [
     additionalRepositories: [{ repositoryLabel: 'codeready-builder-for-rhel-9-x86_64-rpms' }],
   },
   { id: '38407', name: 'edge-lab', role: 'Red Hat Enterprise Linux Server', usage: 'Development/Test', serviceLevel: 'Self-Support', releaseVersion: '10.0', additionalRepositories: [] },
+  { id: '38512', name: 'satellite-dc1', role: 'Red Hat Enterprise Linux Server', usage: 'Production', serviceLevel: 'Premium', releaseVersion: '', additionalRepositories: [] },
 ];
 
 export interface Subscription {
@@ -74,5 +75,6 @@ export interface Subscription {
 
 export const SUBSCRIPTIONS: Subscription[] = [
   { sku: 'RH00798', name: 'Red Hat Developer Subscription for Individuals', quantity: 16, consumed: 5, startDate: '2026-03-02', endDate: '2027-03-02', status: 'Active' },
+  { sku: 'RH00003', name: 'Red Hat Enterprise Linux Server, Standard', quantity: 50, consumed: 41, startDate: '2025-11-01', endDate: '2026-10-31', status: 'Expiring soon' },
   { sku: 'MCT2735', name: 'Red Hat OpenShift Container Platform, Standard (2 cores or 4 vCPUs)', quantity: 64, consumed: 48, startDate: '2026-02-01', endDate: '2027-01-31', status: 'Active' },
 ];

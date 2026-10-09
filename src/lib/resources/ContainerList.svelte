@@ -6,9 +6,10 @@
  * contributed columns (P14) are appended before Actions. The Environment column
  * is dropped because the list is already scoped to one connection.
  */
-import { faPlay, faPlusCircle, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faPlusCircle, faPuzzlePiece, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import {
   Button,
+  DropdownMenu,
   EmptyScreen,
   FilteredEmptyScreen,
   NavPage,
@@ -16,11 +17,11 @@ import {
   TableColumn,
   TableDurationColumn,
   TableRow,
-  TableSimpleColumn,
 } from '@podman-desktop/ui-svelte';
 import { ContainerIcon } from '@podman-desktop/ui-svelte/icons';
 
 import Contribution from '#lib/components/Contribution.svelte';
+import ListItemButtonIcon from '#lib/components/ListItemButtonIcon.svelte';
 import { withConfirmation } from '#lib/confirm.svelte.ts';
 import { registry } from '#lib/ext/registry.svelte.ts';
 import type { ConnectionView, IconRef } from '#lib/ext/types.ts';
@@ -29,7 +30,9 @@ import { containerActions, groupActions, podActions } from '#lib/resources/actio
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import StatusCell from '#lib/table/StatusCell.svelte';
+import TextCell from '#lib/table/TextCell.svelte';
 import type { ActionsCellData, NameCellData, StatusCellData } from '#lib/table/types.ts';
+import { capitalize, plural } from '#lib/util.ts';
 import { type Container, deleteContainer, runTask, shortImage, startContainer, stopContainer, world } from '#lib/world.svelte.ts';
 
 import ConnectionStoppedScreen from './ConnectionStoppedScreen.svelte';
@@ -50,6 +53,7 @@ interface GroupRow {
   containers: Container[];
   allCount: number;
   details?: string[];
+  chip: string;
   selected?: boolean;
   ext?: import('#lib/ext/types.ts').ExtensionMeta;
 }
@@ -88,7 +92,7 @@ const rows: Row[] = $derived.by(() => {
       const pod = world.pods.find(p => p.id === c.podId);
       if (pod) {
         key = `pod:${pod.id}`;
-        make = (): GroupRow => ({ kind: 'group', name: `pod:${pod.name}`, groupName: pod.name, type: 'pod', icon: PodIcon, podId: pod.id, containers: [], allCount: pod.containerIds.length });
+        make = (): GroupRow => ({ kind: 'group', name: `pod:${pod.name}`, groupName: pod.name, type: 'pod', chip: 'Pod', icon: PodIcon, podId: pod.id, containers: [], allCount: pod.containerIds.length });
       }
     } else {
       const grouper = registry.groupers.find(g => c.labels[g.label]);
@@ -102,7 +106,8 @@ const rows: Row[] = $derived.by(() => {
           groupName: grouper.groupName?.(value, all) ?? value,
           details: grouper.groupDetails?.(value, all),
           type: grouper.typeName,
-          icon: grouper.icon ?? PodIcon,
+          chip: grouper.chip ?? capitalize(grouper.typeName),
+          icon: grouper.icon ?? grouper.ext.icon,
           containers: [],
           allCount: all.length,
           ext: grouper.ext,
@@ -141,16 +146,18 @@ const statusColumn = new TableColumn<Row, StatusCellData>('Status', {
 });
 
 const nameColumn = new TableColumn<Row, NameCellData>('Name', {
-  width: '2fr',
+  // floor so a group's line 2 (chip + "n containers (m filtered)") never truncates at 1280px
+  width: 'minmax(15rem, 2fr)',
   renderer: NameCell,
   renderMapping: (r): NameCellData => {
     if (isGroup(r)) {
       const filtered = r.allCount - r.containers.length;
       return {
-        title: `${r.groupName} (${r.type})`,
-        sub: [`${r.allCount} container${r.allCount > 1 ? 's' : ''}${filtered > 0 ? ` (${filtered} filtered)` : ''}`, ...(r.details ?? [])],
+        title: r.groupName,
+        chip: { label: r.chip, icon: r.ext ? r.icon : undefined, ext: r.ext },
+        // details go to the (otherwise empty) Image column so line 2 never truncates
+        sub: [`${plural(r.allCount, 'container')}${filtered > 0 ? ` (${filtered} filtered)` : ''}`],
         href: r.podId ? `/c/${conn.id}/pods/${r.podId}/summary` : undefined,
-        badges: r.ext ? [{ label: `grouped by ${r.ext.displayName}`, ext: r.ext }] : undefined,
       };
     }
     const port = r.ports.length ? `PORT${r.ports.length > 1 ? 'S' : ''} ${r.ports.map(p => p.host).join(', ')}` : '';
@@ -160,13 +167,16 @@ const nameColumn = new TableColumn<Row, NameCellData>('Name', {
 });
 
 const imageColumn = new TableColumn<Row, string>('Image', {
-  width: '3fr',
-  renderer: TableSimpleColumn,
-  renderMapping: (r): string => (isGroup(r) ? '' : shortImage(r.image)),
+  // single line + ellipsis (TextCell) so long image names never run into Uptime
+  // floor so ~30 chars of an image reference stay visible at 1280px
+  width: 'minmax(6rem, 3fr)',
+  renderer: TextCell,
+  renderMapping: (r): string => (isGroup(r) ? (r.details ?? []).join(' · ') : shortImage(r.image)),
   comparator: (a, b): number => (isGroup(a) ? '' : a.image).localeCompare(isGroup(b) ? '' : b.image),
 });
 
 const uptimeColumn = new TableColumn<Row, Date | undefined>('Uptime', {
+  width: '100px',
   renderer: TableDurationColumn,
   renderMapping: (r): Date | undefined => (!isGroup(r) && r.state === 'RUNNING' && r.startedAt ? new Date(r.startedAt) : undefined),
   comparator: (a, b): number => (isGroup(b) ? 0 : (b.startedAt ?? 0)) - (isGroup(a) ? 0 : (a.startedAt ?? 0)),
@@ -192,18 +202,34 @@ const actionsColumn = new TableColumn<Row, ActionsCellData>('Actions', {
   },
 });
 
+/** Fixed width from the longest value/header (~7px per 12px char + cell padding), 80–160px. */
+function contributedWidth(title: string, values: string[]): string {
+  const longest = Math.max(title.length, ...values.map(v => v.length));
+  return `${Math.min(120, Math.max(72, Math.ceil(longest * 7 + 16)))}px`;
+}
+
+/** Below ~1400px the low-priority contributed columns (MODEL, AGENT) drop before Image or Actions shrink. */
+let innerWidth = $state(1440);
+const wide = $derived(innerWidth >= 1400);
+
 const columns = $derived([
   statusColumn,
   nameColumn,
   imageColumn,
   uptimeColumn,
+  // contributed columns only when a container in the current (filtered) list has a value
+  // (no empty MODEL/AGENT columns). Values often live on grouped child rows only, so the
+  // column is sized to its longest value (each table row is its own grid, so max-content
+  // would misalign) and capped at 160px so it never starves Image.
   ...registry.columns
-    .filter(c => c.target === 'container')
+    .filter(c => wide && c.target === 'container')
+    .map(c => ({ c, values: visible.map(x => c.value(x) ?? '').filter(Boolean) }))
+    .filter(({ values }) => values.length > 0)
     .map(
-      c =>
+      ({ c, values }) =>
         new TableColumn<Row, string>(c.title, {
-          width: c.width ?? '1fr',
-          renderer: TableSimpleColumn,
+          width: contributedWidth(c.title, values),
+          renderer: TextCell,
           renderMapping: (r): string => (isGroup(r) ? '' : (c.value(r) ?? '')),
         }),
     ),
@@ -272,6 +298,14 @@ function resetFilter(): void {
   filter = 'all';
 }
 
+const prunable = $derived(mine.filter(c => c.state !== 'RUNNING'));
+
+function prune(): void {
+  const list = prunable;
+  if (!list.length) return;
+  withConfirmation(() => list.forEach(c => deleteContainer(c.id)), `remove ${plural(list.length, 'unused container')}`, 'Prune containers?', 'Prune');
+}
+
 function runToolbar(m: (typeof toolbar)[number]): void {
   m.run({ target: 'container', conn, resource: conn });
 }
@@ -279,14 +313,31 @@ function runToolbar(m: (typeof toolbar)[number]): void {
 const toolbar = $derived(registry.menusFor({ target: 'container', conn, resource: conn }, 'toolbar'));
 </script>
 
+<svelte:window bind:innerWidth />
+
 <NavPage bind:searchTerm={searchTerm} title="containers">
   {#snippet additionalActions()}
-    {#each toolbar as m (m.ext.id + m.id)}
-      <Contribution ext={m.ext} kind="menu (toolbar)" api="P14">
-        <Button type="secondary" icon={m.icon} onclick={runToolbar.bind(undefined, m)}>{m.label}</Button>
-      </Contribution>
-    {/each}
-    <Button onclick={create} icon={faPlusCircle} title="Create a container">Create</Button>
+    <!-- own flex + gap: NavPage's space-x-2 doesn't apply through Contribution's display:contents wrapper -->
+    <div class="flex flex-nowrap items-center gap-2">
+      {#if toolbar.length === 1}
+        {@const m = toolbar[0]}
+        <Contribution ext={m.ext} kind="menu (toolbar)" api="P14">
+          <Button type="secondary" icon={m.icon} onclick={runToolbar.bind(undefined, m)}>{m.label}</Button>
+        </Contribution>
+      {/if}
+      <Button type="secondary" onclick={prune} icon={faTrash} title="Remove unused containers" disabled={!prunable.length}>Prune</Button>
+      <Button onclick={create} icon={faPlusCircle} title="Create a container">Create</Button>
+      {#if toolbar.length > 1}
+        <!-- more than one contributed page action: fold them into an overflow menu next to the core actions -->
+        <DropdownMenu title="More actions from extensions" shownAsMenuActionItem={true}>
+          {#each toolbar as m (m.ext.id + m.id)}
+            <Contribution ext={m.ext} kind="menu (toolbar)" api="P14">
+              <ListItemButtonIcon title={m.label} icon={m.icon ?? faPuzzlePiece} onClick={runToolbar.bind(undefined, m)} menu={true} />
+            </Contribution>
+          {/each}
+        </DropdownMenu>
+      {/if}
+    </div>
   {/snippet}
   {#snippet bottomAdditionalActions()}
     {#if selectedItemsNumber > 0}

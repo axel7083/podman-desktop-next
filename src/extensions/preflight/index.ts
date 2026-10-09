@@ -15,6 +15,7 @@ const extension: MockExtension = {
   id: 'redhat.preflight',
   displayName: 'Red Hat Certification Preflight',
   publisher: 'redhat',
+  category: 'Security & supply chain',
   description: 'Run the Red Hat container certification checks on your image before you submit it to Partner Connect.',
   version: '0.1.0',
   icon: 'icons/redhat.preflight.png',

@@ -64,7 +64,7 @@ function playground(): void {
 </script>
 
 {#if svc}
-  <DetailsPage title="Service details" subtitle={svc.containerId} breadcrumbLeftPart="Model Services" breadcrumbRightPart="Service details" onclose={close} onbreadcrumbClick={close}>
+  <DetailsPage title="Service details" subtitle={svc.containerId} breadcrumbLeftPart="Model services" breadcrumbRightPart="Service details" onclose={close} onbreadcrumbClick={close}>
     {#snippet iconSnippet()}<StatusIcon icon={faRocket} size={24} status={svc?.status === 'running' ? 'RUNNING' : 'EXITED'} />{/snippet}
     {#snippet actionsSnippet()}
       <div class="flex gap-2">
@@ -76,7 +76,7 @@ function playground(): void {
     {#snippet contentSnippet()}
       <div class="flex flex-col gap-4 p-4 overflow-auto h-full">
         <Card title="Models">
-          <div class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-bg)] px-3 py-2">
+          <div class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-surface)] px-3 py-2">
             <span class="grow text-[var(--pd-content-card-header-text)]">{m?.name}</span>
             <span class="flex items-center gap-1 rounded-md bg-[var(--pd-content-card-bg)] px-2 py-1 text-xs"><Icon icon={faScaleBalanced} /> {m?.license}</span>
             <span class="flex items-center gap-1 rounded-md bg-[var(--pd-content-card-bg)] px-2 py-1 text-xs"><Icon icon={faBuildingColumns} /> {m?.registry}</span>
@@ -84,17 +84,17 @@ function playground(): void {
         </Card>
         <Card title="Server">
           <div class="flex flex-wrap gap-3">
-            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-bg)] px-3 py-2 underline">http://localhost:{svc.port}/docs <Icon icon={faBookOpen} /></span>
-            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-bg)] px-3 py-2 font-mono" aria-label="OpenAI endpoint">http://localhost:{svc.port}/v1 <Icon icon={faPlug} /></span>
-            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-bg)] px-3 py-2">{svc.gpu ? `GPU Inference · ${GPU.model}` : 'CPU Inference'} <Icon icon={faMicrochip} /></span>
-            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-bg)] px-3 py-2">{INFERENCE_IMAGES[svc.backend]?.label}</span>
+            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-surface)] px-3 py-2 underline">http://localhost:{svc.port}/docs <Icon icon={faBookOpen} /></span>
+            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-surface)] px-3 py-2 font-mono" aria-label="OpenAI endpoint">http://localhost:{svc.port}/v1 <Icon icon={faPlug} /></span>
+            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-surface)] px-3 py-2">{svc.gpu ? `GPU Inference · ${GPU.model}` : 'CPU Inference'} <Icon icon={faMicrochip} /></span>
+            <span class="flex items-center gap-2 rounded-md bg-[var(--pd-content-card-inset-surface)] px-3 py-2">{INFERENCE_IMAGES[svc.backend]?.label}</span>
           </div>
           {#if svc.backend === 'vllm'}
             <div class="mt-3 grid grid-cols-4 gap-3 text-xs">
-              <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-2"><div class="opacity-70">Generation</div><div class="text-base text-[var(--pd-content-card-header-text)]">85 tok/s</div></div>
-              <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-2"><div class="opacity-70">KV cache usage</div><div class="text-base text-[var(--pd-content-card-header-text)]">12 %</div></div>
-              <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-2"><div class="opacity-70">Time to first token p50</div><div class="text-base text-[var(--pd-content-card-header-text)]">81 ms</div></div>
-              <div class="rounded-md bg-[var(--pd-content-card-inset-bg)] p-2"><div class="opacity-70">GPU memory</div><div class="text-base text-[var(--pd-content-card-header-text)]">21.3 / 24 GB</div></div>
+              <div class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-2"><div class="opacity-70">Generation</div><div class="text-base text-[var(--pd-content-card-header-text)]">85 tok/s</div></div>
+              <div class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-2"><div class="opacity-70">KV cache usage</div><div class="text-base text-[var(--pd-content-card-header-text)]">12 %</div></div>
+              <div class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-2"><div class="opacity-70">Time to first token p50</div><div class="text-base text-[var(--pd-content-card-header-text)]">81 ms</div></div>
+              <div class="rounded-md bg-[var(--pd-content-card-inset-surface)] p-2"><div class="opacity-70">GPU memory</div><div class="text-base text-[var(--pd-content-card-header-text)]">21.3 / 24 GB</div></div>
             </div>
           {/if}
         </Card>

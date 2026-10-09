@@ -74,6 +74,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'RHEL VMs',
   publisher: 'redhat',
+  category: 'RHEL & image mode',
   description: 'Create Red Hat Enterprise Linux VMs and RHEL Podman machines, registered with your subscription.',
   version: '0.4.0',
   icon: 'icons/redhat.rhel-vms.png',

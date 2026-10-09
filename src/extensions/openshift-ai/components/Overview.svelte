@@ -48,7 +48,7 @@ function go(section: string): void {
       <Card title="DataScienceCluster default-dsc · components">
         <div class="grid grid-cols-3 gap-x-6 gap-y-1.5">
           {#each components as [name, c] (name)}
-            <div class="flex items-center justify-between rounded-md bg-[var(--pd-content-card-inset-bg)] px-3 py-1.5">
+            <div class="flex items-center justify-between rounded-md bg-[var(--pd-content-card-inset-surface)] px-3 py-1.5">
               <span class="font-mono text-xs text-[var(--pd-content-card-header-text)]">{name}</span>
               <Chip label={c.managementState} tone={c.managementState === 'Managed' ? 'success' : 'default'} />
             </div>

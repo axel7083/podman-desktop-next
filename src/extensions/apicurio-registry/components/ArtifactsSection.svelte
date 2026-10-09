@@ -112,7 +112,7 @@ function upload(): void {
           </Card>
         </div>
         <Card title="Content · v{latest(selected).version}">
-          <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-bg)] overflow-auto">{selected.content}</pre>
+          <pre class="text-xs font-mono rounded-md p-3 bg-[var(--pd-content-card-inset-surface)] overflow-auto">{selected.content}</pre>
         </Card>
       </div>
     {/snippet}

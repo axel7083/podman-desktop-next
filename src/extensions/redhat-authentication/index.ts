@@ -3,7 +3,9 @@
  * extension (dependsOn). Contributes the Accounts provider (P16), the
  * registry.redhat.io service-account registry, a status-bar item, a settings
  * page (organization, activation keys, subscriptions) and a dashboard card.
- * Shared with the RHEL wave: keep it generic, extend rather than fork.
+ * Single owner of SSO + activation keys + subscriptions + registry (store.ts);
+ * redhat.rhel-registration depends on it and only adds per-system
+ * registration (subscription-manager) status and actions.
  */
 import { faArrowRightToBracket, faGear } from '@fortawesome/free-solid-svg-icons';
 
@@ -14,6 +16,7 @@ import { runTask, world } from '#lib/world.svelte.ts';
 import RedHatAccountSettings from './components/RedHatAccountSettings.svelte';
 import SubscriptionCard from './components/SubscriptionCard.svelte';
 import { REGISTRY_SERVICE_ACCOUNT, SESSION, SSO_PROVIDER_ID } from './data.ts';
+import { seedAccount } from './store.ts';
 
 const ID = 'redhat.redhat-authentication';
 
@@ -39,6 +42,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'Red Hat Authentication',
   publisher: 'redhat',
+  category: 'Accounts',
   description: 'Sign in with Red Hat SSO; configures registry.redhat.io and registers Podman machines with a RHEL subscription.',
   version: '1.3.0',
   icon: 'icons/redhat.redhat-authentication.png',
@@ -84,7 +88,11 @@ const extension: MockExtension = {
         icon: faGear,
         run: (): void => navigate('/settings/redhat-account'),
       },
+      { id: 'redhat.authentication.keys', title: 'Manage activation keys', category: 'Red Hat', icon: faGear, run: (): void => navigate('/settings/redhat-account') },
     ],
+  },
+  seed(): void {
+    seedAccount();
   },
 };
 

@@ -31,6 +31,7 @@ const extension: MockExtension = {
   id: CRYOSTAT_EXT,
   displayName: 'Cryostat',
   publisher: 'redhat',
+  category: 'Application development',
   description: 'Run a local Cryostat next to your JVM containers, auto-discover them over the Podman socket and capture and analyse JFR recordings.',
   version: '0.2.0',
   icon: 'icons/redhat.cryostat.svg',

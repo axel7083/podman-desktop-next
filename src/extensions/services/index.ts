@@ -19,6 +19,7 @@ const extension: MockExtension = {
   id: ID,
   displayName: 'Services',
   publisher: 'podman-desktop',
+  category: 'Application development',
   description: 'One-click local backing services (databases, brokers, identity, observability) that your apps and other extensions can discover.',
   version: '0.3.0',
   icon: 'icons/podman-desktop.svg',
@@ -38,7 +39,7 @@ const extension: MockExtension = {
       {
         id: 'service',
         label: SERVICE_GROUP_LABEL,
-        typeName: 'Service',
+        typeName: 'Service', chip: 'Service',
         icon: 'icons/podman-desktop.svg',
       },
     ],

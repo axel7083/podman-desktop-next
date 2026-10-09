@@ -7,7 +7,7 @@ import { navigate } from '#lib/nav.ts';
 import ActionsCell from '#lib/table/ActionsCell.svelte';
 import NameCell from '#lib/table/NameCell.svelte';
 import type { ActionsCellData, NameCellData } from '#lib/table/types.ts';
-import { humanAge } from '#lib/world.svelte.ts';
+import { humanAge, timeAgo } from '#lib/world.svelte.ts';
 
 import { runPlaybook } from '../actions.ts';
 import { type AnsibleRun, recapOf, store } from '../data.ts';
@@ -63,7 +63,7 @@ const columns = [
   }),
   new TableColumn<AnsibleRun, string>('Hosts', { renderer: TableSimpleColumn, renderMapping: recapSummary }),
   new TableColumn<AnsibleRun, string>('Duration', { renderer: TableSimpleColumn, renderMapping: duration }),
-  new TableColumn<AnsibleRun, string>('Started', { renderer: TableSimpleColumn, renderMapping: (r): string => `${humanAge(r.started)} ago` }),
+  new TableColumn<AnsibleRun, string>('Started', { renderer: TableSimpleColumn, renderMapping: (r): string => timeAgo(r.started) }),
   new TableColumn<AnsibleRun, ActionsCellData>('Actions', {
     align: 'right',
     width: '110px',
