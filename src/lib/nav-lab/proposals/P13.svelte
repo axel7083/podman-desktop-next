@@ -90,6 +90,21 @@ $effect(() => {
 // svelte-ignore state_referenced_locally
 let sel = $state(lab.ctx ?? 'podman-machine-default');
 let filter = $state('');
+let treeW = $state(272);
+
+function resizeTree(e: PointerEvent): void {
+  const startX = e.clientX;
+  const startW = treeW;
+  const move = (ev: PointerEvent): void => {
+    treeW = Math.max(200, Math.min(480, startW + ev.clientX - startX));
+  };
+  const up = (): void => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+}
 /** Expanded tree keys, remembered per connection (sections collapsed by default). */
 let expanded = $state<Record<string, string[]>>({});
 
@@ -251,7 +266,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
 
 <Frame {titleLeft} {titleRight}>
   {#if c}
-    <aside class="flex flex-col w-[272px] shrink-0 h-full bg-[var(--pd-secondary-nav-bg)] border-r border-[var(--pd-global-nav-bg-border)]">
+    <aside data-island="tree" tabindex="-1" style:width="{treeW}px" class="flex flex-col shrink-0 h-full bg-[var(--pd-secondary-nav-bg)] border-r border-[var(--pd-global-nav-bg-border)]">
       <div class="px-2 pt-2 pb-1 shrink-0">
         <SimpleSwitcher selected={c.id} onselect={select} onmanage={(): void => open({ kind: 'settings' })} />
       </div>
@@ -277,8 +292,16 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
         {/if}
       </div>
     </aside>
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize the tree"
+      data-resizer="tree"
+      class="relative z-10 w-1 -mx-0.5 shrink-0 cursor-col-resize hover:bg-[var(--pd-tab-highlight)]"
+      onpointerdown={resizeTree}></div>
   {/if}
   <div class="flex flex-col flex-1 min-w-0 h-full">
+    <div data-island="editor" tabindex="-1" class="flex flex-col flex-1 min-h-0 min-w-0">
     <TabStrip {wb} />
     <div class="flex-1 min-h-0 overflow-hidden">
       {#key wb.active}
@@ -310,6 +333,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
           <Content target={t} onopen={open} selectedRes={t?.resId} />
         {/if}
       {/key}
+    </div>
     </div>
     <BottomPanel {sessions} onopen={open} />
   </div>

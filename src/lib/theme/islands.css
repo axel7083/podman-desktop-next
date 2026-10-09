@@ -1,0 +1,150 @@
+/*
+ * v3 chrome style layer: JetBrains "Islands" (default) vs Classic (v2 P13 look).
+ * Root classes set by lab.applyTheme(): `dark|light` + `style-islands|style-classic`
+ * (+ `islands-twbg` = "Different tool window background").
+ * Hooks in markup: [data-frame] [data-titlebar] [data-frame-body] [data-statusbar]
+ * [data-island=tree|editor|panel] [data-resizer]. Values: docs/islands-theme.md,
+ * rules: docs/p13-design-rules.md § G. Unlayered on purpose: wins over Tailwind utilities.
+ */
+html {
+  /* window canvas behind the app (classic: the title-bar colour) */
+  --pdn-canvas: var(--pd-titlebar-bg);
+}
+
+html.style-islands {
+  /* Island.arc = 20 (Swing arc = diameter) -> 10px radius; Island.borderWidth = 6 -> 6px gap */
+  --island-radius: 10px;
+  --island-gap: 6px;
+}
+
+html.style-islands.dark {
+  --pdn-canvas: var(--pd-titlebar-bg); /* #0f0f11, darker than the islands */
+  --island-bg: var(--pd-content-bg); /* #222222 */
+  --island-tool-bg: var(--island-bg);
+  --island-border: rgb(255 255 255 / 0.06);
+  --island-border-active: rgb(255 255 255 / 0.16);
+  --island-tab-active-bg: color-mix(in srgb, var(--pd-button-primary-bg) 30%, transparent);
+  --island-tab-active-border: color-mix(in srgb, var(--pd-button-primary-bg) 65%, transparent);
+  --island-tab-inactive-bg: rgb(255 255 255 / 0.07);
+  --island-tab-inactive-border: rgb(255 255 255 / 0.12);
+}
+html.style-islands.dark.islands-twbg {
+  --island-tool-bg: var(--pd-global-nav-bg); /* #27272a, a step lighter than the editor */
+}
+
+html.style-islands.light {
+  --pdn-canvas: var(--pd-global-nav-bg-border); /* #e4e4e4, light grey canvas */
+  --island-bg: var(--pd-content-bg); /* #f6f6f6 */
+  --island-tool-bg: var(--island-bg);
+  --island-border: rgb(0 0 0 / 0.07);
+  --island-border-active: rgb(0 0 0 / 0.18);
+  --island-tab-active-bg: color-mix(in srgb, var(--pd-button-primary-bg) 16%, transparent);
+  --island-tab-active-border: color-mix(in srgb, var(--pd-button-primary-bg) 55%, transparent);
+  --island-tab-inactive-bg: rgb(0 0 0 / 0.06);
+  --island-tab-inactive-border: rgb(0 0 0 / 0.12);
+}
+html.style-islands.light.islands-twbg {
+  --island-tool-bg: var(--pd-terminal-background); /* #ffffff */
+}
+
+/* ---- window: canvas everywhere outside the islands ---- */
+html.style-islands [data-frame] {
+  background: var(--pdn-canvas);
+}
+html.style-islands [data-titlebar] {
+  background: var(--pdn-canvas);
+  border-bottom-color: transparent;
+}
+html.style-islands [data-frame-body] {
+  padding: 0 var(--island-gap) var(--island-gap);
+}
+html.style-islands.light [data-statusbar] {
+  background: var(--pdn-canvas);
+  color: #3f3f46;
+}
+
+/* ---- islands ---- */
+html.style-islands [data-island] {
+  background: var(--island-bg);
+  border: 1px solid var(--island-border);
+  border-radius: var(--island-radius);
+  overflow: hidden;
+  outline: none;
+  transition: border-color 0.12s;
+}
+html.style-islands [data-island='tree'],
+html.style-islands [data-island='panel'] {
+  background: var(--island-tool-bg);
+}
+/* active island (Island.inactiveAlpha): the focused one, else the editor */
+html.style-islands [data-island]:focus-within,
+html.style-islands [data-frame-body]:not(:has([data-island]:focus-within)) [data-island='editor'] {
+  border-color: var(--island-border-active);
+}
+
+/* tab strips live inside their island: no own surface, soft under-border */
+html.style-islands [data-island] [role='tablist'] {
+  background: transparent;
+  border-bottom-color: var(--island-border);
+  padding-left: 4px;
+}
+
+/* tree: rounded selection inset in the island */
+html.style-islands [data-island='tree'] [role='treeitem'] {
+  margin: 0 6px;
+  border-radius: 6px;
+}
+
+/* bottom panel: own island below the editor, resizer in the gap */
+html.style-islands [data-island='panel'] {
+  overflow: visible;
+  margin-top: var(--island-gap);
+}
+html.style-islands [data-island='panel'] > [data-testid='nav-lab-panel-body'] {
+  border-radius: 0 0 var(--island-radius) var(--island-radius);
+  overflow: hidden;
+}
+html.style-islands [data-island='panel'] > [role='separator'] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(-1 * var(--island-gap) - 1px);
+  height: var(--island-gap);
+  margin: 0;
+  background: transparent;
+}
+html.style-islands [data-resizer] {
+  width: var(--island-gap);
+  margin: 0;
+  background: transparent;
+}
+html.style-islands [data-island='panel'] > [role='separator']:hover {
+  background: linear-gradient(var(--pd-button-primary-bg), var(--pd-button-primary-bg)) center / 100% 2px no-repeat;
+}
+html.style-islands [data-resizer]:hover {
+  background: linear-gradient(var(--pd-button-primary-bg), var(--pd-button-primary-bg)) center / 2px 100% no-repeat;
+}
+
+/* ---- tabs (rule A1, same component in editor and panel): rounded pill ---- */
+html.style-islands .ltab {
+  height: 26px;
+  margin: auto 1px;
+  padding: 0 6px 0 10px;
+  border-radius: 6px;
+}
+html.style-islands .ltab .bar {
+  display: none;
+}
+html.style-islands .ltab.sel {
+  background: var(--island-tab-inactive-bg);
+  box-shadow: inset 0 0 0 1px var(--island-tab-inactive-border);
+}
+html.style-islands [data-island]:focus-within .ltab.sel,
+html.style-islands [data-frame-body]:not(:has([data-island]:focus-within)) [data-island='editor'] .ltab.sel {
+  background: var(--island-tab-active-bg);
+  box-shadow: inset 0 0 0 1px var(--island-tab-active-border);
+}
+html.style-islands .ltab.sel.dim {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--island-tab-inactive-border);
+}

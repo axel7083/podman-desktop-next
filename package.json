@@ -1,6 +1,6 @@
 {
   "name": "podman-desktop-next",
-  "version": "2.0.0-next",
+  "version": "3.0.0-next",
   "private": true,
   "type": "module",
   "description": "Interactive mockup of a provider-first Podman Desktop with every integration as a mock extension",

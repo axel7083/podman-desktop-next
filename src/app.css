@@ -3,6 +3,7 @@
 @import 'tailwindcss';
 @import './lib/theme/themes.css';
 @import './lib/theme/proposed-tokens.css';
+@import './lib/theme/islands.css';
 
 @source '../node_modules/@podman-desktop/ui-svelte/dist';
 

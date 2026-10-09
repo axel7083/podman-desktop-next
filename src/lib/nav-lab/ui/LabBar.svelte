@@ -1,17 +1,17 @@
 <script lang="ts">
-/** Lime lab toolbar (mockup chrome, not product). */
+/** Lime "Mockup" settings bar (mockup chrome, not product). */
 import { goto } from '$app/navigation';
 
 import { href } from '#lib/nav.ts';
 
-import { lab, PROPOSALS, type ProposalId, type RailMode, type ScreenWidth } from '../lab.svelte.ts';
+import { type ChromeStyle, lab, type ScreenWidth } from '../lab.svelte.ts';
 
 function sync(): void {
   lab.applyTheme();
-  goto(href(`/nav-lab?${lab.query()}`), { replaceState: true }).catch(() => undefined);
+  goto(href(`/?${lab.query()}`), { replaceState: true }).catch(() => undefined);
 }
 
-function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' | 'conns' | 'install' | 'table'>(k: K, v: (typeof lab)[K]): void {
+function set<K extends 'theme' | 'style' | 'toolBg' | 'panel' | 'screen' | 'conns' | 'install' | 'table'>(k: K, v: (typeof lab)[K]): void {
   lab[k] = v;
   sync();
 }
@@ -28,26 +28,22 @@ function set<K extends 'theme' | 'rail' | 'tabs' | 'panel' | 'screen' | 'color' 
   </span>
 {/snippet}
 
-<div class="flex items-center gap-3 h-8 shrink-0 px-3 text-[11px] font-medium bg-[var(--pdn-mockup-bg)] text-[var(--pdn-mockup-text)] overflow-x-auto whitespace-nowrap" data-testid="nav-lab-bar">
-  <a href={href('/nav-lab')} class="font-bold" onclick={(): void => lab.selectProposal(undefined)}>Nav lab</a>
-  {@render seg<ProposalId | undefined>('', [...PROPOSALS.map(p => [p.id, p.round > 1 ? p.id.toUpperCase() : `${p.id.toUpperCase()} ${p.short}`] as [ProposalId, string])], lab.proposal, v => {
-    lab.selectProposal(v);
-    sync();
-  })}
-  {#if lab.proposal === 'p12' || lab.proposal === 'p13' || lab.proposal === 'p14'}
-    {@render seg('Connections', [['one', '1'], ['many', 'Many']] as ['one' | 'many', string][], lab.conns, v => set('conns', v))}
-  {/if}
-  {#if lab.proposal === 'p13'}
-    {@render seg('Install', [['vanilla', 'Vanilla'], ['all', 'All extensions']] as ['vanilla' | 'all', string][], lab.install, v => {
-      lab.installed = [];
-      set('install', v);
-    })}
-    {@render seg('Table', [['classic', 'Classic'], ['modern', 'Modern'], ['grid', 'Grid']] as ['classic' | 'modern' | 'grid', string][], lab.table, v => set('table', v))}
-  {/if}
-  {@render seg('Colour (H)', [[true, 'On'], [false, 'Off']], lab.color, v => set('color', v))}
+<div class="flex items-center gap-3 h-7 shrink-0 px-3 text-[11px] font-medium bg-[var(--pdn-mockup-bg)] text-[var(--pdn-mockup-text)] overflow-x-auto whitespace-nowrap" data-testid="mockup-bar">
+  <span class="font-bold">Mockup</span>
   {@render seg('Theme', [['dark', 'Dark'], ['light', 'Light']] as ['dark' | 'light', string][], lab.theme, v => set('theme', v))}
-  {#if lab.proposal !== 'p13' && lab.proposal !== 'p14'}{@render seg(lab.proposal && Number(lab.proposal.slice(1)) > 5 ? 'Nav' : 'Rail', [['icons', 'Icons'], ['labels', 'Labels'], ['expanded', 'Expanded']] as [RailMode, string][], lab.rail, v => set('rail', v))}{/if}
-  {@render seg('Tabs', [['few', 'Few'], ['many', 'Many (16)']] as ['few' | 'many', string][], lab.tabs, v => set('tabs', v))}
+  {@render seg('Style', [['islands', 'Islands'], ['classic', 'Classic']] as [ChromeStyle, string][], lab.style, v => set('style', v))}
+  {#if lab.style === 'islands'}
+    <label class="flex items-center gap-1 cursor-pointer" title="Islands option: tree and bottom panel use a different background than the editor">
+      <input type="checkbox" data-testid="twbg" checked={lab.toolBg} onchange={(e): void => set('toolBg', e.currentTarget.checked)} />
+      Different tool window background
+    </label>
+  {/if}
+  {@render seg('Install', [['vanilla', 'Vanilla'], ['all', 'All extensions']] as ['vanilla' | 'all', string][], lab.install, v => {
+    lab.installed = [];
+    set('install', v);
+  })}
+  {@render seg('Connections', [['one', '1'], ['many', 'Many']] as ['one' | 'many', string][], lab.conns, v => set('conns', v))}
+  {@render seg('Table', [['modern', 'Modern'], ['grid', 'Grid'], ['classic', 'Classic']] as ['classic' | 'modern' | 'grid', string][], lab.table, v => set('table', v))}
   {@render seg('Panel `', [[true, 'On'], [false, 'Off']], lab.panel, v => set('panel', v))}
   {@render seg('Screen', [[1440, '1440'], [1280, '1280'], [1024, '1024']] as [ScreenWidth, string][], lab.screen, v => set('screen', v))}
 </div>

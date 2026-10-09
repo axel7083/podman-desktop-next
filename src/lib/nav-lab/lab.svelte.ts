@@ -1,5 +1,5 @@
 /**
- * Nav lab state: lab toggles (proposal, theme, rail mode…) and a small
+ * Mockup state: settings-bar toggles (theme, style, install…) and a small
  * `Workbench` (opened tabs) each proposal instantiates.
  */
 import {
@@ -33,110 +33,17 @@ import {
 } from "./data.ts";
 import { findNode, OVERVIEW_ICON } from "./r3/trees.ts";
 
-export type ProposalId =
-  | "p1"
-  | "p2"
-  | "p5"
-  | "p6"
-  | "p7"
-  | "p8"
-  | "p9"
-  | "p10"
-  | "p12"
-  | "p13"
-  | "p14";
 export type RailMode = "icons" | "labels" | "expanded";
 export type ScreenWidth = 1440 | 1280 | 1024;
-
-export const PROPOSALS: {
-  id: ProposalId;
-  name: string;
-  short: string;
-  defaultRail: RailMode;
-  round: 1 | 2 | 3;
-}[] = [
-  {
-    id: "p1",
-    name: "P1 · IDE / Explorer",
-    short: "IDE / Explorer",
-    defaultRail: "labels",
-    round: 1,
-  },
-  {
-    id: "p2",
-    name: "P2 · Provider rail + tabs (hybrid)",
-    short: "Hybrid",
-    defaultRail: "expanded",
-    round: 1,
-  },
-  {
-    id: "p5",
-    name: "P5 · Lens-style hotbar",
-    short: "Hotbar",
-    defaultRail: "icons",
-    round: 1,
-  },
-  {
-    id: "p6",
-    name: "P6 · Scope chip in the title bar",
-    short: "Scope chip",
-    defaultRail: "expanded",
-    round: 2,
-  },
-  {
-    id: "p7",
-    name: "P7 · Breadcrumb header",
-    short: "Breadcrumb",
-    defaultRail: "expanded",
-    round: 2,
-  },
-  {
-    id: "p8",
-    name: "P8 · Aggregated + connection facets",
-    short: "Facets",
-    defaultRail: "expanded",
-    round: 2,
-  },
-  {
-    id: "p9",
-    name: "P9 · Dashboard launcher + tab groups",
-    short: "Tab groups",
-    defaultRail: "icons",
-    round: 2,
-  },
-  {
-    id: "p10",
-    name: "P10 · Status-bar context",
-    short: "Status bar",
-    defaultRail: "expanded",
-    round: 2,
-  },
-  {
-    id: "p12",
-    name: "P12 · Switcher at the top of the nav",
-    short: "Nav switcher",
-    defaultRail: "expanded",
-    round: 2,
-  },
-  {
-    id: "p13",
-    name: "P13 · P1 without the rail",
-    short: "Tree, no rail",
-    defaultRail: "expanded",
-    round: 3,
-  },
-  {
-    id: "p14",
-    name: "P14 · P5 nav + switcher",
-    short: "Nav + switcher",
-    defaultRail: "expanded",
-    round: 3,
-  },
-];
+/** v3 chrome style: JetBrains-like floating "islands" (default) or the v2 flat look. */
+export type ChromeStyle = "islands" | "classic";
 
 class LabState {
-  proposal = $state<ProposalId | undefined>(undefined);
   theme = $state<"dark" | "light">("dark");
+  /** Islands (default) or Classic chrome (`style=` param). */
+  style = $state<ChromeStyle>("islands");
+  /** Islands option "Different tool window background" (`twbg=on`). */
+  toolBg = $state(false);
   rail = $state<RailMode>("expanded");
   tabs = $state<"few" | "many">("few");
   panel = $state(false);
@@ -170,18 +77,13 @@ class LabState {
   }
 
   init(params: URLSearchParams): void {
-    const p = params.get("p");
-    this.proposal = PROPOSALS.some((x) => x.id === p)
-      ? (p as ProposalId)
-      : undefined;
     const theme = params.get("theme");
     this.theme = theme === "light" ? "light" : "dark";
     const rail = params.get("rail");
     this.rail =
       rail === "icons" || rail === "labels" || rail === "expanded"
         ? rail
-        : (PROPOSALS.find((x) => x.id === this.proposal)?.defaultRail ??
-          "expanded");
+        : "expanded";
     this.tabs = params.get("tabs") === "many" ? "many" : "few";
     this.panel = params.get("panel") === "on";
     const screen = Number(params.get("screen"));
@@ -193,17 +95,17 @@ class LabState {
     this.install = params.get("install") === "vanilla" ? "vanilla" : "all";
     const table = params.get("table");
     this.table = table === "classic" || table === "grid" ? table : "modern";
+    this.style = params.get("style") === "classic" ? "classic" : "islands";
+    this.toolBg = params.get("twbg") === "on";
     this.applyTheme();
   }
 
+  /** Theme layer on <html>: `dark|light` + `style-islands|style-classic` (+ `islands-twbg`). */
   applyTheme(): void {
-    document.documentElement.className = this.theme;
+    const cls = [this.theme, `style-${this.style}`];
+    if (this.style === "islands" && this.toolBg) cls.push("islands-twbg");
+    document.documentElement.className = cls.join(" ");
     document.documentElement.style.colorScheme = this.theme;
-  }
-
-  selectProposal(id: ProposalId | undefined): void {
-    this.proposal = id;
-    this.rail = PROPOSALS.find((x) => x.id === id)?.defaultRail ?? "expanded";
   }
 
   openCreate(context: string): void {
@@ -214,16 +116,16 @@ class LabState {
   /** Hash query mirroring the toggles (shareable URL). */
   query(): string {
     const q = new URLSearchParams();
-    if (this.proposal) q.set("p", this.proposal);
     q.set("theme", this.theme);
-    q.set("rail", this.rail);
-    q.set("tabs", this.tabs);
+    q.set("style", this.style);
+    if (this.toolBg) q.set("twbg", "on");
+    if (this.tabs === "many") q.set("tabs", "many");
     q.set("panel", this.panel ? "on" : "off");
     q.set("screen", String(this.screen));
     if (this.color) q.set("color", "on");
     if (this.conns === "one") q.set("conns", "one");
     if (this.install === "vanilla") q.set("install", "vanilla");
-    if (this.proposal === "p13") q.set("table", this.table);
+    q.set("table", this.table);
     return q.toString();
   }
 }
@@ -386,13 +288,7 @@ export function describe(t: LabTarget): TargetInfo {
       };
     case "connection":
       // P13 (rule B6): a connection tab is its Overview (same icon as the tree row) + provider badge.
-      if (lab.proposal === "p13")
-        return { title: c?.name ?? "?", icon: OVERVIEW_ICON, connId: c?.id, crumb: [c?.group ?? ""] };
-      return {
-        title: c?.name ?? "?",
-        icon: c?.icon ?? faBorderAll,
-        crumb: [c?.group ?? ""],
-      };
+      return { title: c?.name ?? "?", icon: OVERVIEW_ICON, connId: c?.id, crumb: [c?.group ?? ""] };
     case "tool": {
       const x = tool(t.toolId);
       return {

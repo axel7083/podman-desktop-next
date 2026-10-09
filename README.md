@@ -3,6 +3,15 @@
 Interactive, static mockup of a provider-first Podman Desktop in which every
 integration is a mock extension. Architecture and conventions: [AGENTS.md](AGENTS.md).
 
+**v3 (current `main`)**: `#/` is the P13 navigation (tree + editor tabs + bottom
+panel) with a JetBrains "Islands"-style chrome. The lime **Mockup** bar switches
+Theme, Style (Islands / Classic, plus "Different tool window background"), Install,
+Connections, Table, Panel and Screen width; settings live in the hash query
+(`#/?theme=light&style=classic&twbg=on&install=vanilla&conns=one&table=grid&panel=on&screen=1280`).
+Old `#/nav-lab?p=p13…` links still work. Rules: `docs/p13-design-rules.md`,
+Islands research: `docs/islands-theme.md`. The v1 shell routes (`#/c/…`,
+`#/settings`) remain in the code; the parameters below apply to them.
+
 ## How to review
 
 ```bash
@@ -52,7 +61,7 @@ Published on GitHub Pages: <https://axel7083.github.io/podman-desktop-next/>
 
 | URL | What |
 |---|---|
-| `/podman-desktop-next/v1/`, `/v2/`, … | Releases, one folder per `v*` tag, frozen once published |
+| `/podman-desktop-next/v1/`, `/v2/`, … | Releases, one folder per `v*` tag, frozen once published (v1 = shell, v2 = nav lab with P13 home, v3 = P13 only + Islands) |
 | `/podman-desktop-next/next/` | Preview of `main`, rebuilt on every push |
 | `/podman-desktop-next/pr-<n>/` | Preview of a same-repo pull request, removed when it closes |
 | `/podman-desktop-next/versions.json` | `[{ id, kind: release \| preview \| pr, ref, date }]` |

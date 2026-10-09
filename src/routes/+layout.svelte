@@ -28,9 +28,11 @@ let { children }: Props = $props();
 
 const initialUrl = new URL(page.url.href);
 ui.init(initialUrl);
-if (registry.init(initialUrl) && initialUrl.searchParams.get('welcome') !== 'off') ui.welcomeOpen = true;
-
 const path = $derived(appPath(appUrl().pathname));
+/** v3 app (P13) at `#/` and its legacy alias `#/nav-lab`: full viewport, no v1 shell, no Welcome. */
+const isMockupApp = (p: string): boolean => p === '/' || p.startsWith('/nav-lab');
+const firstRun = registry.init(initialUrl);
+if (firstRun && initialUrl.searchParams.get('welcome') !== 'off' && !isMockupApp(appPath(appUrl().pathname))) ui.welcomeOpen = true;
 const conn = $derived(page.params.conn ? registry.getConnection(page.params.conn) : undefined);
 const inSettings = $derived(path.startsWith('/settings'));
 /** A connection with nothing but "Overview" (most VMs and services) needs no secondary nav. */
@@ -42,8 +44,8 @@ $effect(() => {
 });
 </script>
 
-{#if path.startsWith('/nav-lab')}
-  <!-- Nav lab (throwaway): full viewport, outside the shell -->
+{#if isMockupApp(path)}
+  <!-- v3 app (P13): full viewport, outside the v1 shell -->
   {@render children()}
 {:else}
 <main class="flex flex-col w-screen h-screen overflow-hidden">

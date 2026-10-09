@@ -101,3 +101,27 @@ violation is a code smell you can grep for.
     actions as its `⋯` button.
 27. **Keyboard**: Ctrl+F opens find in code / log views and focuses the filter in lists; `/` focuses the filter;
     Esc clears / closes; middle-click closes a tab.
+
+## G. Islands (v3 default style)
+
+Theme layer only: `src/lib/theme/islands.css` keyed on `html.style-islands` (Classic =
+`style-classic` = the rules above unchanged). Components only carry hooks
+(`data-island`, `data-resizer`, `data-frame*`); never style islands per component.
+Research and values: [islands-theme.md](islands-theme.md).
+
+28. **Three islands**: tree (`data-island="tree"`), editor = tab strip + content
+    (`data-island="editor"`), bottom panel (`data-island="panel"`). Everything else
+    (title bar, status bar, gaps) is the **window canvas** `--pdn-canvas`.
+29. **Radius 10px, gap 6px** (`--island-radius`, `--island-gap`) between islands and
+    from the window edges (the title bar is the top gap). 1px `--island-border`, no
+    divider lines between regions.
+30. **Surfaces**: dark canvas `#0f0f11` under `#222222` islands; light canvas `#e4e4e4`
+    under `#f6f6f6` islands. "Different tool window background" (`twbg=on`) gives the
+    tree and panel `--island-tool-bg` (dark `#27272a`, light `#ffffff`).
+31. **Focus contrast** (JetBrains `Island.inactiveAlpha`): the island with focus
+    (`:focus-within`, else the editor) gets `--island-border-active`, and its selected
+    tab is an accent pill; selected tabs in other islands are neutral grey pills.
+32. **Tabs**: rule 1 still holds (one `Tab`). In Islands the 2px bar becomes a
+    26px rounded (6px) pill inside the 32px strip; the strip has no own background.
+33. **Resizers live in the gaps** (tree ↔ editor, editor ↔ panel): the whole gap is the
+    hit area, a 2px accent line shows on hover. Tree rows use rounded (6px) inset selection.

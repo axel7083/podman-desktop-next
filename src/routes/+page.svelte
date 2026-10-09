@@ -1,13 +1,9 @@
 <script lang="ts">
 /**
- * v2: the home page opens the chosen navigation (nav-lab P13) directly.
- * The v1 shell stays reachable at /v1/.
+ * v3: the home page IS the P13 navigation (no redirect, no v1 shell). The v1
+ * shell routes (`#/c/…`, `#/settings`…) stay reachable; v1 itself is at /v1/.
  */
-import { onMount } from 'svelte';
-
-import { navigate } from '#lib/nav.ts';
-
-onMount(() => {
-  navigate('/nav-lab?p=p13&table=modern', true);
-});
+import MockupApp from '#lib/nav-lab/MockupApp.svelte';
 </script>
+
+<MockupApp />

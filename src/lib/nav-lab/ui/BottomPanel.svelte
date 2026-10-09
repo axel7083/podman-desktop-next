@@ -141,7 +141,7 @@ function newTerminal(): void {
 </script>
 
 {#if lab.panel}
-  <section aria-label="Panel" class="flex flex-col shrink-0 border-t border-[var(--pd-content-divider)] bg-[var(--pd-terminal-background)]" style:height="{height}px" style:border-top={tint ? `2px solid ${tint}` : undefined}>
+  <section aria-label="Panel" data-island="panel" tabindex="-1" class="relative flex flex-col shrink-0 border-t border-[var(--pd-content-divider)] bg-[var(--pd-terminal-background)]" style:height="{height}px" style:border-top={tint ? `2px solid ${tint}` : undefined}>
     <div
       role="separator"
       aria-orientation="horizontal"
