@@ -1,5 +1,11 @@
 [
   {
+    "id": "v1",
+    "kind": "release",
+    "ref": "a8f15c7d550cb9c54d3d13b72f567190e64e5852",
+    "date": "2026-10-09T09:23:03.201Z"
+  },
+  {
     "id": "next",
     "kind": "preview",
     "ref": "a8f15c7d550cb9c54d3d13b72f567190e64e5852",
