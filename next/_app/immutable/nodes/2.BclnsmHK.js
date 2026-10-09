@@ -1,1 +1,0 @@
-import{G as e,It as t,Lt as n,m as r}from"../chunks/Rsg-an2b.js";import{f as i}from"../chunks/D2k4rU6X.js";function a(a,o){n(o,!1),e(()=>{i(`/nav-lab?p=p13&table=modern`,!0)}),r(),t()}export{a as component};
