@@ -21,7 +21,7 @@ import {
 
 import type { IconRef } from '#lib/ext/types.ts';
 
-import { type ConnStatus, type LabConnection, type LabResource, type LabTarget } from '../data.ts';
+import { conn as findConn, type ConnStatus, type LabConnection, type LabResource, type LabTarget, section as findSection } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { ext, isInstalled } from './exts.ts';
 
@@ -109,8 +109,14 @@ function terminalLines(r: LabResource): string[] {
 
 let seq = 0;
 
+/** Source of a panel session: the resource tab target and its kind icon. */
+export function sourceOf(r: LabResource): { target: LabTarget; icon: IconRef | undefined } {
+  const sec = findSection(findConn(r.connId), r.sectionId);
+  return { target: { kind: 'resource', connId: r.connId, sectionId: r.sectionId, resId: r.id }, icon: sec?.ext?.icon ?? sec?.icon };
+}
+
 export function openTerminal(r: LabResource): void {
-  lab.addSession({ id: `term-${++seq}`, kind: 'terminal', title: r.name, label: 'terminal', connId: r.connId, lines: terminalLines(r) }, true);
+  lab.addSession({ id: `term-${++seq}`, kind: 'terminal', title: r.name, label: 'terminal', connId: r.connId, lines: terminalLines(r), ...sourceOf(r) });
 }
 
 /** Containers created with `-t` get an extra "Attach TTY" action. */
@@ -121,28 +127,34 @@ export function hasTty(r: LabResource): boolean {
 }
 
 export function openTty(r: LabResource): void {
-  lab.addSession({ id: `tty-${++seq}`, kind: 'terminal', title: `${r.name} (tty)`, label: 'tty', connId: r.connId, lines: [`$ podman attach ${r.name}`, '/ # '] }, true);
+  lab.addSession({ id: `tty-${++seq}`, kind: 'terminal', title: `${r.name} (tty)`, label: 'tty', connId: r.connId, lines: [`$ podman attach ${r.name}`, '/ # '], ...sourceOf(r) });
 }
 
 /** Quadlet unit logs (journalctl) in the bottom panel. */
-export function showJournal(unit: string, service: string, connId: string): void {
+export function showJournal(unit: string, service: string, connId: string, src?: { target: LabTarget; icon?: IconRef }): void {
   const lines = [
     `-- journalctl --user -u ${service} -f --`,
     `Oct 09 09:12:00 fedora systemd[1012]: Starting ${service} - ${unit}...`,
     `Oct 09 09:12:01 fedora podman[4410]: ${unit.split('.')[0]} 2026-10-09 09:12:01 INFO started`,
     `Oct 09 09:12:01 fedora systemd[1012]: Started ${service} - ${unit}.`,
   ];
-  lab.addSession({ id: `journal-${++seq}`, kind: 'logs', title: service, label: 'journalctl', connId, lines, stream: true }, true);
+  lab.addSession({ id: `journal-${connId}-${unit}`, kind: 'logs', title: service, label: 'journalctl', connId, lines, stream: true, ...src });
 }
 
 export function openConnTerminal(c: LabConnection): void {
   const lines = c.group === 'Kubernetes' ? [`$ kubectl config use-context ${c.id}`, `Switched to context "${c.id}".`, '$ '] : [`$ podman machine ssh ${c.id}`, `[core@${c.id} ~]$ `];
-  lab.addSession({ id: `term-${++seq}`, kind: 'terminal', title: c.name, connId: c.id, lines });
+  lab.addSession({ id: `term-${++seq}`, kind: 'terminal', title: c.name, label: 'terminal', connId: c.id, lines, target: { kind: 'connection', connId: c.id }, icon: c.icon });
 }
 
 export function showLogs(r: LabResource): void {
   const cmd = ['kpods', 'deployments', 'services', 'jobs', 'cronjobs'].includes(r.sectionId) ? 'kubectl logs -f' : 'podman logs -f';
-  lab.addSession({ id: `logs-${++seq}`, kind: 'logs', title: r.name, label: cmd, connId: r.connId, lines: Array.from({ length: 8 }, (_, i) => logLine(r.name, i)), stream: true }, true);
+  lab.addSession({ id: `logs-${r.id}`, kind: 'logs', title: r.name, label: cmd, connId: r.connId, lines: Array.from({ length: 8 }, (_, i) => logLine(r.name, i)), stream: true, ...sourceOf(r) });
+}
+
+/** Aggregated logs of a compose project / pod (all its containers). */
+export function showGroupLogs(name: string, connId: string, members: LabResource[], target?: LabTarget, icon?: IconRef): void {
+  const lines = Array.from({ length: 10 }, (_, i) => `${members[i % Math.max(1, members.length)]?.name ?? name} | ${logLine(name, i)}`);
+  lab.addSession({ id: `logs-group-${connId}-${name}`, kind: 'logs', title: name, label: 'podman compose logs -f', connId, lines, stream: true, target, icon });
 }
 
 /* ------------------------------------------------------------------ */

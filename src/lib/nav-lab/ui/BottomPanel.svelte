@@ -1,18 +1,19 @@
 <script lang="ts">
 /**
- * Bottom panel (#18062): session tabs (terminals, logs, YAML) with a 4px top
- * accent on the active tab, overflow "+N" badge, resize handle (min 120px),
- * backtick toggle (handled by the lab shell).
+ * Bottom panel (#18062): VS Code / JetBrains-like session tabs (28px, no
+ * borders, muted inactive, 2px accent under the active one, close on hover),
+ * one pane by default; Split (or dragging a tab onto the body) shows panes
+ * side by side. Each pane has its own toolbar with the source chip.
  */
-import { faAlignLeft, faChevronDown, faCode, faPlus, faTableColumns, faTerminal, faUpRightAndDownLeftFromCenter, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faAlignLeft, faCode, faPlus, faTableColumns, faTerminal, faUpRightAndDownLeftFromCenter, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 
-import { conn as findConn, type PanelSession } from '../data.ts';
+import type { LabTarget, PanelSession } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
-import CodeView from '../r3/CodeView.svelte';
 import { logLine } from '../r3/live.svelte.ts';
 import ConnIcon from './ConnIcon.svelte';
+import SessionPane, { sessionSource } from './SessionPane.svelte';
 
 interface Props {
   sessions: PanelSession[];
@@ -20,9 +21,12 @@ interface Props {
   title?: string;
   /** Overlay H: tinted top border when one connection is in scope. */
   tint?: string;
+  /** Source chip: open / focus the resource tab a session comes from. */
+  onopen?: (t: LabTarget, o: { preview?: boolean }) => void;
 }
 
-let { sessions: initial, title, tint }: Props = $props();
+let { sessions: initial, title, tint, onopen }: Props = $props();
+let dropHint = $state(false);
 
 let sessions = $state<PanelSession[]>([]);
 let active = $state('');
@@ -43,9 +47,9 @@ $effect.pre(() => {
 $effect(() => {
   const p = lab.pending;
   if (!p) return;
-  sessions.push(p);
-  const keep = lab.pendingSplit ? panes.filter(id => id !== p.id && sessions.some(x => x.id === id)).slice(-2) : [];
-  panes = [...keep, p.id];
+  // Re-opening logs of the same resource focuses its existing tab.
+  if (!sessions.some(x => x.id === p.id)) sessions.push(p);
+  if (!panes.includes(p.id)) panes = [p.id];
   active = p.id;
   lab.pending = undefined;
   lab.pendingSplit = false;
@@ -53,7 +57,7 @@ $effect(() => {
 
 // Logs sessions opened with `stream` keep appending lines while shown.
 $effect(() => {
-  const shown = sessions.filter(x => panes.includes(x.id) && x.stream);
+  const shown = sessions.filter(x => panes.includes(x.id) && x.stream && !x.paused);
   if (!shown.length || !lab.panel) return;
   const timer = setInterval(() => {
     for (const s of shown) {
@@ -69,12 +73,11 @@ function show(id: string): void {
   if (!panes.includes(id)) panes = [id];
 }
 
-function split(): void {
-  const next = sessions.find(x => !panes.includes(x.id));
-  if (next && panes.length < 3) {
-    panes = [...panes, next.id];
-    active = next.id;
-  }
+function split(id?: string): void {
+  const next = id ? sessions.find(x => x.id === id) : sessions.find(x => !panes.includes(x.id));
+  if (!next) return;
+  if (!panes.includes(next.id)) panes = [...panes.slice(-2), next.id];
+  active = next.id;
 }
 
 function closePane(id: string): void {
@@ -86,12 +89,12 @@ function closePane(id: string): void {
 const ICON = { terminal: faTerminal, logs: faAlignLeft, yaml: faCode };
 
 const layout = $derived.by(() => {
-  const avail = width - 140;
+  const avail = width - 150;
   let used = 0;
   const visible: PanelSession[] = [];
   const hidden: PanelSession[] = [];
   for (const s of sessions) {
-    const w = 64 + s.title.length * 6.3;
+    const w = 70 + sessionSource(s).name.length * 6.6;
     if (hidden.length === 0 && used + w <= avail) {
       visible.push(s);
       used += w;
@@ -143,29 +146,37 @@ function newTerminal(): void {
       aria-orientation="horizontal"
       class="h-1 -mt-0.5 cursor-row-resize hover:bg-[var(--pd-tab-highlight)]"
       onpointerdown={startResize}></div>
-    <div class="flex items-stretch h-8 shrink-0 bg-[var(--pd-secondary-nav-bg)] border-b border-[var(--pd-content-divider)]" bind:clientWidth={width}>
-      {#if title}<span class="flex items-center px-3 text-sm font-semibold text-[var(--pd-nav-group-header)] uppercase tracking-wide">{title}</span>{/if}
+    <div role="tablist" class="flex items-stretch h-7 shrink-0 pl-1 bg-[var(--pd-secondary-nav-bg)]" bind:clientWidth={width}>
+      {#if title}<span class="flex items-center px-2 text-[11px] font-semibold text-[var(--pd-nav-group-header)] uppercase tracking-wide">{title}</span>{/if}
       {#each layout.visible as s (s.id)}
         {@const sel = panes.includes(s.id)}
+        {@const src = sessionSource(s)}
         <div
           role="tab"
           tabindex="0"
           aria-selected={sel}
-          class="group/pt relative flex items-center gap-1.5 pl-3 pr-1 text-base cursor-pointer border-r border-[var(--pd-content-divider)] whitespace-nowrap"
-          class:bg-[var(--pd-terminal-background)]={sel}
-          class:text-[var(--pd-tab-text-highlight)]={sel}
-          class:text-[var(--pd-tab-text)]={!sel}
+          data-testid="panel-tab"
+          data-session={s.id}
+          draggable="true"
+          title="{src.name} · {s.label ?? s.kind}"
+          class="ptab group/pt"
+          class:sel
+          class:act={active === s.id}
           onclick={(): void => show(s.id)}
-          onkeydown={(): void => show(s.id)}>
-          {#if sel}<span class="absolute left-0 right-0 top-0 h-1 bg-[var(--pd-tab-highlight)]"></span>{/if}
-          <span class="text-[11px] opacity-80"><AppIcon icon={ICON[s.kind]} /></span>
-          <ConnIcon connId={s.connId} size={13} dot={false} />
-          <span>{s.title}</span>
+          onkeydown={(e): void => {
+            if (e.key === 'Enter') show(s.id);
+          }}
+          ondragstart={(e): void => {
+            e.dataTransfer?.setData('text/x-session', s.id);
+          }}>
+          <span class="flex w-3.5 h-3.5 items-center justify-center shrink-0"><AppIcon icon={src.icon ?? ICON[s.kind]} size="14px" /></span>
+          <span class="truncate">{src.name}</span>
+          <span class="opacity-50 text-[10px]"><AppIcon icon={ICON[s.kind]} size="xs" /></span>
+          <ConnIcon connId={s.connId} size={11} dot={false} />
           <button
             type="button"
             aria-label="Close {s.title}"
-            class="w-5 h-5 flex items-center justify-center rounded invisible group-hover/pt:visible hover:bg-[var(--pd-content-card-hover-inset-bg)]"
-            class:!visible={sel}
+            class="x"
             onclick={(e): void => {
               e.stopPropagation();
               close(s.id);
@@ -173,60 +184,129 @@ function newTerminal(): void {
         </div>
       {/each}
       {#if layout.hidden.length}
-        <div class="relative flex items-center px-1">
+        <div class="relative flex items-center px-0.5">
           <button
             type="button"
-            class="flex items-center gap-1 h-5 px-1.5 rounded-full text-[10px] font-semibold bg-[var(--pd-label-primary-bg)] text-[var(--pd-label-primary-text)]"
+            class="h-5 px-1.5 rounded text-[11px] text-[var(--pd-tab-text)] hover:bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-tab-text-highlight)]"
             aria-label="{layout.hidden.length} more sessions"
             onclick={(): void => {
               menuOpen = !menuOpen;
-            }}>+{layout.hidden.length}<AppIcon icon={faChevronDown} size="xs" /></button>
+            }}>+{layout.hidden.length}</button>
           {#if menuOpen}
             <div role="menu" class="absolute left-0 bottom-full mb-1 w-64 rounded-md border border-[var(--pd-dropdown-border)] bg-[var(--pd-dropdown-bg)] shadow-xl py-1 z-50">
               {#each layout.hidden as s (s.id)}
+                {@const src = sessionSource(s)}
                 <button
                   type="button"
                   role="menuitem"
-                  class="w-full flex items-center gap-2 px-3 py-1.5 text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)]"
+                  class="w-full flex items-center gap-2 px-3 h-7 text-left text-xs text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)]"
                   onclick={(): void => {
                     show(s.id);
                     menuOpen = false;
-                  }}><AppIcon icon={ICON[s.kind]} /> {s.title}</button>
+                  }}><AppIcon icon={src.icon ?? ICON[s.kind]} size="12px" /><span class="truncate">{src.name}</span><span class="opacity-50">{s.label ?? s.kind}</span></button>
               {/each}
             </div>
           {/if}
         </div>
       {/if}
       <div class="flex-1"></div>
-      <div class="flex items-center gap-0.5 px-2 text-[var(--pd-tab-text)]">
-        <button type="button" title="Split" aria-label="Split panel" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={split}><AppIcon icon={faTableColumns} /></button>
-        <button type="button" title="New terminal" aria-label="New terminal" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={newTerminal}><AppIcon icon={faPlus} /></button>
-        <button type="button" title="Maximize" aria-label="Maximize panel" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => { height = height > 400 ? 230 : 520; }}><AppIcon icon={faUpRightAndDownLeftFromCenter} /></button>
-        <button type="button" title="Hide panel (`)" aria-label="Hide panel" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => { lab.panel = false; }}><AppIcon icon={faXmark} /></button>
+      <div class="flex items-center gap-0.5 px-1.5 text-[var(--pd-tab-text)]">
+        <button type="button" title="Split" aria-label="Split panel" class="pbtn" onclick={(): void => split()}><AppIcon icon={faTableColumns} size="xs" /></button>
+        <button type="button" title="New terminal" aria-label="New terminal" class="pbtn" onclick={newTerminal}><AppIcon icon={faPlus} size="xs" /></button>
+        <button type="button" title="Maximize" aria-label="Maximize panel" class="pbtn" onclick={(): void => { height = height > 400 ? 230 : 520; }}><AppIcon icon={faUpRightAndDownLeftFromCenter} size="xs" /></button>
+        <button type="button" title="Hide panel (`)" aria-label="Hide panel" class="pbtn" onclick={(): void => { lab.panel = false; }}><AppIcon icon={faXmark} size="xs" /></button>
       </div>
     </div>
-    <div data-testid="nav-lab-panel-body" class="flex flex-1 min-h-0 text-[var(--pd-terminal-foreground)]">
+    <div
+      data-testid="nav-lab-panel-body"
+      role="group"
+      class="relative flex flex-1 min-h-0 text-[var(--pd-terminal-foreground)]"
+      ondragover={(e): void => {
+        if (e.dataTransfer?.types.includes('text/x-session')) {
+          e.preventDefault();
+          dropHint = true;
+        }
+      }}
+      ondragleave={(): void => {
+        dropHint = false;
+      }}
+      ondrop={(e): void => {
+        e.preventDefault();
+        dropHint = false;
+        const id = e.dataTransfer?.getData('text/x-session');
+        if (id) split(id);
+      }}>
       {#each shown as cur (cur.id)}
-        <div data-testid="panel-pane" data-kind={cur.kind} class="flex flex-col flex-1 min-w-0 border-l first:border-l-0 border-[var(--pd-content-divider)]">
-          {#if shown.length > 1}
-            <div class="flex items-center gap-1.5 h-6 shrink-0 px-2 text-[11px] border-b border-[var(--pd-content-divider)]" class:bg-[var(--pd-content-card-bg)]={cur.id === active}>
-              <AppIcon icon={ICON[cur.kind]} size="xs" /><span class="truncate">{cur.title}</span><span class="opacity-50 truncate">{cur.label ?? ''}</span>
-              <span class="flex-1"></span>
-              <button type="button" aria-label="Close pane" class="w-4 h-4 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => closePane(cur.id)}><AppIcon icon={faXmark} size="xs" /></button>
-            </div>
-          {/if}
-          {#if cur.kind === 'logs'}
-            <CodeView lines={cur.lines} lang="log" follow testid="panel-logs" class="bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)]" />
-          {:else}
-            <div class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5">
-              <div class="mb-1 text-[11px] opacity-60">{cur.kind === 'yaml' ? 'Editing (apply with ⌘S)' : (cur.label ?? 'Terminal')} · {findConn(cur.connId)?.name}</div>
-              {#each cur.lines as line, i (i)}
-                <div class="whitespace-pre">{line}{#if i === cur.lines.length - 1 && cur.kind === 'terminal'}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</div>
-              {/each}
-            </div>
-          {/if}
+        <div class="flex flex-1 min-w-0 border-l first:border-l-0 border-[var(--pd-content-divider)]">
+          <SessionPane session={cur} active={shown.length > 1 && cur.id === active} closable={shown.length > 1} onclose={(): void => closePane(cur.id)} onfocus={(): void => { active = cur.id; }} {onopen} />
         </div>
       {/each}
+      {#if dropHint}<div class="pointer-events-none absolute inset-y-0 right-0 w-1/2 border-2 border-dashed border-[var(--pd-tab-highlight)] bg-[color-mix(in_srgb,var(--pd-tab-highlight)_10%,transparent)]"></div>{/if}
     </div>
   </section>
 {/if}
+
+<style>
+.ptab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  padding: 0 4px 0 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--pd-tab-text);
+  opacity: 0.8;
+}
+.ptab:hover {
+  opacity: 1;
+  color: var(--pd-tab-text-highlight);
+}
+.ptab.sel {
+  opacity: 1;
+  color: var(--pd-tab-text-highlight);
+}
+.ptab.sel::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--pd-tab-highlight) 55%, transparent);
+}
+.ptab.act::after {
+  background: var(--pd-tab-highlight);
+}
+.x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  font-size: 10px;
+  visibility: hidden;
+}
+.ptab:hover .x,
+.ptab.sel .x {
+  visibility: visible;
+}
+.x:hover,
+.pbtn:hover {
+  background: var(--pd-action-button-details-bg);
+  color: var(--pd-tab-text-highlight);
+}
+.pbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+</style>

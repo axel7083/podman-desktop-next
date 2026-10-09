@@ -5,13 +5,14 @@
  * Without Grype installed (Vanilla): the PD empty-screen promotion.
  */
 import { faArrowUpRightFromSquare, faRotateRight, faShieldHalved } from '@fortawesome/free-solid-svg-icons';
-import { Button, LinearProgress } from '@podman-desktop/ui-svelte';
+import { LinearProgress } from '@podman-desktop/ui-svelte';
 
 import type { LabResource, LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
 import { hash } from './details.ts';
 import { ext, isInstalled } from './exts.ts';
+import ActBtn from './ActBtn.svelte';
 import Head from './Head.svelte';
 import ModernTable from './ModernTable.svelte';
 import PromoEmpty from './PromoEmpty.svelte';
@@ -59,7 +60,7 @@ const results = $derived.by(() => {
   const n = 6 + (h % 7);
   return Array.from({ length: n }, (_, i) => {
     const [pkg, inst, fixed] = PKGS[(h + i * 5) % PKGS.length];
-    return { sev: SEV[Math.min(4, (h >> i) % 5)], id: `CVE-202${5 + (i % 2)}-${String((h >> (i % 9)) % 90000).padStart(5, '1')}`, pkg, inst, fixed };
+    return { sev: SEV[Math.min(4, (h >>> i) % 5)], id: `CVE-202${5 + (i % 2)}-${String((h >>> (i % 9)) % 90000).padStart(5, '1')}`, pkg, inst, fixed };
   }).sort((a, b) => SEV.indexOf(a.sev) - SEV.indexOf(b.sev));
 });
 let sev = $state('all');
@@ -86,7 +87,7 @@ const rows = $derived<LabRow[]>(
 {/snippet}
 
 {#snippet actions()}
-  {#if installed}<Button type="secondary" icon={faRotateRight} inProgress={scanning} onclick={(): void => void run++}>Rescan</Button>{/if}
+  {#if installed}<ActBtn icon={faRotateRight} label="Rescan" disabled={scanning} onclick={(): void => void run++} />{/if}
 {/snippet}
 
 <div data-testid="scan-view" class="flex flex-col h-full min-h-0">

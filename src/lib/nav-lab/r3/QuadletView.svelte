@@ -1,7 +1,6 @@
 <script lang="ts">
 /** One Quadlet unit: Summary (service, systemctl status) and Source (INI). */
 import { faAlignLeft, faEllipsisVertical, faPenToSquare, faPlay, faRotateRight, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@podman-desktop/ui-svelte';
 
 import type { LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
@@ -27,12 +26,12 @@ const svc = $derived(n.data?.service ?? '');
 const up = $derived(st === 'running');
 
 function journal(): void {
-  showJournal(n.label, svc, f.connId);
+  showJournal(n.label, svc, f.connId, { target: { kind: 'node', connId: f.connId, nodeId: n.id }, icon: f.provider.icon });
 }
 </script>
 
 {#snippet actions()}
-  <Button type="secondary" icon={faAlignLeft} onclick={journal}>Logs (journalctl)</Button>
+  <ActBtn icon={faAlignLeft} label="Logs (journalctl)" onclick={journal} />
   <ActBtn icon={up ? faStop : faPlay} label={up ? 'Stop' : 'Start'} disabled={st === 'ready'} onclick={(): void => void (live.status[n.id] = up ? 'stopped' : 'running')} />
   <ActBtn icon={faRotateRight} label="Restart" disabled={!up} onclick={(): void => void (live.status[n.id] = 'running')} />
   <ActBtn icon={faPenToSquare} label="Edit" onclick={(): void => { view = 'source'; }} />

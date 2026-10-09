@@ -1,0 +1,282 @@
+<script lang="ts" module>
+import { conn as findConn, type LabTarget, type PanelSession, RESOURCES, resource, section as findSection } from '../data.ts';
+import { connStatus, live, resStatus } from '../r3/live.svelte.ts';
+import type { IconRef } from '#lib/ext/types.ts';
+
+export interface SessionSource {
+  name: string;
+  icon: IconRef | undefined;
+  target: LabTarget | undefined;
+  status: string | undefined;
+}
+
+/** Resource a session comes from (explicit target, else matched by name, else its connection). */
+export function sessionSource(s: PanelSession): SessionSource {
+  const c = findConn(s.connId);
+  let target = s.target;
+  let icon = s.icon;
+  if (!target) {
+    const name = s.title.replace(/ (logs|\(tty\))$/, '').replace(/^(ssh |oc rsh )/, '');
+    const r = RESOURCES.find(x => x.connId === s.connId && x.name === name);
+    if (r) {
+      const sec = findSection(c, r.sectionId);
+      target = { kind: 'resource', connId: r.connId, sectionId: r.sectionId, resId: r.id };
+      icon ??= sec?.ext?.icon ?? sec?.icon;
+    } else {
+      target = { kind: 'connection', connId: s.connId };
+      icon ??= c?.icon;
+    }
+  }
+  let status: string | undefined;
+  let name = s.title;
+  if (target.kind === 'resource') {
+    const r = resource(target.resId);
+    if (r) {
+      status = resStatus(r);
+      name = r.name;
+    }
+  } else if (target.kind === 'node' && target.nodeId) status = live.status[target.nodeId] ?? 'running';
+  else if (target.kind === 'connection') {
+    status = connStatus(c);
+    if (s.title.startsWith('kubectl') || s.title.startsWith('ssh')) name = c?.name ?? s.title;
+  }
+  return { name, icon, target, status };
+}
+</script>
+
+<script lang="ts">
+/**
+ * One bottom-panel pane (logs or terminal). A compact single toolbar row:
+ * source chip (kind icon, resource name, connection, status; click focuses the
+ * resource tab), then for logs: time range, level, follow, timestamps, wrap,
+ * find (Ctrl+F), download, clear.
+ */
+import {
+  faAnglesDown,
+  faBan,
+  faChevronDown,
+  faClock,
+  faDownload,
+  faMagnifyingGlass,
+  faTextHeight,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
+
+import AppIcon from '#lib/components/AppIcon.svelte';
+
+import { STATUS_DOT } from '../data.ts';
+import CodeView from '../r3/CodeView.svelte';
+import ConnIcon from './ConnIcon.svelte';
+
+interface Props {
+  session: PanelSession;
+  active: boolean;
+  /** Split: show a close-pane button. */
+  closable?: boolean;
+  onclose?: () => void;
+  onfocus?: () => void;
+  onopen?: (t: LabTarget, o: { preview?: boolean }) => void;
+}
+
+let { session, active, closable = false, onclose, onfocus, onopen }: Props = $props();
+
+const src = $derived(sessionSource(session));
+const c = $derived(findConn(session.connId));
+
+const RANGES: [string, string][] = [
+  ['live', 'Live'],
+  ['5m', 'Last 5 minutes'],
+  ['1h', 'Last hour'],
+  ['24h', 'Last 24 hours'],
+];
+let range = $state('live');
+let since = $state('2026-10-09T09:00');
+let until = $state('2026-10-09T10:00');
+let rangeOpen = $state(false);
+let customOpen = $state(false);
+let follow = $state(true);
+let stamps = $state(true);
+let wrap = $state(false);
+let level = $state('all');
+let code = $state<ReturnType<typeof CodeView>>();
+
+const LEVEL = /\b(DEBUG|INFO|WARN|ERROR)\b|"level":"(debug|info|warn|error)"/i;
+const RANK: Record<string, number> = { debug: 0, info: 1, warn: 2, error: 3 };
+const hasLevels = $derived(session.kind === 'logs' && session.lines.some(l => LEVEL.test(l)));
+const rangeLabel = $derived(range === 'custom' ? 'Custom' : range === 'live' ? 'Live' : range);
+
+function setRange(r: string): void {
+  range = r;
+  rangeOpen = false;
+  customOpen = r === 'custom';
+  session.paused = r !== 'live';
+  if (r !== 'live') follow = false;
+  else follow = true;
+}
+
+const lines = $derived.by(() => {
+  let out = session.lines;
+  if (range === '5m') out = out.slice(-12);
+  else if (range === '1h') out = out.slice(-40);
+  if (level !== 'all') {
+    const min = RANK[level];
+    out = out.filter(l => {
+      const m = LEVEL.exec(l);
+      return !m || RANK[(m[1] ?? m[2]).toLowerCase()] >= min;
+    });
+  }
+  if (!stamps) out = out.map(l => l.replace(/^((?:\S+ \| )?)(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d |[A-Z][a-z]{2} \d\d \d\d:\d\d:\d\d )/, '$1'));
+  return out;
+});
+
+function download(): void {
+  const url = URL.createObjectURL(new Blob([session.lines.join('\n')], { type: 'text/plain' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${src.name}.log`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function clear(): void {
+  session.lines.splice(0, session.lines.length);
+}
+</script>
+
+{#snippet tool(icon: IconRef, label: string, run: () => void, pressed?: boolean, testid?: string)}
+  <button
+    type="button"
+    class="tb"
+    class:on={pressed}
+    title={label}
+    aria-label={label}
+    aria-pressed={pressed}
+    data-testid={testid}
+    onclick={(e): void => {
+      e.stopPropagation();
+      run();
+    }}><AppIcon {icon} size="xs" /></button>
+{/snippet}
+
+<!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
+<div data-testid="panel-pane" data-kind={session.kind} data-session={session.id} class="flex flex-col flex-1 min-w-0 min-h-0" onclick={onfocus}>
+  <div data-testid="pane-toolbar" class="relative flex items-center gap-1 h-7 shrink-0 pl-1.5 pr-1 text-[11px] border-b border-[color-mix(in_srgb,var(--pd-content-divider)_60%,transparent)]" class:bg-[color-mix(in_srgb,var(--pd-content-card-bg)_55%,transparent)]={active}>
+    <button
+      type="button"
+      data-testid="pane-source"
+      class="flex items-center gap-1.5 h-5 min-w-0 pl-1 pr-1.5 rounded text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)]"
+      title="Open {src.name}"
+      onclick={(e): void => {
+        e.stopPropagation();
+        if (src.target) onopen?.(src.target, {});
+      }}>
+      {#if src.icon}<span class="flex w-3.5 h-3.5 items-center justify-center shrink-0"><AppIcon icon={src.icon} size="12px" /></span>{/if}
+      <span class="truncate font-medium">{src.name}</span>
+      {#if src.status}<span class="w-1.5 h-1.5 rounded-full shrink-0 {STATUS_DOT[src.status] ?? STATUS_DOT.stopped}" title={src.status}></span>{/if}
+      <ConnIcon connId={session.connId} size={11} dot={false} />
+      <span class="opacity-60 truncate max-w-32 font-normal">{c?.name}</span>
+    </button>
+    {#if session.label}<span class="truncate opacity-50 font-mono">{session.label}</span>{/if}
+    <span class="flex-1"></span>
+    {#if session.kind === 'logs'}
+      <div class="relative">
+        <button
+          type="button"
+          data-testid="logs-range"
+          class="flex items-center gap-1 h-5 px-1.5 rounded hover:bg-[var(--pd-action-button-details-bg)] text-[var(--pd-content-header)]"
+          aria-haspopup="menu"
+          title="Time range"
+          onclick={(e): void => {
+            e.stopPropagation();
+            rangeOpen = !rangeOpen;
+          }}>
+          {#if range === 'live'}<span class="w-1.5 h-1.5 rounded-full bg-[var(--pd-status-running)]"></span>{:else}<AppIcon icon={faClock} size="xs" />{/if}
+          {rangeLabel}<AppIcon icon={faChevronDown} size="xs" /></button>
+        {#if rangeOpen || customOpen}
+          <div role="menu" tabindex="-1" class="absolute right-0 top-6 z-50 w-56 rounded-md border border-[var(--pd-dropdown-border)] bg-[var(--pd-dropdown-bg)] shadow-xl py-1 text-xs" onclick={(e): void => e.stopPropagation()}>
+            {#if rangeOpen}
+              {#each RANGES as [id, label] (id)}
+                <button type="button" role="menuitemradio" aria-checked={range === id} class="w-full flex items-center px-3 h-7 text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)]" class:font-semibold={range === id} onclick={(): void => setRange(id)}>{label}</button>
+              {/each}
+              <button type="button" role="menuitemradio" aria-checked={range === 'custom'} class="w-full flex items-center px-3 h-7 text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)] border-t border-[var(--pd-content-divider)]" onclick={(): void => setRange('custom')}>Custom…</button>
+            {:else}
+              <div data-testid="logs-custom" class="flex flex-col gap-2 px-3 py-2 text-[var(--pd-dropdown-item-text)]">
+                <label class="flex flex-col gap-1">Since<input type="datetime-local" bind:value={since} class="h-6 px-1.5 rounded bg-[var(--pd-input-field-bg)] border border-[var(--pd-input-field-stroke)]" /></label>
+                <label class="flex flex-col gap-1">Until<input type="datetime-local" bind:value={until} class="h-6 px-1.5 rounded bg-[var(--pd-input-field-bg)] border border-[var(--pd-input-field-stroke)]" /></label>
+                <div class="flex justify-end gap-1">
+                  <button type="button" class="h-6 px-2 rounded hover:bg-[var(--pd-dropdown-item-hover-bg)]" onclick={(): void => setRange('live')}>Cancel</button>
+                  <button type="button" class="h-6 px-2 rounded bg-[var(--pd-button-primary-bg)] text-[var(--pd-button-primary-text)]" onclick={(): void => { customOpen = false; }}>Apply</button>
+                </div>
+              </div>
+            {/if}
+          </div>
+        {/if}
+      </div>
+      {#if hasLevels}
+        <select
+          data-testid="logs-level"
+          aria-label="Level"
+          bind:value={level}
+          onclick={(e): void => e.stopPropagation()}
+          class="h-5 pl-1 pr-0 rounded text-[11px] bg-transparent text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)] outline-none cursor-pointer">
+          <option value="all">All levels</option>
+          <option value="info">Info+</option>
+          <option value="warn">Warn+</option>
+          <option value="error">Error</option>
+        </select>
+      {/if}
+      <span class="sep"></span>
+      {@render tool(faAnglesDown, 'Follow (auto-scroll)', () => (follow = !follow), follow, 'logs-follow')}
+      {@render tool(faClock, 'Timestamps', () => (stamps = !stamps), stamps, 'logs-stamps')}
+      {@render tool(faTextHeight, 'Wrap lines', () => (wrap = !wrap), wrap, 'logs-wrap')}
+      <span class="sep"></span>
+      {@render tool(faMagnifyingGlass, 'Find (Ctrl+F)', () => code?.find(), undefined, 'logs-find')}
+      {@render tool(faDownload, 'Download', download, undefined, 'logs-download')}
+      {@render tool(faBan, 'Clear', clear, undefined, 'logs-clear')}
+    {/if}
+    {#if closable}
+      <span class="sep"></span>
+      {@render tool(faXmark, 'Close pane', () => onclose?.(), undefined, 'pane-close')}
+    {/if}
+  </div>
+  {#if session.kind === 'logs'}
+    <CodeView bind:this={code} {lines} lang="log" follow={follow && range === 'live'} {wrap} findButton={false} testid="panel-logs" class="bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)]" />
+  {:else}
+    <div class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5">
+      {#if session.kind === 'yaml'}<div class="mb-1 text-[11px] opacity-60">Editing (apply with ⌘S)</div>{/if}
+      {#each session.lines as line, i (i)}
+        <div class="whitespace-pre">{line}{#if i === session.lines.length - 1 && session.kind === 'terminal'}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</div>
+      {/each}
+    </div>
+  {/if}
+</div>
+
+<style>
+.tb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--pd-action-button-details-text);
+  opacity: 0.75;
+}
+.tb:hover {
+  opacity: 1;
+  background: var(--pd-action-button-details-bg);
+  color: var(--pd-action-button-details-hover-text);
+}
+.tb.on {
+  opacity: 1;
+  color: var(--pd-button-primary-bg);
+  background: color-mix(in srgb, var(--pd-button-primary-bg) 14%, transparent);
+}
+.sep {
+  width: 1px;
+  height: 14px;
+  margin: 0 2px;
+  background: var(--pd-content-divider);
+}
+</style>

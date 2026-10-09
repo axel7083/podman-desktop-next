@@ -45,7 +45,7 @@ export function containerInfo(r: LabResource): ContainerInfo {
       ['maintainer', 'platform@acme.com'],
       ['io.k8s.display-name', r.name],
     ],
-    cpu: Array.from({ length: 24 }, (_, i) => 6 + ((h >> (i % 16)) % 40)),
+    cpu: Array.from({ length: 24 }, (_, i) => 6 + ((h >>> (i % 16)) % 40)),
     mem: 40 + (h % 900),
   };
 }
@@ -57,8 +57,8 @@ export function imageInfo(r: LabResource): { size: string; layers: { id: string;
   return {
     size: r.sub.endsWith('MB') ? r.sub : `${(h % 900) + 80} MB`,
     layers: Array.from({ length: n }, (_, i) => ({
-      id: ((h >> i) * 2654435761).toString(16).slice(0, 12).padEnd(12, 'a'),
-      size: `${((h >> i) % 90) + 1}.${i} MB`,
+      id: ((h >>> i) * 2654435761).toString(16).slice(0, 12).padEnd(12, 'a'),
+      size: `${((h >>> i) % 90) + 1}.${i} MB`,
       cmd: ['FROM ubi10-minimal', 'RUN microdnf install -y java-21', 'COPY target/lib /deployments/lib', 'COPY target/*.jar /deployments/', 'ENV LANG=C.UTF-8', 'USER 185', 'EXPOSE 8080', 'ENTRYPOINT ["/opt/jboss/run-java.sh"]'][i % 8],
     })),
     tags: [r.name, `${repo}:latest`].filter((x, i, a) => a.indexOf(x) === i),
@@ -127,4 +127,68 @@ export function inspectText(r: LabResource, sectionLabel: string): string {
     null,
     2,
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* Compose projects                                                    */
+/* ------------------------------------------------------------------ */
+
+export interface ComposeService {
+  service: string;
+  /** Container of the service (a real lab resource, or a synthetic one). */
+  ctr: LabResource;
+  /** False when the container is synthetic (no tab to open). */
+  real: boolean;
+}
+
+const FALLBACK_SERVICES: [string, string][] = [
+  ['api', 'quay.io/acme/orders-api:1.4'],
+  ['db', 'registry.redhat.io/rhel10/postgresql-16'],
+  ['cache', 'docker.io/valkey/valkey:8'],
+];
+
+/** Services of a compose project: the containers grouped under it, else a fake set. */
+export function composeServices(project: LabResource): ComposeService[] {
+  const prefix = project.name.replace(/-stack$/, '');
+  const real = resourcesOf(project.connId, 'containers').filter(r => r.group === project.name);
+  if (real.length) return real.map(r => ({ service: r.name.startsWith(`${prefix}-`) ? r.name.slice(prefix.length + 1) : r.name, ctr: r, real: true }));
+  return FALLBACK_SERVICES.map(([service, image]) => ({
+    service,
+    real: false,
+    ctr: { id: `${project.id}/svc/${service}`, name: `${project.name}-${service}-1`, connId: project.connId, sectionId: 'containers', status: project.status === 'running' ? 'running' : 'exited', sub: image, age: project.age, group: project.name },
+  }));
+}
+
+export function composeYaml(project: LabResource): string[] {
+  const svcs = composeServices(project);
+  const db = svcs.find(s => /db|postgres/.test(s.service))?.service;
+  const out = [`# ${composeFile(project)}`, `name: ${project.name}`, 'services:'];
+  for (const s of svcs) {
+    const ci = containerInfo(s.ctr);
+    out.push(`  ${s.service}:`, `    image: ${ci.image}`, `    container_name: ${s.ctr.name}`);
+    if (ci.ports.length) out.push('    ports:', ...ci.ports.map(p => `      - "${p}:8080"`));
+    out.push('    environment:', `      APP_PROFILE: prod`, `      LOG_LEVEL: info`);
+    if (db && s.service !== db) out.push(`      DB_URL: postgresql://${db}:5432/${project.name.split('-')[0]}`);
+    if (/db|cache|postgres|valkey/.test(s.service)) out.push('    volumes:', `      - ${s.service}-data:/var/lib/data`);
+    if (db && s.service !== db) out.push('    depends_on:', `      - ${db}`);
+    out.push(`    restart: ${ci.restart}`);
+  }
+  out.push('networks:', '  default:', `    name: ${project.name}_default`);
+  const vols = svcs.filter(s => /db|cache|postgres|valkey/.test(s.service)).map(s => `${s.service}-data`);
+  if (vols.length) out.push('volumes:', ...vols.map(v => `  ${v}: {}`));
+  return out;
+}
+
+export function composeDir(project: LabResource): string {
+  return `/home/dev/projects/${project.name.replace(/-stack$/, '')}`;
+}
+
+export function composeFile(project: LabResource): string {
+  return `${composeDir(project)}/compose.yaml`;
+}
+
+export function composeVolumes(project: LabResource): string[] {
+  return composeServices(project)
+    .filter(s => /db|cache|postgres|valkey/.test(s.service))
+    .map(s => `${project.name}_${s.service}-data`);
 }

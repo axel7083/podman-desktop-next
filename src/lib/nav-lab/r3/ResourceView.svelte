@@ -19,17 +19,18 @@ import {
   faTerminal,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-import { Button } from '@podman-desktop/ui-svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 
-import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf, STATUS_DOT } from '../data.ts';
+import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf, section as findSection, STATUS_DOT } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import ActBtn from './ActBtn.svelte';
 import CodeView from './CodeView.svelte';
-import { containerInfo, hash, imageInfo, inspectText, isKube, kubeConditions, kubeEvents, relatedPods } from './details.ts';
+import type { LabRow } from './cells/types.ts';
+import { composeDir, composeFile, composeServices, composeVolumes, composeYaml, containerInfo, hash, imageInfo, inspectText, isKube, kubeConditions, kubeEvents, relatedPods } from './details.ts';
 import { ext } from './exts.ts';
 import Head from './Head.svelte';
+import ModernTable from './ModernTable.svelte';
 import {
   can,
   deleteRes,
@@ -45,6 +46,7 @@ import {
   resStatus,
   restartRes,
   scanRes,
+  showGroupLogs,
   showLogs,
   startRes,
   stopRes,
@@ -60,7 +62,7 @@ interface Props {
 let { res, c, s, onopen }: Props = $props();
 
 // svelte-ignore state_referenced_locally
-let view = $state(live.view[res.id] ?? 'summary');
+let view = $state(live.view[res.id] ?? (res.sectionId === 'compose' ? 'containers' : 'summary'));
 
 $effect(() => {
   const v = live.view[res.id];
@@ -75,7 +77,10 @@ const up = $derived(isUp(st));
 const deleted = $derived(live.deleted.includes(res.id));
 const isImage = $derived(s.id === 'images');
 const xviews = $derived(extViews(s.id));
+const isCompose = $derived(s.id === 'compose');
+const services = $derived(isCompose ? composeServices(res) : []);
 const views = $derived<[string, string][]>([
+  ...(isCompose ? ([['containers', 'Containers']] as [string, string][]) : []),
   ['summary', 'Summary'],
   ...(isImage ? ([['history', 'History']] as [string, string][]) : []),
   ['inspect', isKube(s.id) ? 'YAML' : 'Inspect'],
@@ -90,6 +95,45 @@ const shortId = $derived((h * 2654435761).toString(16).slice(0, 12).padEnd(12, '
 
 function openRes(r: LabResource): void {
   onopen({ kind: 'resource', connId: r.connId, sectionId: r.sectionId, resId: r.id }, {});
+}
+
+function upper(x: string): string {
+  return x === 'ready' ? 'RUNNING' : x === 'error' ? 'DEGRADED' : x.toUpperCase();
+}
+
+const ctrIcon = $derived(findSection(c, 'containers')?.icon ?? icon);
+const serviceRows = $derived.by((): LabRow[] => {
+  void live.status;
+  return services
+    .filter(x => !live.deleted.includes(x.ctr.id))
+    .map(x => {
+      const r = x.ctr;
+      const cst = resStatus(r);
+      const cup = isUp(cst);
+      const ci = containerInfo(r);
+      return {
+        name: r.id,
+        r,
+        status: upper(cst),
+        icon: ctrIcon,
+        title: x.service,
+        sub: [],
+        cols: { ctr: r.name, image: ci.image, ports: ci.ports.map(p => `${p}→8080`).join(', '), uptime: cup ? r.age : '' },
+        open: x.real ? (): void => openRes(r) : undefined,
+        pin: x.real ? (): void => openRes(r) : undefined,
+        buttons: [
+          cup ? { title: 'Stop', icon: faStop, run: (): void => stopRes(r) } : { title: 'Start', icon: faPlay, run: (): void => startRes(r) },
+          { title: 'See logs', icon: faAlignLeft, run: (): void => showLogs(r) },
+          { title: 'Delete', icon: faTrash, danger: true, run: (): void => deleteRes(r) },
+        ],
+        menu: x.real ? (): ReturnType<typeof resActions> => resActions(r, onopen) : undefined,
+      };
+    });
+});
+const upCount = $derived(services.filter(x => isUp(resStatus(x.ctr))).length);
+
+function composeLogs(): void {
+  showGroupLogs(res.name, c.id, services.map(x => x.ctr), { kind: 'resource', connId: c.id, sectionId: s.id, resId: res.id }, icon);
 }
 
 function kubeYaml(): string[] {
@@ -161,7 +205,16 @@ function kubeYaml(): string[] {
     <ActBtn icon={ext('grype')?.icon ?? faTrash} label="Scan vulnerabilities" onclick={(): void => scanRes(res, onopen)} />
     <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, imageMenu(res, onopen))} />
   {:else}
-    {#if can.logs(s.id)}<Button type="secondary" icon={faAlignLeft} onclick={(): void => showLogs(res)}>See logs</Button>{/if}
+    {#if isCompose}
+      <ActBtn icon={faAlignLeft} label="See logs" onclick={composeLogs} />
+      {#if upCount}
+        <ActBtn icon={faStop} label="Stop all" onclick={(): void => services.forEach(x => stopRes(x.ctr))} />
+      {:else}
+        <ActBtn icon={faPlay} label="Start all" onclick={(): void => services.forEach(x => startRes(x.ctr))} />
+      {/if}
+      <ActBtn icon={faRotateRight} label="Restart all" disabled={!upCount} onclick={(): void => services.forEach(x => restartRes(x.ctr))} />
+    {/if}
+    {#if can.logs(s.id)}<ActBtn icon={faAlignLeft} label="See logs" onclick={(): void => showLogs(res)} />{/if}
     {#if can.start(s.id)}
       {#if up}
         <ActBtn icon={faStop} label="Stop" onclick={(): void => stopRes(res)} />
@@ -194,6 +247,12 @@ function kubeYaml(): string[] {
     actions={deleted ? undefined : actions} />
   {#if deleted}
     <div class="flex-1 flex items-center justify-center text-[var(--pd-details-empty-sub-header)]">{res.name} was deleted.</div>
+  {:else if view === 'containers' && isCompose}
+    <div data-testid="compose-containers" class="flex flex-1 min-h-0 overflow-auto">
+      <ModernTable rows={serviceRows} cols={[['Container', 'ctr', 'minmax(8rem, 1.2fr)'], ['Image', 'image', 'minmax(8rem, 2fr)'], ['Ports', 'ports', '130px'], ['Uptime', 'uptime', '100px', true]]} variant={lab.table === 'grid' ? 'grid' : 'modern'} initialSort="" />
+    </div>
+  {:else if view === 'inspect' && isCompose}
+    <CodeView lines={composeYaml(res)} lang="yaml" numbered testid="inspect" />
   {:else if view === 'inspect'}
     <CodeView lines={inspectText({ ...res, status: st }, s.label).split('\n')} lang={isKube(s.id) ? 'yaml' : 'json'} testid="inspect" />
   {:else if view === 'kube'}
@@ -214,7 +273,17 @@ function kubeYaml(): string[] {
           ['Result', 'Check', 'Provider'],
         )}
       {/snippet}
-      {@render card('Image checks', checks)}
+      <div class="flex flex-col gap-4">
+        {@render card('Image checks', checks)}
+        {#snippet vulns()}
+          <div class="flex items-center gap-3 pt-1">
+            <span class="flex w-6 h-6 items-center justify-center shrink-0"><AppIcon icon={ext('grype')?.icon ?? faTrash} size="20px" /></span>
+            <span class="flex-1 text-[var(--pd-table-body-text)]">Scan the OS packages and language dependencies of this image for known CVEs.</span>
+            <button type="button" data-testid="check-scan" class="h-7 px-3 rounded-md text-xs border border-[var(--pd-button-secondary-border,var(--pd-content-divider))] text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)]" onclick={(): void => scanRes(res, onopen)}>Scan vulnerabilities</button>
+          </div>
+        {/snippet}
+        {@render card('Vulnerabilities · Grype', vulns)}
+      </div>
     </div>
   {:else if view === 'layers'}
     {@const im = imageInfo(res)}
@@ -225,7 +294,26 @@ function kubeYaml(): string[] {
   {:else}
     <div data-testid="summary" class="flex-1 min-h-0 overflow-auto px-5 py-4 text-[13px] leading-5">
       <div class="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4 items-start">
-        {#if s.id === 'containers'}
+        {#if isCompose}
+          {#snippet project()}
+            <table class="w-full"><tbody>
+              {@render row('Project', res.name)}
+              {@render row('Working directory', composeDir(res))}
+              {@render row('Config file', composeFile(res))}
+              {@render row('Services', `${services.length} (${upCount} running)`)}
+              {@render row('Networks', `${res.name}_default`)}
+              {@render row('Volumes', composeVolumes(res).join(', ') || '—')}
+              {@render row('Engine', `${c.product} · ${c.name}`)}
+            </tbody></table>
+          {/snippet}
+          {#snippet svcList()}
+            {#each services as x (x.ctr.id)}
+              {#if x.real}{@render resRow(x.ctr, `${x.service} · ${containerInfo(x.ctr).image}`)}{:else}<div class="flex items-center gap-2 h-8 px-1"><span class="w-2 h-2 rounded-full {STATUS_DOT[resStatus(x.ctr)] ?? STATUS_DOT.running}"></span>{x.service}<span class="text-xs text-[var(--pd-table-body-text)]">{x.ctr.sub}</span></div>{/if}
+            {/each}
+          {/snippet}
+          {@render card('Project', project)}
+          {@render card(`Services (${services.length})`, svcList)}
+        {:else if s.id === 'containers'}
           {@const ci = containerInfo(res)}
           {@const image = resourcesOf(c.id, 'images').find(i => i.name === ci.image || ci.image.startsWith(i.name.split(':')[0]))}
           {#snippet details()}

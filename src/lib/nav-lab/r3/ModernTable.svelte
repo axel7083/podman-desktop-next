@@ -1,3 +1,10 @@
+<script lang="ts" module>
+import { SvelteSet } from 'svelte/reactivity';
+
+/** Collapsed group rows, remembered across tabs / remounts (keyed by row name). */
+const collapsed = new SvelteSet<string>();
+</script>
+
 <script lang="ts">
 /**
  * P13 list, IDE-shell flavours (lab toggle `table=`):
@@ -6,8 +13,6 @@
  * - grid: dense 26px JetBrains-like grid, row numbers, filter row, resizable columns.
  */
 import { faCheck, faChevronDown, faChevronRight, faEllipsis, faEllipsisVertical, faPlay, faSortDown, faSortUp, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { SvelteSet } from 'svelte/reactivity';
-
 import AppIcon from '#lib/components/AppIcon.svelte';
 
 import { openMenu } from './live.svelte.ts';
@@ -34,7 +39,6 @@ const grid = $derived(variant === 'grid');
 let sortKey = $state(initialSort);
 let sortDir = $state<1 | -1>(1);
 const hidden = new SvelteSet<string>();
-const collapsed = new SvelteSet<string>();
 const selected = new SvelteSet<string>();
 let highlight = $state<string | undefined>(undefined);
 let colFilter = $state<Record<string, string>>({});
@@ -84,6 +88,8 @@ interface Flat {
   row: LabRow;
   depth: number;
   group: boolean;
+  /** Last child of its group (tree connector ends here). */
+  last?: boolean;
 }
 
 const flat = $derived.by((): Flat[] => {
@@ -95,7 +101,7 @@ const flat = $derived.by((): Flat[] => {
   for (const r of top) {
     if (r.children) {
       out.push({ row: r, depth: 0, group: true });
-      if (!collapsed.has(r.name)) for (const k of r.children) out.push({ row: k, depth: 1, group: false });
+      if (!collapsed.has(r.name)) r.children.forEach((k, j, arr) => out.push({ row: k, depth: 1, group: false, last: j === arr.length - 1 }));
     } else out.push({ row: r, depth: 0, group: false });
   }
   return out;
@@ -287,25 +293,29 @@ function subOf(r: LabRow): string[] {
         data-row={r.name}
         role="row"
         tabindex="-1"
+        aria-expanded={!collapsed.has(r.name)}
         style:grid-template-columns={template}
         class:hl={highlight === r.name}
+        class:open={!collapsed.has(r.name)}
         onclick={(e): void => click(e, f)}
+        ondblclick={(): void => r.pin?.()}
         onkeydown={(): void => undefined}
         oncontextmenu={(e): void => openMenu(e, r.buttons.map(b => ({ label: b.title, icon: b.icon, danger: b.danger, run: b.run })))}>
         {#if grid}<span class="gut">{i + 1}</span>{/if}
-        <span class="flex items-center justify-center opacity-70"><AppIcon icon={collapsed.has(r.name) ? faChevronRight : faChevronDown} size="xs" /></span>
+        <span class="chev" data-testid="mt-group-toggle"><AppIcon icon={collapsed.has(r.name) ? faChevronRight : faChevronDown} size="xs" /></span>
         <span class="name" style:grid-column="span {shown.length}">
-          {#if !grid}{@render dot(r)}{/if}
-          <AppIcon icon={r.icon} size="14px" />
+          <span class="gicon"><AppIcon icon={r.icon} size="15px" /></span>
           <span class="title">{r.title}</span>
-          <span class="muted">{r.children?.length ?? 0}</span>
-          {#if r.chip}<span class="muted kind">{r.chip}</span>{/if}
+          {#if r.chip}<span class="kind">{r.chip}</span>{/if}
+          <span class="agg">{@render dot(r)}{r.agg ?? `${r.children?.length ?? 0}`}</span>
         </span>
         {@render acts(r)}
       </div>
     {:else}
       <div
         class="row item"
+        class:child={f.depth > 0}
+        class:last={f.last}
         data-testid="mt-row"
         data-row={r.name}
         role="row"
@@ -328,7 +338,7 @@ function subOf(r: LabRow): string[] {
         {/if}
         {#each shown as c (c.key)}
           {#if c.key === '__name'}
-            <span class="name" style:padding-left="{f.depth * 20}px">
+            <span class="name" style:padding-left={f.depth ? '22px' : undefined}>
               {#if !grid}
                 {#if typeof r.icon === 'string'}<AppIcon icon={r.icon} size="14px" />{/if}
                 {@render dot(r)}
@@ -363,6 +373,10 @@ function subOf(r: LabRow): string[] {
   color: var(--pd-table-body-text);
   outline: none;
   align-self: flex-start;
+  --guide-x: 13px;
+}
+.grid-v {
+  --guide-x: 51px;
 }
 .grid-v {
   --row-h: 26px;
@@ -503,14 +517,80 @@ function subOf(r: LabRow): string[] {
 }
 .grp .title {
   font-weight: 600;
+  color: var(--pd-content-header);
+}
+/* Group header: tinted band, kind icon, bold name, aggregate status. */
+.grp {
+  position: relative;
+}
+.grp:not(:hover):not(.hl) {
+  background: var(--pd-content-card-bg);
+}
+.chev {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  opacity: 0.7;
+}
+.gicon {
+  display: inline-flex;
+  width: 16px;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--pd-content-header-icon, var(--pd-table-body-text));
+}
+.kind {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pd-table-body-text);
+  opacity: 0.75;
+}
+.agg {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--pd-table-body-text);
+}
+/* Children: indented, thin tree connector aligned under the group chevron. */
+.child {
+  position: relative;
+}
+.child:not(:hover):not(.sel):not(.hl) {
+  background: color-mix(in srgb, var(--pd-content-card-bg) 35%, transparent);
+}
+.child::before {
+  content: '';
+  position: absolute;
+  left: var(--guide-x);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--pd-table-body-text) 35%, transparent);
+  pointer-events: none;
+}
+.child.last::before {
+  bottom: 50%;
+}
+.child::after {
+  content: '';
+  position: absolute;
+  left: var(--guide-x);
+  top: 50%;
+  width: 14px;
+  height: 1px;
+  background: color-mix(in srgb, var(--pd-table-body-text) 35%, transparent);
+  pointer-events: none;
+}
+.child .cb input {
+  position: relative;
+  z-index: 1;
 }
 .muted {
   color: var(--pd-table-body-text);
   font-size: 12px;
-}
-.kind {
-  font-size: 11px;
-  opacity: 0.8;
 }
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

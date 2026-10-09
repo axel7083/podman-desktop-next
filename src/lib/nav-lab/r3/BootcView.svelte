@@ -8,6 +8,7 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 import type { LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
+import ActBtn from './ActBtn.svelte';
 import Head from './Head.svelte';
 import RowsTable from './RowsTable.svelte';
 import { type FoundNode, OVERVIEW_ICON } from './trees.ts';
@@ -68,7 +69,7 @@ const disks = $derived<LabRow[]>(
 </script>
 
 {#snippet actions()}
-  {#if section === 'Images'}<Button icon={faArrowCircleDown} onclick={(): void => lab.openCreate('Pull a bootc image')}>Pull image</Button>{/if}
+  {#if section === 'Images'}<ActBtn icon={faArrowCircleDown} label="Pull image" onclick={(): void => lab.openCreate('Pull a bootc image')} />{/if}
   <Button icon={faPlusCircle} onclick={(): void => lab.openCreate('Build a disk image')}>Build</Button>
 {/snippet}
 

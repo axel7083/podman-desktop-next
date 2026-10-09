@@ -26,6 +26,8 @@ export interface LabRow {
   shortId?: string;
   /** Group chip (Compose / Pod). */
   chip?: string;
+  /** Group aggregate status ("2/3 running"). */
+  agg?: string;
   cols: Record<string, string>;
   open?: () => void;
   /** Pinned open (double-click / Enter). */

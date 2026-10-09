@@ -21,9 +21,13 @@ interface Props {
   testid?: string;
   /** Keep the view scrolled to the bottom (streaming logs). */
   follow?: boolean;
+  /** Soft-wrap long lines. */
+  wrap?: boolean;
+  /** Show the floating find button (off when a toolbar owns it). */
+  findButton?: boolean;
 }
 
-let { lines, lang = 'plain', numbered = false, class: cls = 'bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)]', testid, follow = false }: Props = $props();
+let { lines, lang = 'plain', numbered = false, class: cls = 'bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)]', testid, follow = false, wrap = false, findButton = true }: Props = $props();
 
 let open = $state(false);
 let query = $state('');
@@ -127,6 +131,11 @@ $effect(() => {
   tick().then(() => scroller && (scroller.scrollTop = scroller.scrollHeight));
 });
 
+/** Open the find bar (called by an owning toolbar). */
+export function find(): void {
+  void show();
+}
+
 async function show(): Promise<void> {
   open = true;
   await tick();
@@ -176,13 +185,13 @@ function onkey(e: KeyboardEvent): void {
         <button type="button" aria-label="Next match" class="w-5 h-5 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => step(1)}><AppIcon icon={faArrowDown} size="xs" /></button>
         <button type="button" aria-label="Close find" class="w-5 h-5 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => { open = false; }}><AppIcon icon={faXmark} size="xs" /></button>
       </div>
-    {:else}
+    {:else if findButton}
       <button type="button" aria-label="Find (Ctrl+F)" title="Find (Ctrl+F)" class="w-7 h-7 rounded-md opacity-60 hover:opacity-100 hover:bg-[var(--pd-content-card-hover-bg)]" onclick={show}><AppIcon icon={faMagnifyingGlass} size="xs" /></button>
     {/if}
   </div>
   <div bind:this={scroller} class="flex-1 min-h-0 overflow-auto py-3 font-mono text-[12px] leading-5">
     {#each view.rows as segs, i (i)}
-      <div class="flex whitespace-pre pr-4" class:pl-4={!numbered}>
+      <div class="flex pr-4 {wrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'}" class:pl-4={!numbered}>
         {#if numbered}<span class="w-10 shrink-0 pr-3 text-right select-none opacity-40">{i + 1}</span>{/if}
         <span>{#each segs as s, j (j)}{#if s.m !== undefined}<mark data-m={s.m} class="rounded-sm text-inherit {s.c ?? ''} {s.m === current ? 'bg-[var(--pd-status-degraded)] !text-black' : 'bg-[color-mix(in_srgb,var(--pd-status-degraded)_35%,transparent)]'}">{s.t}</mark>{:else if s.c}<span class={s.c}>{s.t}</span>{:else}{s.t}{/if}{/each}</span>
       </div>

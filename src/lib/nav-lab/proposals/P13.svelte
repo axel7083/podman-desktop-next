@@ -303,6 +303,6 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
         {/if}
       {/key}
     </div>
-    <BottomPanel {sessions} />
+    <BottomPanel {sessions} onopen={open} />
   </div>
 </Frame>

@@ -6,6 +6,7 @@ import { Button } from '@podman-desktop/ui-svelte';
 import type { LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
+import ActBtn from './ActBtn.svelte';
 import Head from './Head.svelte';
 import { isUp, live, type MenuItem, showJournal } from './live.svelte.ts';
 import RowsTable from './RowsTable.svelte';
@@ -62,7 +63,7 @@ const rows = $derived(
       pin: (): void => open(n, false),
       buttons: [
         s === 'running' ? { title: 'Stop', icon: faStop, run: (): void => toggle(n) } : { title: 'Start', icon: faPlay, run: (): void => toggle(n), enabled: s !== 'ready' },
-        { title: 'Logs (journalctl)', icon: faAlignLeft, run: (): void => showJournal(n.label, n.data?.service ?? '', f.connId) },
+        { title: 'Logs (journalctl)', icon: faAlignLeft, run: (): void => showJournal(n.label, n.data?.service ?? '', f.connId, { target: { kind: 'node', connId: f.connId, nodeId: n.id }, icon: f.provider.icon }) },
       ],
       menu: () => menu(n),
     };
@@ -71,7 +72,7 @@ const rows = $derived(
 </script>
 
 {#snippet actions()}
-  <Button type="secondary" icon={faRotateRight} onclick={(): void => undefined}>Refresh</Button>
+  <ActBtn icon={faRotateRight} label="Refresh" onclick={(): void => undefined} />
   <Button icon={faPlusCircle} onclick={(): void => lab.openCreate('Generate a Quadlet')}>Generate Quadlet</Button>
 {/snippet}
 

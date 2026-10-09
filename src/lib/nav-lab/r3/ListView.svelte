@@ -5,6 +5,7 @@
  * (All / Running / Stopped), then the ui-svelte Table.
  */
 import {
+  faAlignLeft,
   faArrowCircleDown,
   faCube,
   faDownload,
@@ -16,12 +17,14 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen, FilteredEmptyScreen } from '@podman-desktop/ui-svelte';
 
-import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf } from '../data.ts';
+import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf, section as findSection } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
 import { containerInfo, hash, imageInfo } from './details.ts';
+import ActBtn from './ActBtn.svelte';
+import { ext } from './exts.ts';
 import Head from './Head.svelte';
-import { can, deleteRes, imageMenu, isUp, live, resActions, resStatus, startRes, stopRes } from './live.svelte.ts';
+import { can, deleteRes, imageMenu, isUp, live, resActions, resStatus, showGroupLogs, startRes, stopRes } from './live.svelte.ts';
 import RowsTable from './RowsTable.svelte';
 import SegFilter from './SegFilter.svelte';
 
@@ -133,7 +136,20 @@ const rows = $derived.by((): LabRow[] => {
       let g = groups.get(r.group);
       if (!g) {
         const pod = r.group.endsWith('pod');
-        g = { name: `g:${r.group}`, status: 'RUNNING', icon, title: r.group, chip: pod ? 'Pod' : 'Compose', sub: [], cols: {}, buttons: [], children: [] };
+        const gicon = pod ? (findSection(c, 'pods')?.icon ?? icon) : (ext('compose')?.icon ?? icon);
+        const project = pod ? undefined : resourcesOf(c.id, 'compose').find(x => x.name === r.group);
+        g = {
+          name: `g:${c.id}:${r.group}`,
+          status: 'RUNNING',
+          icon: gicon,
+          title: r.group,
+          chip: pod ? 'Pod' : 'Compose',
+          sub: [],
+          cols: {},
+          buttons: [],
+          children: [],
+          pin: project ? (): void => onopen({ kind: 'resource', connId: c.id, sectionId: 'compose', resId: project.id }, {}) : undefined,
+        };
         groups.set(r.group, g);
         out.push(g);
       }
@@ -145,9 +161,13 @@ const rows = $derived.by((): LabRow[] => {
     const upN = kids.filter(k => k.status === 'RUNNING').length;
     g.status = upN === kids.length ? 'RUNNING' : upN ? 'DEGRADED' : 'EXITED';
     g.sub = [`${kids.length} container${kids.length > 1 ? 's' : ''}`];
+    g.agg = `${upN}/${kids.length} running`;
     const members = kids.map(k => k.r!).filter(Boolean);
+    const project = g.chip === 'Compose' ? resourcesOf(c.id, 'compose').find(x => x.name === g.title) : undefined;
+    const gIcon = g.icon;
     g.buttons = [
       upN ? { title: 'Stop group', icon: faStop, run: (): void => members.forEach(stopRes) } : { title: 'Start group', icon: faPlay, run: (): void => members.forEach(startRes) },
+      { title: 'See logs', icon: faAlignLeft, run: (): void => showGroupLogs(g.title, c.id, members, project ? { kind: 'resource', connId: c.id, sectionId: 'compose', resId: project.id } : undefined, gIcon) },
       { title: 'Delete group', icon: faTrash, danger: true, run: (): void => members.forEach(deleteRes) },
     ];
   }
@@ -168,19 +188,19 @@ const modern = $derived(lab.table !== 'classic');
 
 {#snippet actions()}
   {#if s.id === 'images'}
-    <Button type="secondary" icon={faTrash} onclick={(): void => lab.openCreate('Prune unused images')}>Prune</Button>
-    <Button type="secondary" icon={faFileImport} onclick={(): void => lab.openCreate('Load images')}>Load</Button>
-    <Button type="secondary" icon={faDownload} onclick={(): void => lab.openCreate('Import images')}>Import</Button>
-    <Button type="secondary" icon={faArrowCircleDown} onclick={(): void => lab.openCreate('Pull an image')}>Pull</Button>
+    <ActBtn icon={faTrash} label="Prune unused images" onclick={(): void => lab.openCreate('Prune unused images')} />
+    <ActBtn icon={faFileImport} label="Load images" onclick={(): void => lab.openCreate('Load images')} />
+    <ActBtn icon={faDownload} label="Import images" onclick={(): void => lab.openCreate('Import images')} />
+    <ActBtn icon={faArrowCircleDown} label="Pull an image" onclick={(): void => lab.openCreate('Pull an image')} />
     <Button icon={faCube} onclick={(): void => lab.openCreate('Build an image')}>Build</Button>
   {:else if s.id === 'containers'}
-    <Button type="secondary" icon={faTrash} onclick={(): void => lab.openCreate('Prune stopped containers')}>Prune</Button>
+    <ActBtn icon={faTrash} label="Prune stopped containers" onclick={(): void => lab.openCreate('Prune stopped containers')} />
     <Button icon={faPlusCircle} onclick={(): void => lab.openCreate('Create a container')}>Create</Button>
   {:else if s.id === 'pods'}
-    <Button type="secondary" icon={faTrash} onclick={(): void => lab.openCreate('Prune pods')}>Prune</Button>
+    <ActBtn icon={faTrash} label="Prune pods" onclick={(): void => lab.openCreate('Prune pods')} />
     <Button icon={faPlay} onclick={(): void => onopen({ kind: 'kubeplay', connId: c.id }, {})}>Play Kubernetes YAML</Button>
   {:else if s.id === 'volumes' || s.id === 'networks'}
-    <Button type="secondary" icon={faTrash} onclick={(): void => lab.openCreate(`Prune ${noun}`)}>Prune</Button>
+    <ActBtn icon={faTrash} label="Prune unused {noun}" onclick={(): void => lab.openCreate(`Prune ${noun}`)} />
     <Button icon={faPlusCircle} onclick={(): void => lab.openCreate(`Create ${noun.replace(/s$/, '')}`)}>Create</Button>
   {:else}
     <Button icon={faPlusCircle} onclick={(): void => lab.openCreate(`Create ${noun.replace(/s$/, '')}`)}>Create</Button>

@@ -558,6 +558,7 @@ const NAMES = [
 ];
 
 const SPECIFIC: Record<string, string[]> = {
+  compose: ['orders-stack', 'auth-stack'],
   topics: ['orders.created', 'orders.paid', 'orders.shipped', 'payments.authorized', 'payments.failed', 'inventory.reserved', 'inventory.released', 'customers.cdc', 'audit.log', 'notifications.email', 'dlq.orders', 'connect-offsets'],
   groups: ['orders-worker', 'payments-svc', 'inventory-svc', 'audit-sink', 'debezium-connect'],
   kusers: ['orders-app', 'payments-app', 'admin'],
@@ -753,6 +754,12 @@ export interface PanelSession {
   lines: string[];
   /** Append fake log lines while visible (P13 "Show logs"). */
   stream?: boolean;
+  /** Streaming paused (logs time range other than Live). */
+  paused?: boolean;
+  /** Resource the session comes from (source chip, opens / focuses its tab). */
+  target?: LabTarget;
+  /** Kind icon of the source (container, pod, quadlet…). */
+  icon?: IconRef;
 }
 
 export const PANEL_SESSIONS: PanelSession[] = [
