@@ -1,12 +1,13 @@
 <script lang="ts">
 /**
- * P13 P1 without the rail: editor tabs (preview tabs, provider badges) with
- * the Dashboard as a fixed first tab, compact Summary | Inspect (| Logs)
- * details and the bottom panel (terminals / logs opened from resources). One
- * left panel: the connection switcher, a filter, then the selected connection
- * as a tree (Overview, resource types ▸ resources collapsed by default,
- * contributed sections with their extension logo, extension sub-trees) and
- * its Extensions pages. Right-click a tree item for its actions. Lab toggle
+ * P13 P1 without the rail: editor tabs with the Dashboard as a fixed first
+ * tab (home glyph), one shared compact header for every tab (lists with the
+ * search inline), PD tables for lists (Quadlets included), PD details tabs,
+ * logs / terminals / TTY as side-by-side panes in the bottom panel, Grype scan
+ * tabs, Ctrl+F inside code views. One left panel: the connection switcher, a
+ * filter, then the selected connection as a tree (resource types ▸ resources,
+ * contributed sections with their extension logo, extension sub-trees) and its
+ * Extensions pages. Right-click a tree item for its actions. Lab toggle
  * "Install: Vanilla | All extensions" switches what is installed.
  */
 import { faChevronDown, faChevronRight, faCircleInfo, faEllipsisVertical, faMagnifyingGlass, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
@@ -38,6 +39,10 @@ import ConnView from '../r3/ConnView.svelte';
 import ExtensionsView from '../r3/ExtensionsView.svelte';
 import { connVisible, isInstalled, sectionVisible, toolVisible } from '../r3/exts.ts';
 import HomeDashboard from '../r3/HomeDashboard.svelte';
+import KubePlayView from '../r3/KubePlayView.svelte';
+import ListView from '../r3/ListView.svelte';
+import ScanView from '../r3/ScanView.svelte';
+import SettingsView from '../r3/SettingsView.svelte';
 import { connActions, isUp, live, type MenuItem, openMenu, resActions, resStatus } from '../r3/live.svelte.ts';
 import NodeView from '../r3/NodeView.svelte';
 import { TREE_PROVIDERS, type TreeNode, treeRoot } from '../r3/trees.ts';
@@ -83,7 +88,7 @@ const f = $derived(filter.trim().toLowerCase());
 const open1 = $derived(c ? (expanded[c.id] ?? []) : []);
 const trees = $derived(c ? TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) && isInstalled(p.extId)) : []);
 const sections = $derived(c ? c.sections.filter(s => sectionVisible(s) && !trees.some(p => p.replaces.includes(s.id))) : []);
-const pages = $derived(extPagesFor(c).filter(t => !f || t.name.toLowerCase().includes(f)));
+const pages = $derived(extPagesFor(c).filter(t => !trees.some(p => p.extId === t.id) && (!f || t.name.toLowerCase().includes(f))));
 const activeKind = $derived(wb.activeTarget?.kind);
 const sessions = $derived.by(() => {
   void lab.install;
@@ -213,7 +218,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
   {/if}
 {/snippet}
 
-{#snippet titleLeft()}<TitleActions side="left" active={activeKind} onopen={(t): void => open(t)} />{/snippet}
+{#snippet titleLeft()}<TitleActions side="left" dashboard={false} active={activeKind} onopen={(t): void => open(t)} />{/snippet}
 {#snippet titleRight()}<TitleActions side="right" active={activeKind} onopen={(t): void => open(t)} />{/snippet}
 
 <Frame {titleLeft} {titleRight}>
@@ -259,8 +264,18 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
       {#key wb.active}
         {@const t = wb.activeTarget}
         {@const tc = findConn(t?.connId)}
+        {@const ts = findSection(tc, t?.sectionId)}
+        {@const tr = resource(t?.resId)}
         {#if t?.kind === 'dashboard'}
           <HomeDashboard onopen={open} />
+        {:else if t?.kind === 'list' && tc && ts}
+          <ListView c={tc} s={ts} onopen={open} />
+        {:else if t?.kind === 'scan' && tr}
+          <ScanView res={tr} onopen={open} />
+        {:else if t?.kind === 'settings'}
+          <SettingsView />
+        {:else if t?.kind === 'kubeplay' && tc}
+          <KubePlayView connId={tc.id} onopen={open} />
         {:else if t?.kind === 'connection' && tc}
           <ConnView c={tc} onopen={open} />
         {:else if t?.kind === 'node' && t.nodeId}

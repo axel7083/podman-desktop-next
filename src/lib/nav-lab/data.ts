@@ -692,7 +692,7 @@ export const WORKFLOWS = [
 /* Tabs                                                                */
 /* ------------------------------------------------------------------ */
 
-export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node';
+export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node' | 'scan' | 'kubeplay';
 
 export interface LabTarget {
   kind: TargetKind;
@@ -747,6 +747,8 @@ export interface PanelSession {
   id: string;
   kind: 'terminal' | 'logs' | 'yaml';
   title: string;
+  /** Header label of the pane (`podman logs`, `journalctl`, `tty`…). */
+  label?: string;
   connId: string;
   lines: string[];
   /** Append fake log lines while visible (P13 "Show logs"). */

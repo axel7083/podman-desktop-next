@@ -149,7 +149,7 @@ function homeTarget(): LabTarget | undefined {
       onkeydown={(): void => select(HOME)}>
       {#if sel}<span class="absolute left-0 right-0 top-0 h-[2px] bg-[var(--pd-tab-highlight)]"></span>{/if}
       <span class="text-[11px] opacity-70"><AppIcon icon={faHouse} /></span>
-      <TabIcon icon={d.icon} connId={d.connId} size={15} />
+      {#if ht.kind !== 'dashboard'}<TabIcon icon={d.icon} connId={d.connId} size={15} />{/if}
       <span class="text-base font-medium whitespace-nowrap">{homeLabel ?? d.title}</span>
     </div>
   {/if}

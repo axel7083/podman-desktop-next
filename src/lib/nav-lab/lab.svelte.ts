@@ -54,10 +54,13 @@ class LabState {
   installed = $state<string[]>([]);
   /** Session queued for the bottom panel (picked up by BottomPanel). */
   pending = $state<PanelSession | undefined>(undefined);
+  /** Show the pending session side by side with the current pane (split). */
+  pendingSplit = $state(false);
 
   /** Open the bottom panel and add a session to it (terminal / logs from a resource). */
-  addSession(s: PanelSession): void {
+  addSession(s: PanelSession, split = false): void {
     this.pending = s;
+    this.pendingSplit = split;
     this.panel = true;
   }
 
@@ -225,10 +228,16 @@ export function describe(t: LabTarget): TargetInfo {
   switch (t.kind) {
     case 'resource': {
       const r = resource(t.resId);
-      return { title: r?.name ?? '?', icon: s?.icon ?? faBorderAll, connId: c?.id, crumb: [c?.name ?? '', s?.label ?? ''] };
+      return { title: r?.name ?? '?', icon: s?.ext?.icon ?? s?.icon ?? faBorderAll, connId: c?.id, crumb: [c?.name ?? '', s?.label ?? ''] };
     }
+    case 'scan': {
+      const r = resource(t.resId);
+      return { title: `Scan · ${r?.name ?? '?'}`, icon: 'icons/podman-desktop.grype.png', connId: c?.id, crumb: [c?.name ?? '', 'Grype'] };
+    }
+    case 'kubeplay':
+      return { title: 'Play Kubernetes YAML', icon: 'icons/podman-desktop.kube-context.png', connId: c?.id, crumb: [c?.name ?? ''] };
     case 'list':
-      return { title: s?.label ?? '?', icon: s?.icon ?? faBorderAll, connId: c?.id, crumb: [c?.name ?? ''] };
+      return { title: s?.label ?? '?', icon: s?.ext?.icon ?? s?.icon ?? faBorderAll, connId: c?.id, crumb: [c?.name ?? ''] };
     case 'connection':
       return { title: c?.name ?? '?', icon: c?.icon ?? faBorderAll, crumb: [c?.group ?? ''] };
     case 'tool': {
@@ -249,7 +258,7 @@ export function describe(t: LabTarget): TargetInfo {
     }
     case 'node': {
       const n = findNode(t.nodeId);
-      return { title: n?.node.label ?? '?', icon: n?.node.icon ?? n?.root.icon ?? faBorderAll, connId: c?.id, crumb: [c?.name ?? '', ...(n?.path ?? [])] };
+      return { title: n?.node.label ?? '?', icon: n?.root.icon ?? n?.node.icon ?? faBorderAll, connId: c?.id, crumb: [c?.name ?? '', ...(n?.path ?? [])] };
     }
     case 'tools':
       return { title: 'Tools', icon: faToolbox, crumb: [] };

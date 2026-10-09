@@ -5,7 +5,12 @@
  */
 import {
   faAlignLeft,
+  faArrowUp,
+  faClockRotateLeft,
   faCode,
+  faDownload,
+  faKeyboard,
+  faPenToSquare,
   faMagnifyingGlassChart,
   faPlay,
   faRotateRight,
@@ -105,7 +110,29 @@ function terminalLines(r: LabResource): string[] {
 let seq = 0;
 
 export function openTerminal(r: LabResource): void {
-  lab.addSession({ id: `term-${++seq}`, kind: 'terminal', title: r.name, connId: r.connId, lines: terminalLines(r) });
+  lab.addSession({ id: `term-${++seq}`, kind: 'terminal', title: r.name, label: 'terminal', connId: r.connId, lines: terminalLines(r) }, true);
+}
+
+/** Containers created with `-t` get an extra "Attach TTY" action. */
+export function hasTty(r: LabResource): boolean {
+  let h = 7;
+  for (const ch of r.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return r.sectionId === 'containers' && h % 3 === 0;
+}
+
+export function openTty(r: LabResource): void {
+  lab.addSession({ id: `tty-${++seq}`, kind: 'terminal', title: `${r.name} (tty)`, label: 'tty', connId: r.connId, lines: [`$ podman attach ${r.name}`, '/ # '] }, true);
+}
+
+/** Quadlet unit logs (journalctl) in the bottom panel. */
+export function showJournal(unit: string, service: string, connId: string): void {
+  const lines = [
+    `-- journalctl --user -u ${service} -f --`,
+    `Oct 09 09:12:00 fedora systemd[1012]: Starting ${service} - ${unit}...`,
+    `Oct 09 09:12:01 fedora podman[4410]: ${unit.split('.')[0]} 2026-10-09 09:12:01 INFO started`,
+    `Oct 09 09:12:01 fedora systemd[1012]: Started ${service} - ${unit}.`,
+  ];
+  lab.addSession({ id: `journal-${++seq}`, kind: 'logs', title: service, label: 'journalctl', connId, lines, stream: true }, true);
 }
 
 export function openConnTerminal(c: LabConnection): void {
@@ -114,7 +141,8 @@ export function openConnTerminal(c: LabConnection): void {
 }
 
 export function showLogs(r: LabResource): void {
-  lab.addSession({ id: `logs-${++seq}`, kind: 'logs', title: `${r.name} logs`, connId: r.connId, lines: Array.from({ length: 6 }, (_, i) => logLine(r.name, i)), stream: true });
+  const cmd = ['kpods', 'deployments', 'services', 'jobs', 'cronjobs'].includes(r.sectionId) ? 'kubectl logs -f' : 'podman logs -f';
+  lab.addSession({ id: `logs-${++seq}`, kind: 'logs', title: r.name, label: cmd, connId: r.connId, lines: Array.from({ length: 8 }, (_, i) => logLine(r.name, i)), stream: true }, true);
 }
 
 /* ------------------------------------------------------------------ */
@@ -157,9 +185,33 @@ export function inspectRes(r: LabResource, onopen: (t: LabTarget, o: { preview?:
 /** Views contributed by extensions to a resource tab (when installed). */
 export function extViews(sectionId: string): { id: string; label: string; extId: string }[] {
   const out: { id: string; label: string; extId: string }[] = [];
-  if (sectionId === 'images' && isInstalled('layers-explorer') && lab.install === 'all') out.push({ id: 'layers', label: 'Layers', extId: 'layers-explorer' });
-  if ((sectionId === 'images' || sectionId === 'containers') && isInstalled('grype') && lab.install === 'all') out.push({ id: 'vulns', label: 'Vulnerabilities', extId: 'grype' });
+  if (sectionId === 'images' && isInstalled('layers-explorer')) out.push({ id: 'layers', label: 'Layers', extId: 'layers-explorer' });
   return out;
+}
+
+/** Grype scan of an image (or a container's image) in its own tab. */
+export function scanRes(r: LabResource, onopen: (t: LabTarget, o: { preview?: boolean }) => void): void {
+  onopen({ kind: 'scan', connId: r.connId, resId: r.id }, {});
+}
+
+function showView(r: LabResource, view: string, onopen: (t: LabTarget, o: { preview?: boolean }) => void): void {
+  live.view[r.id] = view;
+  onopen({ kind: 'resource', connId: r.connId, sectionId: r.sectionId, resId: r.id }, {});
+}
+
+/** Image ⋮ menu (today's PD ImageActions + contributed items). */
+export function imageMenu(r: LabResource, onopen: (t: LabTarget, o: { preview?: boolean }) => void): MenuItem[] {
+  const items: MenuItem[] = [
+    { label: 'Push Image', icon: faArrowUp, run: () => lab.openCreate(`Push ${r.name}`) },
+    { label: 'Edit Image', icon: faPenToSquare, run: () => lab.openCreate(`Edit ${r.name}`) },
+    { label: 'Show History', icon: faClockRotateLeft, run: () => showView(r, 'history', onopen) },
+    { label: 'Save Image', icon: faDownload, run: () => lab.openCreate(`Save ${r.name}`) },
+    { label: 'Push image to Kind cluster', icon: ext('kind')?.icon, run: () => lab.openCreate(`Push ${r.name} to kind-dev`) },
+  ];
+  items.push({ label: isInstalled('grype') ? 'Scan vulnerabilities' : 'Scan vulnerabilities (install Grype)', icon: ext('grype')?.icon, run: () => scanRes(r, onopen), sep: true });
+  if (lab.install === 'all') items.push({ label: 'Push to Quay', icon: 'icons/redhat.quay.png', run: () => lab.openCreate(`Push ${r.name} to quay.io`) });
+  if (isInstalled('bootc')) items.push({ label: 'Build disk image', icon: ext('bootc')?.icon, run: () => onopen({ kind: 'tool', toolId: 'bootc' }, {}) });
+  return items;
 }
 
 /** Full action list for a resource (context menu, ⋮). */
@@ -172,13 +224,13 @@ export function resActions(r: LabResource, onopen: (t: LabTarget, o: { preview?:
     items.push({ label: 'Stop', icon: faStop, disabled: !up, run: () => stopRes(r) });
     items.push({ label: 'Restart', icon: faRotateRight, disabled: !up, run: () => restartRes(r) });
   }
-  if (can.terminal(r.sectionId)) items.push({ label: 'Open terminal', icon: faTerminal, disabled: !up, run: () => openTerminal(r), sep: items.length > 0 });
-  if (can.logs(r.sectionId)) items.push({ label: 'Show logs', icon: faAlignLeft, run: () => showLogs(r), sep: !can.terminal(r.sectionId) && items.length > 0 });
+  if (can.logs(r.sectionId)) items.push({ label: 'See logs', icon: faAlignLeft, run: () => showLogs(r), sep: items.length > 0 });
+  if (can.terminal(r.sectionId)) items.push({ label: 'Open terminal', icon: faTerminal, disabled: !up, run: () => openTerminal(r), sep: !can.logs(r.sectionId) && items.length > 0 });
+  if (hasTty(r)) items.push({ label: 'Attach TTY', icon: faKeyboard, disabled: !up, run: () => openTty(r) });
   items.push({ label: 'Inspect', icon: faCode, run: () => inspectRes(r, onopen), sep: !can.terminal(r.sectionId) && !can.logs(r.sectionId) && items.length > 0 });
   const extra: MenuItem[] = [];
-  if ((r.sectionId === 'images' || r.sectionId === 'containers') && isInstalled('grype') && lab.install === 'all')
-    extra.push({ label: 'Scan with Grype', icon: ext('grype')?.icon, run: () => onopen({ kind: 'tool', toolId: 'grype' }, {}) });
-  if (r.sectionId === 'images' && isInstalled('bootc')) extra.push({ label: 'Build disk image', icon: ext('bootc')?.icon, run: () => onopen({ kind: 'tool', toolId: 'bootc' }, {}) });
+  if (r.sectionId === 'images') extra.push(...imageMenu(r, onopen).map(x => ({ ...x, sep: false })));
+  if (r.sectionId === 'containers') extra.push({ label: isInstalled('grype') ? "Scan the container's image" : "Scan the container's image (install Grype)", icon: ext('grype')?.icon, run: () => scanRes(r, onopen) });
   if (r.sectionId === 'containers' && isInstalled('quadlet')) extra.push({ label: 'Generate Quadlet', icon: ext('quadlet')?.icon, run: () => lab.openCreate(`Quadlet for ${r.name}`) });
   if (['kpods', 'deployments', 'services'].includes(r.sectionId) && isInstalled('kube-dashboard') && lab.install === 'all')
     extra.push({ label: 'Open in Kubernetes dashboard', icon: ext('kube-dashboard')?.icon, run: () => inspectRes(r, onopen) });

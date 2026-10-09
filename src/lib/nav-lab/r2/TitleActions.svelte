@@ -17,9 +17,11 @@ interface Props {
   /** Kind of the active global page (highlighted). */
   active?: string;
   onopen: (t: LabTarget) => void;
+  /** Show the Dashboard icon on the left (P13 has a Dashboard tab instead). */
+  dashboard?: boolean;
 }
 
-let { side, active, onopen }: Props = $props();
+let { side, active, onopen, dashboard = true }: Props = $props();
 
 const RIGHT: [LabTarget['kind'], string, IconRef][] = [
   ['extensions', 'Extensions', EXTENSIONS_ICON],
@@ -43,8 +45,10 @@ const RIGHT: [LabTarget['kind'], string, IconRef][] = [
 
 {#if side === 'left'}
   <span class="text-base font-semibold">Podman Desktop</span>
-  <span class="w-px h-4 mx-1 bg-[var(--pd-global-nav-bg-border)]"></span>
-  {@render icon('dashboard', 'Dashboard', DASHBOARD_ICON)}
+  {#if dashboard}
+    <span class="w-px h-4 mx-1 bg-[var(--pd-global-nav-bg-border)]"></span>
+    {@render icon('dashboard', 'Dashboard', DASHBOARD_ICON)}
+  {/if}
 {:else}
   <div class="flex items-center justify-end gap-1 text-[var(--pd-titlebar-icon)]">
     {@render icon('notifications', 'Notifications', faBell)}

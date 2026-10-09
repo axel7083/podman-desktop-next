@@ -4,12 +4,13 @@
  * accent on the active tab, overflow "+N" badge, resize handle (min 120px),
  * backtick toggle (handled by the lab shell).
  */
-import { faAlignLeft, faChevronDown, faCode, faPlus, faTerminal, faUpRightAndDownLeftFromCenter, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faAlignLeft, faChevronDown, faCode, faPlus, faTableColumns, faTerminal, faUpRightAndDownLeftFromCenter, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 
 import { conn as findConn, type PanelSession } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
+import CodeView from '../r3/CodeView.svelte';
 import { logLine } from '../r3/live.svelte.ts';
 import ConnIcon from './ConnIcon.svelte';
 
@@ -25,13 +26,17 @@ let { sessions: initial, title, tint }: Props = $props();
 
 let sessions = $state<PanelSession[]>([]);
 let active = $state('');
+/** Sessions shown side by side (split); the tab strip highlights them all. */
+let panes = $state<string[]>([]);
 let height = $state(230);
 let width = $state(0);
 let menuOpen = $state(false);
 
 $effect.pre(() => {
   sessions = [...initial];
-  active = initial[0]?.id ?? '';
+  const first = initial[0]?.id ?? '';
+  active = first;
+  panes = first ? [first] : [];
 });
 
 // Sessions queued from a resource (Open terminal / Show logs): add and focus.
@@ -39,20 +44,44 @@ $effect(() => {
   const p = lab.pending;
   if (!p) return;
   sessions.push(p);
+  const keep = lab.pendingSplit ? panes.filter(id => id !== p.id && sessions.some(x => x.id === id)).slice(-2) : [];
+  panes = [...keep, p.id];
   active = p.id;
   lab.pending = undefined;
+  lab.pendingSplit = false;
 });
 
-// Logs sessions opened with `stream` keep appending lines while active.
+// Logs sessions opened with `stream` keep appending lines while shown.
 $effect(() => {
-  const s = sessions.find(x => x.id === active);
-  if (!s?.stream || !lab.panel) return;
+  const shown = sessions.filter(x => panes.includes(x.id) && x.stream);
+  if (!shown.length || !lab.panel) return;
   const timer = setInterval(() => {
-    s.lines.push(logLine(s.title, s.lines.length));
-    if (s.lines.length > 400) s.lines.splice(0, 100);
+    for (const s of shown) {
+      s.lines.push(logLine(s.title, s.lines.length));
+      if (s.lines.length > 400) s.lines.splice(0, 100);
+    }
   }, 900);
   return (): void => clearInterval(timer);
 });
+
+function show(id: string): void {
+  active = id;
+  if (!panes.includes(id)) panes = [id];
+}
+
+function split(): void {
+  const next = sessions.find(x => !panes.includes(x.id));
+  if (next && panes.length < 3) {
+    panes = [...panes, next.id];
+    active = next.id;
+  }
+}
+
+function closePane(id: string): void {
+  panes = panes.filter(x => x !== id);
+  if (!panes.length) panes = sessions[0] ? [sessions[0].id] : [];
+  if (active === id) active = panes.at(-1) ?? '';
+}
 
 const ICON = { terminal: faTerminal, logs: faAlignLeft, yaml: faCode };
 
@@ -74,7 +103,7 @@ const layout = $derived.by(() => {
   return { visible, hidden };
 });
 
-const current = $derived(sessions.find(s => s.id === active));
+const shown = $derived(panes.map(id => sessions.find(s => s.id === id)).filter((s): s is PanelSession => !!s));
 
 function startResize(e: PointerEvent): void {
   const startY = e.clientY;
@@ -93,7 +122,9 @@ function startResize(e: PointerEvent): void {
 function close(id: string): void {
   const idx = sessions.findIndex(s => s.id === id);
   sessions.splice(idx, 1);
-  if (active === id) active = (sessions[idx] ?? sessions[idx - 1])?.id ?? '';
+  panes = panes.filter(x => x !== id);
+  if (active === id) active = panes.at(-1) ?? (sessions[idx] ?? sessions[idx - 1])?.id ?? '';
+  if (!panes.length && active) panes = [active];
 }
 
 function newTerminal(): void {
@@ -101,6 +132,7 @@ function newTerminal(): void {
   const s: PanelSession = { id: `new-${n}-${Date.now()}`, kind: 'terminal', title: `podman-machine-default (${n})`, connId: 'podman-machine-default', lines: ['$ '] };
   sessions.push(s);
   active = s.id;
+  panes = [s.id];
 }
 </script>
 
@@ -114,7 +146,7 @@ function newTerminal(): void {
     <div class="flex items-stretch h-8 shrink-0 bg-[var(--pd-secondary-nav-bg)] border-b border-[var(--pd-content-divider)]" bind:clientWidth={width}>
       {#if title}<span class="flex items-center px-3 text-sm font-semibold text-[var(--pd-nav-group-header)] uppercase tracking-wide">{title}</span>{/if}
       {#each layout.visible as s (s.id)}
-        {@const sel = s.id === active}
+        {@const sel = panes.includes(s.id)}
         <div
           role="tab"
           tabindex="0"
@@ -123,12 +155,8 @@ function newTerminal(): void {
           class:bg-[var(--pd-terminal-background)]={sel}
           class:text-[var(--pd-tab-text-highlight)]={sel}
           class:text-[var(--pd-tab-text)]={!sel}
-          onclick={(): void => {
-            active = s.id;
-          }}
-          onkeydown={(): void => {
-            active = s.id;
-          }}>
+          onclick={(): void => show(s.id)}
+          onkeydown={(): void => show(s.id)}>
           {#if sel}<span class="absolute left-0 right-0 top-0 h-1 bg-[var(--pd-tab-highlight)]"></span>{/if}
           <span class="text-[11px] opacity-80"><AppIcon icon={ICON[s.kind]} /></span>
           <ConnIcon connId={s.connId} size={13} dot={false} />
@@ -161,7 +189,7 @@ function newTerminal(): void {
                   role="menuitem"
                   class="w-full flex items-center gap-2 px-3 py-1.5 text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)]"
                   onclick={(): void => {
-                    active = s.id;
+                    show(s.id);
                     menuOpen = false;
                   }}><AppIcon icon={ICON[s.kind]} /> {s.title}</button>
               {/each}
@@ -171,19 +199,34 @@ function newTerminal(): void {
       {/if}
       <div class="flex-1"></div>
       <div class="flex items-center gap-0.5 px-2 text-[var(--pd-tab-text)]">
+        <button type="button" title="Split" aria-label="Split panel" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={split}><AppIcon icon={faTableColumns} /></button>
         <button type="button" title="New terminal" aria-label="New terminal" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={newTerminal}><AppIcon icon={faPlus} /></button>
         <button type="button" title="Maximize" aria-label="Maximize panel" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => { height = height > 400 ? 230 : 520; }}><AppIcon icon={faUpRightAndDownLeftFromCenter} /></button>
         <button type="button" title="Hide panel (`)" aria-label="Hide panel" class="w-6 h-6 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => { lab.panel = false; }}><AppIcon icon={faXmark} /></button>
       </div>
     </div>
-    <div data-testid="nav-lab-panel-body" class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5 text-[var(--pd-terminal-foreground)]">
-      {#if current}
-        <div class="mb-1 text-[11px] opacity-60">{current.kind === 'logs' ? 'Following logs' : current.kind === 'yaml' ? 'Editing (apply with ⌘S)' : 'Terminal'} · {findConn(current.connId)?.name}</div>
-        {#each current.lines as line, i (i)}
-          <div class="whitespace-pre" class:text-[var(--pd-status-degraded)]={/WARN|error/.test(line)}
-            class:text-[var(--pd-status-dead)]={/ERROR/.test(line)}>{line}{#if i === current.lines.length - 1 && current.kind === 'terminal'}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</div>
-        {/each}
-      {/if}
+    <div data-testid="nav-lab-panel-body" class="flex flex-1 min-h-0 text-[var(--pd-terminal-foreground)]">
+      {#each shown as cur (cur.id)}
+        <div data-testid="panel-pane" data-kind={cur.kind} class="flex flex-col flex-1 min-w-0 border-l first:border-l-0 border-[var(--pd-content-divider)]">
+          {#if shown.length > 1}
+            <div class="flex items-center gap-1.5 h-6 shrink-0 px-2 text-[11px] border-b border-[var(--pd-content-divider)]" class:bg-[var(--pd-content-card-bg)]={cur.id === active}>
+              <AppIcon icon={ICON[cur.kind]} size="xs" /><span class="truncate">{cur.title}</span><span class="opacity-50 truncate">{cur.label ?? ''}</span>
+              <span class="flex-1"></span>
+              <button type="button" aria-label="Close pane" class="w-4 h-4 rounded hover:bg-[var(--pd-content-card-hover-bg)]" onclick={(): void => closePane(cur.id)}><AppIcon icon={faXmark} size="xs" /></button>
+            </div>
+          {/if}
+          {#if cur.kind === 'logs'}
+            <CodeView lines={cur.lines} lang="log" follow testid="panel-logs" class="bg-[var(--pd-terminal-background)] text-[var(--pd-terminal-foreground)]" />
+          {:else}
+            <div class="flex-1 min-h-0 overflow-auto px-4 py-2 font-mono text-[12px] leading-5">
+              <div class="mb-1 text-[11px] opacity-60">{cur.kind === 'yaml' ? 'Editing (apply with ⌘S)' : (cur.label ?? 'Terminal')} · {findConn(cur.connId)?.name}</div>
+              {#each cur.lines as line, i (i)}
+                <div class="whitespace-pre">{line}{#if i === cur.lines.length - 1 && cur.kind === 'terminal'}<span class="inline-block w-2 h-4 align-middle bg-[var(--pd-terminal-cursor)]"></span>{/if}</div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/each}
     </div>
   </section>
 {/if}

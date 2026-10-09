@@ -6,9 +6,13 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 
 import { type LabTarget, STATUS_DOT } from '../data.ts';
 import ActBtn from './ActBtn.svelte';
+import BootcView from './BootcView.svelte';
+import CodeView from './CodeView.svelte';
 import { ext } from './exts.ts';
 import Head from './Head.svelte';
 import { isUp, live, openMenu } from './live.svelte.ts';
+import QuadletList from './QuadletList.svelte';
+import QuadletView from './QuadletView.svelte';
 import { findNode, type TreeNode } from './trees.ts';
 
 interface Props {
@@ -46,7 +50,11 @@ function toggle(): void {
       ])} />
 {/snippet}
 
-{#if f}
+{#if f && f.provider.id === 'quadlets'}
+  {#if f.node === f.root}<QuadletList {f} {onopen} />{:else}<QuadletView {f} {onopen} />{/if}
+{:else if f && f.provider.id === 'bootc'}
+  <BootcView {f} {onopen} />
+{:else if f}
   <div class="flex flex-col h-full min-h-0">
     <Head
       icon={f.node.icon ?? f.provider.icon}
@@ -62,9 +70,9 @@ function toggle(): void {
       }}
       {actions} />
     {#if view === 'inspect'}
-      <pre class="flex-1 m-0 min-h-0 overflow-auto px-4 py-3 font-mono text-[12px] leading-5 bg-[var(--pd-code-block-bg)] text-[var(--pd-code-block-text)]">{JSON.stringify({ id: f.node.id, name: f.node.label, status: st, detail: f.node.detail, provider: f.provider.id, children: f.node.children?.map(x => x.label) }, null, 2)}</pre>
+      <CodeView lang="json" testid="inspect" lines={JSON.stringify({ id: f.node.id, name: f.node.label, status: st, detail: f.node.detail, provider: f.provider.id, children: f.node.children?.map(x => x.label) }, null, 2).split('\n')} />
     {:else}
-      <div class="flex-1 min-h-0 overflow-auto pb-3 text-sm">
+      <div class="flex-1 min-h-0 overflow-auto px-2 py-2 text-[13px] leading-6">
         <dl class="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-x-6 px-3 pt-2">
           <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-content-sub-header)]">Name</dt><dd class="truncate">{f.node.label}</dd></div>
           <div class="flex gap-2 leading-5"><dt class="w-24 shrink-0 text-[var(--pd-content-sub-header)]">Detail</dt><dd class="truncate">{f.node.detail ?? '—'}</dd></div>
