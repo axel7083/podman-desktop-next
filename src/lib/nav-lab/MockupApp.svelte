@@ -12,6 +12,7 @@ import { lab } from '#lib/nav-lab/lab.svelte.ts';
 import P13 from '#lib/nav-lab/proposals/P13.svelte';
 import ContextMenu from '#lib/nav-lab/r3/ContextMenu.svelte';
 import CreateModal from '#lib/nav-lab/ui/CreateModal.svelte';
+import FlowModals from '#lib/nav-lab/ui/FlowModals.svelte';
 import LabBar from '#lib/nav-lab/ui/LabBar.svelte';
 import { appUrl } from '#lib/nav.ts';
 
@@ -43,4 +44,5 @@ function onkey(e: KeyboardEvent): void {
   </div>
 </div>
 <CreateModal />
+<FlowModals />
 <ContextMenu />

@@ -3,6 +3,8 @@
  * Extension cards (catalog / installed / "Extend X"): 32px logo, name,
  * publisher · version, description, status and one labelled secondary
  * action (Install / Open), rule D13: per-card actions are never primary.
+ * A muted "Docs · Repository · Product" row links to the extension resources
+ * (ext-links.ts), accent color on hover only (rule C9).
  */
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 
@@ -10,6 +12,7 @@ import LabIcon from '../ui/LabIcon.svelte';
 import Btn from './Btn.svelte';
 
 import { hash } from './details.ts';
+import { linksFor } from './ext-links.ts';
 import { ext, installExt, isInstalled, type LabExtension } from './exts.ts';
 
 interface Props {
@@ -52,6 +55,14 @@ function refresh(): void {
           </div>
         </div>
         <div class="text-[13px] text-[var(--pd-table-body-text)] line-clamp-2 min-h-10">{e.description}</div>
+        {#if linksFor(e.id).length}
+          <div data-testid="ext-links" class="flex items-center gap-1.5 text-[12px] text-[var(--pd-table-body-text)]">
+            {#each linksFor(e.id) as l, i (l.href)}
+              {#if i > 0}<span aria-hidden="true">·</span>{/if}
+              <a href={l.href} target="_blank" rel="noreferrer" title={l.href} class="hover:text-[var(--pd-link)] hover:underline">{l.label}</a>
+            {/each}
+          </div>
+        {/if}
         <div class="flex items-center gap-2">
           {#if inst}
             <span class="flex items-center gap-1.5 text-[12px] text-[var(--pd-table-body-text)]" title="Already installed"><span class="w-2 h-2 rounded-full bg-[var(--pd-status-running)]"></span>Installed</span>

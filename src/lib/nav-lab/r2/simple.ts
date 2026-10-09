@@ -5,9 +5,11 @@
 import { CONNECTIONS, type LabConnection, type LabTool, TOOLS } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { connVisible, toolVisible } from '../r3/exts.ts';
+import { flows } from '../r3/flows.svelte.ts';
 
 /** Connections visible in the lab (only podman-machine-default when `conns=one`). */
 export function labConns(): LabConnection[] {
+  void flows.conns;
   return lab.conns === 'one' ? CONNECTIONS.filter(c => c.id === 'podman-machine-default') : CONNECTIONS.filter(connVisible);
 }
 

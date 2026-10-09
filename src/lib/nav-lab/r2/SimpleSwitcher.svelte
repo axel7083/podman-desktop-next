@@ -15,6 +15,7 @@ import AppIcon from '#lib/components/AppIcon.svelte';
 import { conn as findConn, STATUS_DOT } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import FilterInput from '../r3/FilterInput.svelte';
+import { openModal } from '../r3/flows.svelte.ts';
 import ConnIcon from '../ui/ConnIcon.svelte';
 import { labConns, switchGroup } from './simple.ts';
 
@@ -65,7 +66,8 @@ function onpointer(e: PointerEvent): void {
     aria-haspopup="menu"
     aria-expanded={open}
     title={current?.name}
-    class="w-full flex items-center gap-2 p-1.5 rounded-lg text-left hover:bg-[var(--pd-secondary-nav-text-hover-bg)] {open ? 'bg-[var(--pd-secondary-nav-text-hover-bg)]' : ''}"
+    data-testid="switcher-button"
+    class="relative z-40 w-full flex items-center gap-2 p-1.5 rounded-lg text-left hover:bg-[var(--pd-secondary-nav-text-hover-bg)] {open ? 'bg-[var(--pd-secondary-nav-text-hover-bg)]' : ''}"
     onclick={(): void => { open = !open; }}>
     <span class="w-8 h-8 shrink-0 rounded-md flex items-center justify-center bg-[var(--pd-content-card-bg)] border border-[var(--pd-global-nav-bg-border)]">
       <ConnIcon connId={current?.id} size={18} ring={surface} />
@@ -79,16 +81,19 @@ function onpointer(e: PointerEvent): void {
     {/if}
   </button>
   {#if open}
+    <!-- Backdrop: dims the rest of the app while the switcher is open (the menu floats above it). -->
+    <div data-testid="switcher-backdrop" class="fixed inset-0 z-30 bg-black/25" role="presentation"></div>
     <div
       role="menu"
-      class="absolute top-full mt-1 z-40 py-1 rounded-lg border border-[var(--pd-dropdown-border)] bg-[var(--pd-dropdown-bg)] text-[var(--pd-dropdown-item-text)] shadow-xl {collapsed ? 'left-0 w-64' : 'left-0 right-0'}">
+      data-testid="switcher-menu"
+      class="absolute top-full mt-1.5 z-40 py-1.5 rounded-lg border border-[color-mix(in_srgb,var(--pd-dropdown-ring)_45%,var(--pd-content-divider))] bg-[var(--pd-dropdown-bg)] text-[var(--pd-dropdown-item-text)] shadow-lg {collapsed ? 'left-0 w-64' : 'left-0 right-0'}">
       {#if !single}
         {#if conns.length > 8}
           <div class="px-1.5 pb-1"><FilterInput placeholder="Filter connections" bind:value={filter} /></div>
         {/if}
         <div class="max-h-[60vh] overflow-auto">
           {#each groups as [g, list] (g)}
-            <div class="px-3 pt-1.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">{g}</div>
+            <div class="px-3 pt-2.5 first:pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">{g}</div>
             {#each list as c (c.id)}
               <button type="button" role="menuitem" class="w-full flex items-center gap-2 h-7 px-3 text-left hover:bg-[var(--pd-dropdown-item-hover-bg)]" onclick={(): void => pick(c.id)}>
                 <ConnIcon connId={c.id} size={16} dot={false} />
@@ -103,7 +108,7 @@ function onpointer(e: PointerEvent): void {
         </div>
         <div class="my-1 border-t border-[var(--pd-content-divider)]"></div>
       {/if}
-      <button type="button" role="menuitem" class="w-full flex items-center gap-2 h-7 px-3 text-left hover:bg-[var(--pd-dropdown-item-hover-bg)]" onclick={(): void => { open = false; lab.openCreate('Add connection'); }}>
+      <button type="button" role="menuitem" class="w-full flex items-center gap-2 h-7 px-3 text-left hover:bg-[var(--pd-dropdown-item-hover-bg)]" data-testid="switcher-add" onclick={(): void => { open = false; openModal('add-connection'); }}>
         <span class="w-4 flex justify-center"><AppIcon icon={faPlus} size="xs" /></span>Add connection
       </button>
       <button type="button" role="menuitem" class="w-full flex items-center gap-2 h-7 px-3 text-left hover:bg-[var(--pd-dropdown-item-hover-bg)]" onclick={(): void => { open = false; onmanage(); }}>

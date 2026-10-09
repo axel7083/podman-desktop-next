@@ -51,6 +51,14 @@ export const EXTENSIONS: LabExtension[] = [
   E('grype', 'Grype', 'podman-desktop.grype.png', 'Scan images for vulnerabilities'),
   E('hummingbird', 'Hummingbird', 'redhat.hummingbird.png', 'Red Hat Hardened Images: minimal, zero-CVE images and hardened alternatives for your local images'),
   E('layers-explorer', 'Layers explorer', 'podman-desktop.layers-explorer.png', 'Browse image layers'),
+  E('redhat-account', 'Red Hat Authentication', 'redhat.redhat-authentication.png', 'Sign in with Red Hat SSO: registry.redhat.io, subscriptions, activation keys, Developer Sandbox'),
+  E('lightspeed', 'RHEL Lightspeed', 'redhat.rhel-lightspeed.png', 'Ask about RHEL: explains errors, logs and suggests commands'),
+  E('openshift-checker', 'Image checker for OpenShift', 'redhat.openshift-checker.png', 'Checks images against OpenShift requirements'),
+  E('quay', 'Quay', 'redhat.quay.png', 'Push to quay.io / Quay, repositories and security scans'),
+  E('tas', 'Trusted Artifact Signer', 'redhat.trusted-artifact-signer.png', 'Sign and verify images with Sigstore (Fulcio, Rekor)'),
+  E('ai-inference', 'Red Hat AI Inference Server', 'redhat.ai-inference-server.png', 'Serve models with vLLM on a local GPU'),
+  E('modelcar', 'ModelCar', 'redhat.modelcar.png', 'Package models as OCI images for OpenShift AI'),
+  E('image-builder', 'Image Builder', 'redhat.image-builder.png', 'Build RHEL images and composes'),
 ];
 
 export function ext(id: string | undefined): LabExtension | undefined {
