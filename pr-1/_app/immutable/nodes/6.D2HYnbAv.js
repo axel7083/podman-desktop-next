@@ -1,1 +1,0 @@
-import{n as e}from"../chunks/C5l4Q60I.js";import{n as t}from"../chunks/DPcOYFUq.js";import{t as n}from"../chunks/BVOYh5-H.js";var r=e({load:()=>i}),i=({params:e})=>{n(307,t(`/c/[conn]/[resource]/[id]/[tab]`,{...e,tab:`summary`}))};export{r as universal};
