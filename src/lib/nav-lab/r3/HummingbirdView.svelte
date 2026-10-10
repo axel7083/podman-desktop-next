@@ -103,10 +103,13 @@ const catalogRows = $derived.by((): LabRow[] => {
   const t = search.toLowerCase();
   return HB_CATALOG.filter(h => (cat === 'all' || h.category === cat) && (!t || h.name.includes(t) || h.description.toLowerCase().includes(t))).map(h => ({
     name: `hb:${h.name}`,
-    status: pullState(h) === 'pulled' ? 'USED' : 'UNUSED',
+    // Dot only means "pulled locally".
+    status: pullState(h) === 'pulled' ? 'RUNNING' : '',
+    dotTitle: 'Pulled',
     icon: ImageIcon,
     title: `hummingbird/${h.name}`,
-    sub: [h.description],
+    desc: h.description,
+    sub: [],
     cols: { tags: h.tags.join(', '), variants: h.variants.join(', '), cves: '0', size: mb(h.sizeMB), arch: h.arch.join(', '), updated: h.updated },
     open: (): void => openImage(h),
     pin: (): void => openImage(h, false),
@@ -120,11 +123,15 @@ function altRow(a: HbAlternative): LabRow {
   const done = rebuildState(a.local) === 'rebuilt';
   return {
     name: `alt:${a.local}`,
-    status: done ? 'RUNNING' : a.cves.critical ? 'CRITICAL' : 'HIGH',
+    // Dot only once rebuilt; the severity of the current CVEs is a badge in the CVE column.
+    status: done ? 'RUNNING' : '',
+    dotTitle: 'Rebuilt on the hardened image',
     icon: ImageIcon,
     title: a.local,
-    sub: [a.base],
-    cols: { alt: `hummingbird/${h.name}:${h.tags[0]}`, cves: `${cveTotal(a)} → 0`, size: `${mb(a.sizeMB)} → ${mb(h.sizeMB)} (${pct(a.sizeMB, h.sizeMB)})`, state: done ? 'Rebuilt' : rebuildState(a.local) === 'rebuilding' ? 'Rebuilding…' : '' },
+    desc: `FROM ${a.base}${rebuildState(a.local) === 'rebuilding' ? ' · rebuilding…' : ''}`,
+    sub: [],
+    badge: a.cves.critical ? { col: 'cves', text: `${a.cves.critical} crit`, tone: 'CRITICAL', title: `${a.cves.critical} critical` } : a.cves.high ? { col: 'cves', text: `${a.cves.high} high`, tone: 'HIGH', title: `${a.cves.high} high` } : undefined,
+    cols: { alt: `hummingbird/${h.name}:${h.tags[0]}`, cves: `${cveTotal(a)} → 0`, size: `${pct(a.sizeMB, h.sizeMB)} · ${mb(h.sizeMB)}` },
     open: (): void => openAlternative(a.local, connId, onopen),
     pin: (): void => openAlternative(a.local, connId, onopen),
     buttons: [{ title: 'Rebuild on hardened image', icon: faHammer, enabled: rebuildState(a.local) !== 'rebuilding', run: (): void => rebuildOnHardened(a.local, connId) }],
@@ -146,7 +153,8 @@ const tagRows = $derived.by((): LabRow[] => {
       const full = v === 'default' ? tag : `${tag}-${v}`;
       return {
         name: `tag:${full}`,
-        status: pullState(img, full) === 'pulled' ? 'USED' : 'UNUSED',
+        status: pullState(img, full) === 'pulled' ? 'RUNNING' : '',
+        dotTitle: 'Pulled',
         icon: ImageIcon,
         title: full,
         sub: [],
@@ -212,7 +220,8 @@ function analyze(): void {
           {variant}
           readonly
           mono={['tags']}
-          cols={[['Tags', 'tags', 'minmax(7rem, 1fr)'], ['Variants', 'variants', 'minmax(7rem, 1fr)'], ['CVEs', 'cves', '60px', true], ['Size', 'size', '80px', true], ['Arch', 'arch', '110px'], ['Updated', 'updated', '100px']]} />
+          chips={['variants', 'arch']}
+          cols={[['Tags', 'tags', 'minmax(4rem, 0.7fr)'], ['Variants', 'variants', 'minmax(6rem, 1fr)'], ['CVEs', 'cves', '52px', true], ['Size', 'size', '72px', true], ['Arch', 'arch', '112px'], ['Updated', 'updated', '88px']]} />
       {:else}
         <div class="flex items-center gap-2 px-4 py-3 text-[12px] text-[var(--pd-table-body-text)]">
           No hardened images match.
@@ -224,7 +233,7 @@ function analyze(): void {
     <Head icon={faCodeCompare} title="Alternatives" connId={connId} onconn={(): void => onopen({ kind: 'connection', connId }, {})} sub="Local images with a hardened alternative" provenance={PROV} placeholder="Filter local images" bind:search actions={altActions} />
     <div data-testid="hb-alternatives" class="flex flex-1 min-h-0 overflow-auto">
       {#if altRows.length}
-        <ModernTable rows={altRows} {variant} readonly cols={[['Hardened alternative', 'alt', 'minmax(10rem, 1fr)'], ['CVEs', 'cves', '80px'], ['Size', 'size', 'minmax(9rem, 1fr)'], ['State', 'state', '100px']]} />
+        <ModernTable rows={altRows} {variant} readonly cols={[['Hardened alternative', 'alt', 'minmax(8rem, 1fr)'], ['CVEs', 'cves', '120px'], ['Size', 'size', '120px']]} />
       {:else}
         <div class="flex items-center gap-2 px-4 py-3 text-[12px] text-[var(--pd-table-body-text)]">
           No local images match.
@@ -282,7 +291,7 @@ function analyze(): void {
         </Section>
         {#if alts.some(a => a.hb === img.name)}
           <Section title="Local images it can replace" count={alts.filter(a => a.hb === img.name).length}>
-            <ModernTable {variant} readonly initialSort="" rows={alts.filter(a => a.hb === img.name).map(altRow)} cols={[['CVEs', 'cves', '80px'], ['Size', 'size', 'minmax(9rem, 1fr)']]} />
+            <ModernTable {variant} readonly initialSort="" rows={alts.filter(a => a.hb === img.name).map(altRow)} cols={[['CVEs', 'cves', '120px'], ['Size', 'size', '120px']]} />
           </Section>
         {/if}
       </div>

@@ -7,16 +7,20 @@ import Btn from './Btn.svelte';
 import ExtCards from './ExtCards.svelte';
 import { flows, openModal } from './flows.svelte.ts';
 import Head from './Head.svelte';
+import { isInstalled } from './exts.ts';
 
 let page = $state('Registries');
 const PAGES = ['Resources', 'Proxy', 'Registries', 'Authentication', 'CLI Tools', 'Kubernetes', 'Experimental', 'Preferences'];
 
-const TOOLS: [string, string, string, string, string, string?][] = [
+const BASE_TOOLS: [string, string, string, string, string, string?][] = [
   ['kubectl', 'icons/podman-desktop.kubectl-cli.png', 'kubectl is a command line tool for communicating with a Kubernetes cluster control plane.', 'Kubernetes', 'v1.33.2', 'v1.34.1'],
   ['Compose', 'icons/podman-desktop.compose.png', 'Compose is a tool for defining and running multi-container applications.', 'Compose', 'v2.39.1'],
   ['kind', 'icons/podman-desktop.kind.png', 'Kind is a tool for running local Kubernetes clusters using container "nodes".', 'Kind', 'v0.29.0', 'v0.30.0'],
   ['Podman', 'icons/podman-desktop.podman.png', 'Podman is a daemonless container engine.', 'Podman', 'v5.6.1'],
 ];
+/** The kompose binary (and its version) is managed here, not in the Kompose tab. */
+const KOMPOSE_TOOL: [string, string, string, string, string, string?] = ['Kompose', 'icons/kubernetes.kompose.png', 'Kompose converts Compose files, pods and containers into Kubernetes resources.', 'Kompose', 'v1.37.0', 'v1.38.0'];
+const TOOLS = $derived(isInstalled('kompose') ? [...BASE_TOOLS, KOMPOSE_TOOL] : BASE_TOOLS);
 </script>
 
 <div class="flex flex-col h-full min-h-0">
@@ -32,7 +36,7 @@ const TOOLS: [string, string, string, string, string, string?][] = [
         <div class="pb-3 text-[var(--pd-table-body-text)]">Command line tools installed and registered by extensions.</div>
         <div data-testid="cli-tools" class="flex flex-col gap-3">
           {#each TOOLS as [name, icon, desc, by, ver, update] (name)}
-            <div class="flex rounded-lg bg-[var(--pd-content-card-bg)] p-4 gap-4">
+            <div data-testid="cli-tool" data-tool={name} class="flex rounded-lg bg-[var(--pd-content-card-bg)] p-4 gap-4">
               <div class="flex items-center gap-3 w-48 shrink-0"><LabIcon {icon} size={32} /><span class="text-[14px] font-semibold text-[var(--pd-content-header)]">{name}</span></div>
               <div class="flex-1 min-w-0 flex flex-col gap-2">
                 <div class="text-[var(--pd-content-header)]">{desc}</div>

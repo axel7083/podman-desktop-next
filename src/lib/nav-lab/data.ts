@@ -25,6 +25,8 @@ import {
   faKey,
   faLayerGroup,
   faListCheck,
+  faMicrochip,
+  faSliders,
   faNetworkWired,
   faPlay,
   faRobot,
@@ -43,7 +45,6 @@ import ImageIcon from '#lib/images/ImageIcon.svelte';
 import IngressRouteIcon from '#lib/images/IngressRouteIcon.svelte';
 import JobIcon from '#lib/images/JobIcon.svelte';
 import NetworkIcon from '#lib/images/NetworkIcon.svelte';
-import NodeIcon from '#lib/images/NodeIcon.svelte';
 import PodIcon from '#lib/images/PodIcon.svelte';
 import PVCIcon from '#lib/images/PVCIcon.svelte';
 import ServiceIcon from '#lib/images/ServiceIcon.svelte';
@@ -151,10 +152,19 @@ export function engineSections(c: number, i: number, p: number, extra: LabSectio
 /** Kubernetes kinds, grouped like the PD Kubernetes extension (groups are tree folders). */
 export const KUBE_GROUPS = ['Compute', 'Config', 'Network', 'Storage', 'Access Control'] as const;
 
+/** Tree folder icons, like the PD Kubernetes extension (never a generic folder). */
+export const KUBE_GROUP_ICON: Record<string, IconRef> = {
+  Compute: faMicrochip,
+  Config: faSliders,
+  Network: faNetworkWired,
+  Storage: faDatabase,
+  'Access Control': faShieldHalved,
+};
+
 function kubeSections(scale: number, extra: LabSection[] = []): LabSection[] {
   const G = (id: string, label: string, icon: IconRef, count: number, group?: string): LabSection => S(id, label, icon, count, undefined, group);
   return [
-    G('nodes', 'Nodes', NodeIcon, Math.max(1, Math.round(scale / 6))),
+    G('nodes', 'Nodes', faServer, Math.max(1, Math.round(scale / 6))),
     G('deployments', 'Deployments', DeploymentIcon, scale, 'Compute'),
     G('daemonsets', 'DaemonSets', faSitemap, 3, 'Compute'),
     G('statefulsets', 'StatefulSets', faDatabase, 2, 'Compute'),

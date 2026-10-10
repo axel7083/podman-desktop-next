@@ -2,17 +2,15 @@
 /**
  * P13 Kubernetes cluster Overview (PD Kubernetes extension dashboard): the
  * header (Overview icon, cluster name, status, product, namespace picker,
- * terminal + `⋯` quick actions, primary "New cluster…"), cluster metrics
+ * terminal + `⋯` quick actions; new clusters come from Settings › Resources), cluster metrics
  * (Nodes, Namespaces), per-namespace metrics for the selected namespaces,
  * then articles to explore. Every card opens its list.
  */
-import { faArrowUpRightFromSquare, faEllipsisVertical, faPlusCircle, faTerminal } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpRightFromSquare, faEllipsisVertical, faTerminal } from '@fortawesome/free-solid-svg-icons';
 
 import { type LabConnection, type LabTarget, resourcesOf } from '../data.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import ActBtn from './ActBtn.svelte';
-import Btn from './Btn.svelte';
-import { openModal } from './flows.svelte.ts';
 import Head from './Head.svelte';
 import { nsMenu } from './kube-menu.ts';
 import { inNs, nsLabel } from './kube-ns.svelte.ts';
@@ -90,7 +88,6 @@ const ARTICLES: [string, string, string][] = [
 {#snippet actions()}
   <ActBtn icon={faTerminal} label="Open terminal" disabled={!up} onclick={(): void => openConnTerminal(c)} />
   <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, [...connActions(c, onopen), ...nsMenu(c, onopen)])} />
-  <Btn kind="primary" icon={faPlusCircle} onclick={(): void => openModal('add-connection')}>New cluster…</Btn>
 {/snippet}
 
 <div data-testid="kube-overview" class="flex flex-col h-full min-h-0">

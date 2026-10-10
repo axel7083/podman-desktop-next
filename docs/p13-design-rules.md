@@ -35,7 +35,12 @@ violation is a code smell you can grep for.
    Containers = `ContainerIcon`; Pods = `PodIcon`; Images = `ImageIcon`; Volumes = `VolumeIcon`;
    Networks = `NetworkIcon`; extension roots = the extension logo; Settings = `SettingsIcon`;
    Extensions = puzzle piece; Accounts = user.
-7. Table rows carry **no per-row icon**: status dot + name. Only group rows (Compose / Pod) show their kind icon.
+   Kubernetes tree folders (like the PD Kubernetes extension, `KUBE_GROUP_ICON`): Compute = microchip,
+   Config = sliders, Network = network-wired, Storage = database, Access Control = shield; Nodes = server;
+   Namespaces = layer-group. Never a generic folder icon for a typed group.
+7. Table rows carry **no per-row icon**: status dot + name. Only group rows (Compose / Pod / Kompose service) show their kind icon.
+   The **status dot is only drawn when it means something** (running state, "Pulled", "Rebuilt") and
+   always has a tooltip (`dotTitle`); otherwise no dot. Severity is a small badge (`badge`), not a dot.
 
 ## C. Color
 
@@ -66,6 +71,10 @@ violation is a code smell you can grep for.
 14. **Header** (`r3/Head.svelte`, every tab): 48px, padding 0 16px:
     `[16px icon] Title (16px semibold) · status pill · connection chip · muted sub ······ [segmented] [filter] [actions]`.
     Provenance (contributing extension) is the title-icon tooltip only.
+14b. **Header never overflows** at 1280px: keep segmented + primary/secondary actions in the header;
+    context pickers (target cluster / namespace / generator) go to a 36px **second row** under the
+    header (Kompose "Target" bar). Tool versions are managed in Settings › CLI Tools, never in a page picker.
+    Cluster pages do not offer "New cluster…" (that is Settings › Resources / Add connection).
 15. **Segmented control** (`r3/SegFilter.svelte`): 28px; used for list filters (All / Running / Stopped),
     details views (Summary / Inspect / …) and severities. No PD `Button type="tab"` and no tab rows inside tabs.
 16. **Filter input** (`r3/FilterInput.svelte`): the one search/filter field (28px, 14px icon, clear ✕,
@@ -75,6 +84,12 @@ violation is a code smell you can grep for.
     disk images, Quadlets), scan results, compose services, image "used by", conditions, events, checks.
     Status dot + name + text columns + hover quick actions + `⋯`; read-only tables (`readonly`) drop
     the checkbox column. A generic key/value summary must never stand in for a list.
+17b. **Columns fit, never a horizontal scroll at ≥ 1280px** (`ModernTable` has `min-width: 0`):
+    every column has a min/max track (`minmax(…)` or a fixed px width), cells truncate with a tooltip,
+    secondary info goes on a **muted second line** under the name (`desc`) instead of its own column,
+    multi-values (arch, variants) are compact chips (`chips`), and rarely-needed values move to the
+    tooltip or the details tab. A side-by-side table pane (Kompose Manifests) is sized so its column
+    minimums fit with a vertical scrollbar. `loop/p13-smoke.mjs` checks `scrollWidth <= clientWidth`.
 18. **Details** tabs default to **Summary**. Summary = key/value cards (label column 160px muted,
     value primary, 13px) followed by related collections as titled tables. Other views: Inspect / YAML,
     Kube, History, Check, contributed views. No view duplicates another (compose: services live in Summary).

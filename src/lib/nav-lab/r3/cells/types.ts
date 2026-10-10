@@ -7,7 +7,8 @@ import type { MenuItem } from "../live.svelte.ts";
 export interface ActionBtn {
   title: string;
   icon: IconRef;
-  run: () => void;
+  /** Receives the click (anchor for a menu / popover). */
+  run: (e?: MouseEvent) => void;
   enabled?: boolean;
   danger?: boolean;
   /** Labelled secondary button (always visible), e.g. catalog "Pull image". */
@@ -24,6 +25,12 @@ export interface LabRow {
   /** Name cell. */
   title: string;
   sub: string[];
+  /** Muted second line under the name (description, base image…); also the name tooltip. */
+  desc?: string;
+  /** Status dot tooltip (defaults to the status word). */
+  dotTitle?: string;
+  /** Small badge (severity…) rendered before a column value. */
+  badge?: { col: string; text: string; tone: string; title?: string };
   /** Short id shown in purple (images). */
   shortId?: string;
   /** Group chip (Compose / Pod). */

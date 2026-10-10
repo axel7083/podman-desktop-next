@@ -12,8 +12,8 @@ const browser = await chromium.launch({ headless: true });
 const results = [];
 const errors = [];
 
-async function session(q) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+async function session(q, width = 1440) {
+  const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   const page = await ctx.newPage();
   page.setDefaultTimeout(8000);
   page.on('console', m => {
@@ -273,7 +273,7 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await expand(page, 'compose');
     await tree(page).getByRole('treeitem', { name: 'orders-stack' }).first().dblclick();
     await page.getByTestId('compose-convert').click();
-    await page.getByTestId('kompose-services').waitFor();
+    await page.getByTestId('kompose-manifests').waitFor();
     await page.getByTestId('head-views').getByRole('radio', { name: /Warnings/ }).click();
     await page.getByTestId('kompose-warnings').getByText('depends_on').first().waitFor();
     await page.getByTestId('head-views').getByRole('radio', { name: /Manifests/ }).click();
@@ -301,7 +301,85 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await checks.nth(1).check();
     await page.getByTestId('bulk-bar').getByText('Convert to Kubernetes').click();
     await page.getByText('Kompose · 2 containers').first().waitFor();
-    await page.getByTestId('kompose-services').getByTestId('mt-row').nth(1).waitFor();
+    await page.getByTestId('kompose-manifests').getByTestId('mt-group').nth(1).waitFor();
+  });
+  await page.context().close();
+}
+
+/* ---------------------------------------------------------------- F polish at 1280px */
+{
+  const page = await session('panel=off', 1280);
+  /** No horizontal overflow: scrollWidth <= clientWidth on the element and its scroll container. */
+  async function noOverflowX(loc, what) {
+    await loc.first().waitFor();
+    const r = await loc.first().evaluate(el => {
+      const out = [];
+      for (let n = el; n && n !== document.body; n = n.parentElement) {
+        if (n.scrollWidth > n.clientWidth + 1 && getComputedStyle(n).overflowX !== 'visible') out.push(`${n.dataset.testid ?? n.className}: ${n.scrollWidth}>${n.clientWidth}`);
+      }
+      if (el.scrollWidth > el.clientWidth + 1) out.unshift(`self ${el.scrollWidth}>${el.clientWidth}`);
+      return out;
+    });
+    expect(r.length === 0, `${what} overflows: ${r.join(', ')}`);
+  }
+  await step('F Kompose header + target bar fit at 1280px, manifests grouped per service, no status dots', async () => {
+    await expand(page, 'compose');
+    await tree(page).getByRole('treeitem', { name: 'orders-stack' }).first().dblclick();
+    await page.getByTestId('compose-convert').click();
+    const v = page.getByTestId('kompose-view');
+    await v.getByTestId('kompose-manifests').waitFor();
+    await noOverflowX(v.getByTestId('tab-head'), 'Kompose header');
+    await noOverflowX(v.getByTestId('kompose-target-bar'), 'Kompose target bar');
+    await noOverflowX(v.getByTestId('kompose-manifests').getByTestId('modern-table'), 'Kompose manifests table');
+    const groups = v.getByTestId('kompose-manifests').getByTestId('mt-group');
+    expect((await groups.count()) >= 2, 'manifests not grouped per service');
+    expect(/Deployment|StatefulSet/.test(await groups.first().getByTestId('mt-agg').innerText()), 'group row has no controller summary');
+    expect((await v.getByTestId('kompose-manifests').getByTestId('mt-dot').count()) === 0, 'status dots in the manifests table');
+    expect((await v.getByTestId('kompose-generator').innerText()).match(/\d+\.\d+/) === null, 'generator shows a version');
+    expect((await v.getByTestId('head-views').innerText()).includes('Services') === false, 'Services view still present');
+    await groups.first().getByTestId('row-btn').click();
+    await page.getByTestId('nav-lab-context-menu').getByText('StatefulSet').waitFor();
+    await page.keyboard.press('Escape');
+    await v.getByTestId('kompose-manifests').getByTestId('mt-row').nth(1).click();
+    expect((await v.getByTestId('kompose-file').innerText()).endsWith('.yaml'), 'no file selected');
+  });
+  await step('F Hummingbird catalog + alternatives fit at 1280px, dots only for pulled', async () => {
+    await useConn(page, 'podman-machine-default');
+    await expand(page, 'hummingbird@podman-machine-default');
+    for (const [node, testid] of [['Catalog', 'hb-catalog'], ['Alternatives', 'hb-alternatives']]) {
+      await tree(page).locator(`[data-key="hummingbird@podman-machine-default/${node}"]`).first().dblclick();
+      const t = page.getByTestId(testid);
+      await t.getByTestId('mt-row').first().waitFor();
+      await noOverflowX(t.getByTestId('modern-table'), testid);
+      await noOverflowX(t, testid);
+    }
+    expect((await page.getByTestId('hb-alternatives').getByTestId('mt-badge').count()) > 0, 'no severity badge');
+    expect((await page.getByTestId('hb-alternatives').getByTestId('mt-dot').count()) === 0, 'meaningless dots in alternatives');
+  });
+  await step('F CLI Tools lists Kompose', async () => {
+    await page.getByTestId('switcher-button').click();
+    await page.getByTestId('switcher-menu').getByText('Manage connections').click();
+    await page.getByRole('button', { name: 'CLI Tools' }).click();
+    await page.locator('[data-tool="Kompose"]').getByText('Registered by Kompose').waitFor();
+  });
+  await step('F kube: meaningful folder icons, no New cluster on overview, All namespaces toggles all', async () => {
+    await useConn(page, 'kind-dev');
+    await tree(page).getByRole('treeitem', { name: 'Overview' }).first().click();
+    const ov = page.getByTestId('kube-overview');
+    await ov.waitFor();
+    expect((await ov.getByText('New cluster').count()) === 0, 'New cluster on cluster overview');
+    await ov.getByTestId('ns-select').click();
+    const menu = page.getByTestId('ns-menu');
+    await menu.getByTestId('ns-all').click();
+    const items = menu.getByTestId('ns-item');
+    const n = await items.count();
+    for (let i = 0; i < n; i++) expect((await items.nth(i).getAttribute('aria-checked')) === 'true', 'All does not check every namespace');
+    await items.first().click();
+    expect((await menu.getByTestId('ns-all').getAttribute('aria-checked')) === 'false', 'All still checked after unchecking one');
+    expect((await ov.getByTestId('ns-select').innerText()).includes(`${n - 1} namespaces`), `label is ${await ov.getByTestId('ns-select').innerText()}`);
+    await items.first().click();
+    expect((await menu.getByTestId('ns-all').getAttribute('aria-checked')) === 'true', 'all checked is not All namespaces');
+    await page.keyboard.press('Escape');
   });
   await page.context().close();
 }
@@ -324,9 +402,49 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await tree(page).getByRole('treeitem', { name: 'orders-stack' }).first().click({ button: 'right' });
     await page.getByTestId('nav-lab-context-menu').getByText('Convert to Kubernetes (install Kompose)').click();
     await page.getByTestId('kompose-view').getByTestId('promo-install').click();
-    await page.getByTestId('kompose-services').waitFor();
+    await page.getByTestId('kompose-manifests').waitFor();
   });
   await page.context().close();
+}
+
+/* ---------------------------------------------------------------- T Red Hat workflow tours (dashboard cards + palette) */
+/* Each card's tour is started then auto-played with "Show me" in a fresh page, until the overlay reports done. */
+{
+  const probe = await session('panel=off');
+  await probe.getByTestId('rh-workflows').waitFor().catch(() => {});
+  const flowsIds = await probe.getByTestId('rh-flow-card').evaluateAll(els => els.map(e => e.getAttribute('data-flow')));
+  await step('T dashboard shows 8 Red Hat workflow cards', async () => {
+    await probe.getByTestId('rh-workflows').waitFor();
+    expect(flowsIds.length === 8, `${flowsIds.length} cards`);
+  });
+  await step('T palette lists "Tour:" entries under Workflows', async () => {
+    await probe.keyboard.press('Control+k');
+    await probe.getByTestId('p13-palette').getByTestId('palette-group').filter({ hasText: 'Workflows' }).waitFor();
+    const item = probe.getByTestId('palette-item').filter({ hasText: 'Tour: Kompose' });
+    await item.waitFor();
+    await item.click();
+    await probe.getByTestId('tour-overlay').waitFor();
+    await probe.getByTestId('tour-exit').click();
+    await probe.getByTestId('tour-overlay').waitFor({ state: 'detached' });
+  });
+  await probe.context().close();
+  for (const id of flowsIds) {
+    const page = await session('panel=off');
+    await step(`T tour ${id}: Show me plays to Done`, async () => {
+      await page.locator(`[data-testid="rh-flow-card"][data-flow="${id}"]`).getByTestId('rh-flow-start').click();
+      await page.getByTestId('tour-callout').waitFor();
+      await page.getByTestId('tour-showme').click();
+      try {
+        await page.locator('[data-testid="tour-overlay"][data-done="true"]').waitFor({ timeout: 90000 });
+      } catch (e) {
+        const at = await page.getByTestId('tour-step').innerText().catch(() => '?');
+        throw new Error(`stuck at "${at}"`);
+      }
+      await page.getByTestId('tour-exit').click();
+      await page.getByTestId('tour-overlay').waitFor({ state: 'detached' });
+    });
+    await page.context().close();
+  }
 }
 
 await browser.close();

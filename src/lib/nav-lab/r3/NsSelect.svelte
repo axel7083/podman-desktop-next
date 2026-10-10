@@ -1,7 +1,7 @@
 <script lang="ts">
 /**
  * P13 namespace multi-select for Kubernetes headers: a 28px trigger
- * ("All namespaces" / "orders" / "orders +2") opening an elevated dropdown
+ * ("All namespaces" / "orders" / "3 namespaces") opening an elevated dropdown
  * with a filter, "All namespaces", pinned namespaces (star toggle) then the
  * others, one checkbox per namespace. The selection is remembered per cluster.
  */
@@ -64,7 +64,7 @@ function outside(e: MouseEvent): void {
     data-testid="ns-select"
     aria-haspopup="menu"
     aria-expanded={open}
-    title="Namespaces"
+    title={sel.includes('*') ? 'All namespaces' : sel.join(', ')}
     class="flex items-center gap-1.5 h-7 max-w-52 px-2 rounded-md border border-[var(--pd-content-divider)] text-[12px] text-[var(--pd-content-header)] hover:bg-[var(--pd-action-button-details-bg)]"
     onclick={(): void => (open ? close() : void (open = true))}>
     <span class="text-[var(--pd-table-body-text)]"><LabIcon icon={faLayerGroup} size={14} /></span>
@@ -85,16 +85,16 @@ function outside(e: MouseEvent): void {
         <FilterInput placeholder="Filter namespaces" testid="ns-filter" bind:value={filter} />
       </div>
       <div class="max-h-80 overflow-auto py-1">
-        <button type="button" role="menuitemcheckbox" aria-checked={all} class="flex w-full items-center gap-2 h-7 px-3 text-left hover:bg-[var(--pd-dropdown-item-hover-bg,var(--pd-action-button-details-bg))]" onclick={(): void => setNs(connId, ['*'])}>
+        <button type="button" role="menuitemcheckbox" data-testid="ns-all" aria-checked={all} class="flex w-full items-center gap-2 h-7 px-3 text-left hover:bg-[var(--pd-dropdown-item-hover-bg,var(--pd-action-button-details-bg))]" onclick={(): void => setNs(connId, ['*'])}>
           {@render check(all)}All namespaces
         </button>
         {#each groups as [title, list] (title)}
           <div class="px-3 pt-2 pb-1 text-[11px] font-semibold text-[var(--pd-table-body-text)]">{title}</div>
           {#each list as n (n)}
-            {@const on = !all && sel.includes(n)}
+            {@const on = all || sel.includes(n)}
             {@const pin = pinned.includes(n)}
             <div class="group flex items-center pr-1 hover:bg-[var(--pd-dropdown-item-hover-bg,var(--pd-action-button-details-bg))]">
-              <button type="button" role="menuitemcheckbox" aria-checked={on} class="flex flex-1 min-w-0 items-center gap-2 h-7 pl-3 text-left" onclick={(): void => toggleNs(connId, n)}>
+              <button type="button" role="menuitemcheckbox" data-testid="ns-item" data-ns={n} aria-checked={on} class="flex flex-1 min-w-0 items-center gap-2 h-7 pl-3 text-left" onclick={(): void => toggleNs(connId, n)}>
                 {@render check(on)}<span class="truncate">{n}</span>
               </button>
               <button

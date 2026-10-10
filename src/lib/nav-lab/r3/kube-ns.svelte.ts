@@ -43,10 +43,16 @@ export function setNs(connId: string, ns: string[]): void {
   kubeNs.sel[connId] = ns.length ? ns : ['*'];
 }
 
-/** Add / remove one namespace from the selection (from "All namespaces": select only it). */
+/**
+ * Add / remove one namespace. From "All namespaces" every namespace counts as
+ * checked, so unchecking one keeps all the others; checking the last missing
+ * one goes back to "All namespaces".
+ */
 export function toggleNs(connId: string, ns: string): void {
-  const cur = allNs(connId) ? [] : selectedNs(connId);
-  setNs(connId, cur.includes(ns) ? cur.filter(x => x !== ns) : [...cur, ns]);
+  const every = namespacesOf(connId);
+  const cur = allNs(connId) ? every : selectedNs(connId);
+  const next = cur.includes(ns) ? cur.filter(x => x !== ns) : [...cur, ns];
+  setNs(connId, every.length > 0 && every.every(n => next.includes(n)) ? ['*'] : next);
 }
 
 /** Pinned namespaces (default: the developer namespace). */
@@ -60,11 +66,11 @@ export function togglePin(connId: string, ns: string): void {
   kubeNs.pinned[connId] = cur.includes(ns) ? cur.filter(x => x !== ns) : [...cur, ns];
 }
 
-/** Short label of the selection: "All namespaces", "orders", "orders +2". */
+/** Short label of the selection: "All namespaces", "orders", "3 namespaces". */
 export function nsLabel(connId: string): string {
   const s = selectedNs(connId);
   if (s.includes('*')) return 'All namespaces';
-  return s.length > 1 ? `${s[0]} +${s.length - 1}` : s[0];
+  return s.length > 1 ? `${s.length} namespaces` : s[0];
 }
 
 /** True when a resource is visible with the cluster's namespace selection (cluster-scoped kinds always are). */

@@ -129,6 +129,8 @@ export function hostOf(svc: string, connId: string, ns: string): string {
 
 export interface Manifest {
   file: string;
+  /** Compose service the file was generated for (`io.kompose.service`). */
+  svc: string;
   kind: string;
   lines: string[];
 }
@@ -138,15 +140,17 @@ export function manifestsOf(key: string, connId: string, ns: string, generator: 
   const out: Manifest[] = [];
   const route = exposeKind(connId);
   for (const s of servicesOf(key)) {
-    const ann = generator === 'kompose' ? ['  annotations:', '    kompose.cmd: kompose convert -f compose.yaml', '    kompose.version: 1.38.0'] : generator === 'podman' ? ['  annotations:', '    io.podman.annotations.generated: podman kube generate --type deployment'] : ['  annotations:', '    score.dev/source: score.yaml'];
+    const ann = generator === 'kompose' ? ['  annotations:', '    kompose.cmd: kompose convert -f compose.yaml', '    kompose.version: 1.37.0'] : generator === 'podman' ? ['  annotations:', '    io.podman.annotations.generated: podman kube generate --type deployment'] : ['  annotations:', '    score.dev/source: score.yaml'];
     if (s.volume)
       out.push({
         file: `${s.volume.name}-persistentvolumeclaim.yaml`,
+        svc: s.name,
         kind: 'PersistentVolumeClaim',
         lines: ['apiVersion: v1', 'kind: PersistentVolumeClaim', 'metadata:', `  name: ${s.volume.name}`, `  namespace: ${ns}`, 'spec:', '  accessModes: [ReadWriteOnce]', ...(s.volume.storageClass !== 'default' ? [`  storageClassName: ${s.volume.storageClass}`] : []), '  resources:', '    requests:', `      storage: ${s.volume.size}`],
       });
     out.push({
       file: `${s.name}-${s.controller.toLowerCase()}.yaml`,
+      svc: s.name,
       kind: s.controller,
       lines: [
         'apiVersion: apps/v1',
@@ -174,12 +178,14 @@ export function manifestsOf(key: string, connId: string, ns: string, generator: 
     if (s.port)
       out.push({
         file: `${s.name}-service.yaml`,
+        svc: s.name,
         kind: 'Service',
         lines: ['apiVersion: v1', 'kind: Service', 'metadata:', `  name: ${s.name}`, `  namespace: ${ns}`, 'spec:', `  type: ${s.type}`, `  selector: { io.kompose.service: ${s.name} }`, `  ports: [{ name: "${s.port}", port: ${s.port}, targetPort: ${s.port} }]`],
       });
     if (s.expose && s.port)
       out.push({
         file: `${s.name}-${route.toLowerCase()}.yaml`,
+        svc: s.name,
         kind: route,
         lines:
           route === 'Route'

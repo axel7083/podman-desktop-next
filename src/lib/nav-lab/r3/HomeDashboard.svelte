@@ -4,6 +4,8 @@
  * pencil, the recommended-extension banner (purple gradient, close ✕),
  * collapsible "Explore Features", "Learning Center" (carousel) and "System
  * Overview" (status pill, providers with version, status and start/stop).
+ * "Red Hat workflows": one card per flow (docs/p13-red-hat-flows.md) with its
+ * product chain and a Start button launching the guided tour (r3/tours.svelte.ts).
  */
 import {
   faChevronDown,
@@ -36,6 +38,7 @@ import { hash } from './details.ts';
 import { ext, installExt, isInstalled } from './exts.ts';
 import Head from './Head.svelte';
 import { connStatus, isUp, toggleConn } from './live.svelte.ts';
+import { startTour, TOURS } from './tours.svelte.ts';
 
 interface Props {
   onopen: (t: LabTarget, opts: { preview?: boolean }) => void;
@@ -156,6 +159,28 @@ function version(id: string): string {
             <span class="text-[14px] font-semibold text-[var(--pd-content-header)]">{t}</span>
             <span class="text-[var(--pd-table-body-text)] flex-1">{d}</span>
             <div><Btn onclick={(): void => onopen(target, {})}>Explore</Btn></div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+
+    {@render sectionHead('workflows', 'Red Hat workflows')}
+    {#if !collapsed.includes('workflows')}
+      <div data-testid="rh-workflows" class="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
+        {#each TOURS as t (t.id)}
+          <div data-testid="rh-flow-card" data-flow={t.id} class="flex flex-col gap-2 p-4 rounded-lg bg-[var(--pd-content-card-bg)]">
+            <div class="flex items-center gap-1.5 flex-wrap" aria-label="Products: {t.logos.map(l => l[1]).join(', ')}">
+              {#each t.logos as [icon, name], i (icon)}
+                {#if i}<span class="text-[9px] text-[var(--pd-table-body-text)]"><AppIcon icon={faChevronRight} /></span>{/if}
+                <span title={name}><LabIcon {icon} size={20} /></span>
+              {/each}
+            </div>
+            <span class="text-[14px] font-semibold text-[var(--pd-content-header)]">{t.title}</span>
+            <span class="text-[var(--pd-table-body-text)] line-clamp-2 flex-1">{t.outcome}</span>
+            <div class="flex items-center gap-2">
+              <Btn icon={faPlay} testid="rh-flow-start" onclick={(): void => startTour(t.id)}>Start</Btn>
+              <span class="text-[11px] text-[var(--pd-table-body-text)]">{t.steps.length} steps</span>
+            </div>
           </div>
         {/each}
       </div>

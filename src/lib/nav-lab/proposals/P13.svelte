@@ -15,7 +15,7 @@
  * "Install: Vanilla | All extensions" switches what is installed.
  * Design rules: docs/p13-design-rules.md (audit: docs/p13-audit.md).
  */
-import { faArrowCircleDown, faChevronDown, faChevronRight, faEllipsisVertical, faFolder, faFolderOpen, faHammer, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faChevronDown, faChevronRight, faEllipsisVertical, faFolder, faFolderOpen, faHammer, faMagnifyingGlass, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
 import { untrack } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -28,6 +28,7 @@ import {
   type LabResource,
   type LabSection,
   type LabTarget,
+  KUBE_GROUP_ICON,
   MANY_TABS,
   PANEL_SESSIONS,
   resource,
@@ -56,6 +57,9 @@ import { nsMenu } from '../r3/kube-menu.ts';
 import KubeOverview from '../r3/KubeOverview.svelte';
 import KubeResourceView from '../r3/KubeResourceView.svelte';
 import OperatorsView from '../r3/OperatorsView.svelte';
+import Palette from '../r3/Palette.svelte';
+import { tour } from '../r3/tours.svelte.ts';
+import TourOverlay from '../r3/TourOverlay.svelte';
 import KomposeView from '../r3/KomposeView.svelte';
 import { kompose } from '../r3/kompose.svelte.ts';
 import KubePlayView from '../r3/KubePlayView.svelte';
@@ -141,6 +145,19 @@ $effect(() => {
 
 /** Expanded tree keys, remembered per connection (sections collapsed by default). */
 let expanded = $state<Record<string, string[]>>({});
+let palette = $state(false);
+
+// Guided tours (r3/tours.svelte.ts) drive the tree and tabs through these.
+tour.host = {
+  open: (t: LabTarget): void => open(t),
+  select: (id: string): void => {
+    if (c?.id !== id && labConns().some(x => x.id === id)) select(id);
+  },
+  expand: (connId: string, keys: string[]): void => {
+    const cur = expanded[connId] ?? [];
+    if (keys.some(k => !cur.includes(k))) expanded[connId] = [...new Set([...cur, ...keys])];
+  },
+};
 
 const c = $derived(findConn(labConns().some(x => x.id === sel) ? sel : labConns()[0]?.id));
 const f = $derived(filter.trim().toLowerCase());
@@ -343,7 +360,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
       if (e.key === 'Enter') toggle(key);
     }}>
     <span class="flex w-3 shrink-0 justify-center text-[9px] opacity-70" data-chevron={key}><AppIcon icon={gOpen ? faChevronDown : faChevronRight} /></span>
-    <LabIcon icon={gOpen ? faFolderOpen : faFolder} size={16} />
+    <LabIcon icon={KUBE_GROUP_ICON[group] ?? (gOpen ? faFolderOpen : faFolder)} size={16} />
     <span class="truncate">{group}</span>
     <span class="flex-1"></span>
     <span class="text-[11px] text-[var(--pd-table-body-text)]">{list.reduce((n, s) => n + countOf(s), 0)}</span>
@@ -354,9 +371,14 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
 {/snippet}
 
 {#snippet titleLeft()}<TitleActions side="left" dashboard={false} active={activeKind} onopen={(t): void => open(t)} />{/snippet}
+{#snippet titleCenter()}
+  <button type="button" data-testid="p13-search" class="flex items-center gap-2 w-[360px] max-w-[30vw] h-6 px-2 rounded-md bg-[var(--pd-input-field-bg)] border border-[var(--pd-input-field-stroke)] text-sm text-[var(--pd-input-field-placeholder-text)]" onclick={(): void => void (palette = true)}>
+    <AppIcon icon={faMagnifyingGlass} size="xs" /><span class="flex-1 text-left truncate">Search</span><kbd class="opacity-70">⌘K</kbd>
+  </button>
+{/snippet}
 {#snippet titleRight()}<TitleActions side="right" active={activeKind} onopen={(t): void => open(t)} />{/snippet}
 
-<Frame {titleLeft} {titleRight}>
+<Frame {titleLeft} {titleCenter} {titleRight}>
   {#if c}
     <aside data-island="tree" tabindex="-1" style:width="{treeW}px" class="flex flex-col shrink-0 h-full bg-[var(--pd-secondary-nav-bg)] border-r border-[var(--pd-global-nav-bg-border)]">
       <div class="px-2 pt-2 pb-1 shrink-0">
@@ -445,6 +467,8 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
     <BottomPanel {sessions} onopen={open} />
   </div>
 </Frame>
+<Palette bind:open={palette} onselect={select} />
+<TourOverlay />
 
 <style>
 /* Resources just deployed by a flow (Kompose): soft accent tint until the next deploy. */

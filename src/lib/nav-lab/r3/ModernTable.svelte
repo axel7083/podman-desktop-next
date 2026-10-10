@@ -34,9 +34,11 @@ interface Props {
   bulkActions?: { label: string; icon?: IconRef; run: (rows: LabRow[]) => void }[];
   /** Hide the row checkbox / bulk bar (read-only results). */
   readonly?: boolean;
+  /** Column keys whose comma-separated values render as compact chips (arch, variants…). */
+  chips?: string[];
 }
 
-let { rows, cols, variant, initialSort = '__name', mono = [], readonly = false, bulkActions = [] }: Props = $props();
+let { rows, cols, variant, initialSort = '__name', mono = [], readonly = false, bulkActions = [], chips = [] }: Props = $props();
 
 const grid = $derived(variant === 'grid');
 
@@ -212,14 +214,14 @@ function subOf(r: LabRow): string[] {
 </script>
 
 {#snippet dot(r: LabRow)}
-  {#if r.status}<span class="dot {tone(r.status)}" title={r.status}></span>{/if}
+  {#if r.status}<span class="dot {tone(r.status)}" data-testid="mt-dot" title={r.dotTitle ?? r.status}></span>{/if}
 {/snippet}
 
 {#snippet acts(r: LabRow)}
   <div class="acts" class:always={r.buttons.some(b => b.label)}>
     {#each r.buttons as b (b.title)}
       {#if b.label}
-        <button type="button" class="ghost-txt lbl" data-testid="row-btn" disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(); }}><AppIcon icon={b.icon} size="xs" />{b.title}</button>
+        <button type="button" class="ghost-txt lbl" data-testid="row-btn" disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(e); }}><AppIcon icon={b.icon} size="xs" />{b.title}</button>
       {:else}
         <button type="button" class="ghost" class:danger={b.danger} title={b.title} aria-label={b.title} disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(); }}><AppIcon icon={b.icon} size="xs" /></button>
       {/if}
@@ -318,7 +320,7 @@ function subOf(r: LabRow): string[] {
           <span class="gicon"><LabIcon icon={r.icon} size={16} /></span>
           <span class="title">{r.title}</span>
           {#if r.chip}<span class="kind">{r.chip}</span>{/if}
-          <span class="agg">{@render dot(r)}{r.agg ?? `${r.children?.length ?? 0}`}</span>
+          <span class="agg" data-testid="mt-agg" title={r.agg}>{@render dot(r)}<span class="truncate">{r.agg ?? `${r.children?.length ?? 0}`}</span></span>
         </span>
         {@render acts(r)}
       </div>
@@ -351,14 +353,19 @@ function subOf(r: LabRow): string[] {
           {#if c.key === '__name'}
             <span class="name" style:padding-left={f.depth ? '22px' : undefined}>
               {#if !grid}{@render dot(r)}{/if}
-              <span class="title" title={r.title}>{r.title}</span>
+              {#if r.desc}
+                <span class="two" title={`${r.title}\n${r.desc}`}><span class="title">{r.title}</span><span class="desc">{r.desc}</span></span>
+              {:else}
+                <span class="title" title={r.title}>{r.title}</span>
+              {/if}
               {#if r.shortId}<span class="muted mono">{r.shortId.slice(0, 8)}</span>{/if}
               {#each subOf(r) as s, j (j)}
                 {#if r.shortId}<span class="pill">{s}</span>{:else}<span class="muted truncate">{s}</span>{/if}
               {/each}
             </span>
           {:else}
-            <span class="cell" class:num={c.numeric} class:mono={(grid && (c.numeric || /id|size/i.test(c.key))) || mono.includes(c.key)} title={r.cols[c.key]}>{r.cols[c.key] ?? ''}</span>
+            <span class="cell" class:num={c.numeric} class:mono={(grid && (c.numeric || /id|size/i.test(c.key))) || mono.includes(c.key)} title={r.badge?.col === c.key ? `${r.badge.title ?? r.badge.text} · ${r.cols[c.key] ?? ''}` : r.cols[c.key]}
+              >{#if r.badge?.col === c.key}<span class="badge {tone(r.badge.tone)}" data-testid="mt-badge">{r.badge.text}</span>{/if}{#if chips.includes(c.key)}{#each (r.cols[c.key] ?? '').split(', ').filter(Boolean) as ch (ch)}<span class="chip">{ch}</span>{/each}{:else}{r.cols[c.key] ?? ''}{/if}</span>
           {/if}
         {/each}
         {@render acts(r)}
@@ -375,8 +382,9 @@ function subOf(r: LabRow): string[] {
   --line: color-mix(in srgb, var(--pd-content-divider) 55%, transparent);
   --accent: var(--pd-button-primary-bg);
   --row-h: 34px;
+  /* Rule E17b: columns fit the width (min/max tracks, truncation + tooltip), never a horizontal scroll. */
   width: 100%;
-  min-width: max-content;
+  min-width: 0;
   font-size: 12px;
   color: var(--pd-table-body-text);
   outline: none;
@@ -556,6 +564,7 @@ function subOf(r: LabRow): string[] {
   opacity: 0.75;
 }
 .agg {
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -612,6 +621,57 @@ function subOf(r: LabRow): string[] {
   font-size: 11px;
   background: var(--pd-label-bg);
   color: var(--pd-label-text);
+}
+.two {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 15px;
+}
+.two .title {
+  min-width: 0;
+  white-space: nowrap;
+}
+.desc {
+  font-size: 11px;
+  color: var(--pd-table-body-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 5px;
+  line-height: 16px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--pd-label-bg);
+  color: var(--pd-label-text);
+}
+.badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  line-height: 16px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--pd-status-stopped);
+}
+.badge.sev-critical {
+  background: var(--pd-status-dead);
+}
+.badge.sev-high {
+  background: var(--pd-status-degraded);
+}
+.badge.sev-medium {
+  background: var(--pd-status-starting);
+}
+.badge.running {
+  background: var(--pd-status-running);
 }
 .cell {
   padding: 0 8px;

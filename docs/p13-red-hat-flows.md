@@ -1,11 +1,43 @@
 # P13: Red Hat flows (products working together)
 
-Eight end-to-end flows in the P13 app (`#/`), each declared by extensions and
-built only from existing P13 surfaces: the connection switcher, the tree, tabs,
-header actions, `⋯` / right-click menus, bottom-panel tasks and sessions, and
-the Vanilla promotions. State: `src/lib/nav-lab/r3/flows.svelte.ts` (modal,
-tasks, runtime connections / resources, provenance); modals:
-`r3/modals/*.svelte` hosted by `ui/FlowModals.svelte`. Smoke test:
+Eight end-to-end workflows where Red Hat products hand work to each other inside
+P13 (`#/`). What each one gets you, in one line:
+
+1. **Red Hat account**: one sign-in configures registry.redhat.io, subscriptions,
+   activation keys and the Developer Sandbox for every other flow.
+2. **RHEL Podman machine**: a subscribed RHEL 10 machine running Podman, ready as
+   your current connection.
+3. **RHEL Lightspeed**: a failed command in the terminal is explained and fixed
+   with one click.
+4. **Image supply chain**: an image is rebased on Hummingbird, scanned, signed,
+   pushed to Quay and deployed to OpenShift, with its provenance on its Summary.
+5. **bootc end to end**: a bootable container becomes a disk image, then a running
+   RHEL VM or an OpenShift Virtualization VM.
+6. **AI chain**: a local model is served with vLLM, packaged as a ModelCar, pushed
+   to Quay and served by OpenShift AI, then compared in the playground.
+7. **Local OpenShift**: a local cluster gets the OpenShift console and operators.
+8. **Kompose**: a Compose project becomes Kubernetes manifests deployed to a cluster.
+
+**Discover and learn them in the app.** The Dashboard has a collapsible **Red Hat
+workflows** section (`data-testid="rh-workflows"`): one card per flow with its
+title, outcome and product chain (e.g. Hummingbird → Grype → Quay → Trusted
+Artifact Signer → OpenShift) and a **Start** button. Start launches a guided tour:
+a coach mark highlights the next element (tree item, header action, menu item,
+modal field) with "Step n of N — why" and Back / Show me / Next / Exit. A step
+advances by itself when you do it (click the highlighted element, the tab opens,
+the task finishes); **Show me** plays the whole flow for you. Before each step the
+tour puts the app in the state it needs (connection, expanded tree, extension
+installed, tab open), so it never gets stuck. The same tours are in the command
+palette (Ctrl/⌘K or the title-bar search) as **Tour: <flow>** under *Workflows*.
+Tours: `src/lib/nav-lab/r3/tours.svelte.ts`; overlay: `r3/TourOverlay.svelte`;
+palette: `r3/Palette.svelte`.
+
+Implementation: every flow is declared by extensions and built only from existing
+P13 surfaces: the connection switcher, the tree, tabs, header actions, `⋯` /
+right-click menus, bottom-panel tasks and sessions, and the Vanilla promotions.
+State: `src/lib/nav-lab/r3/flows.svelte.ts` (modal, tasks, runtime connections /
+resources, provenance); modals: `r3/modals/*.svelte` hosted by
+`ui/FlowModals.svelte`. Smoke test (flows and every tour in Show me mode):
 `node loop/p13-smoke.mjs http://localhost:5173/`.
 
 Every task streams its output in the bottom panel (source chip = the resource
@@ -134,15 +166,18 @@ Extension `kompose` (modelled like Grype: its own tab, Vanilla promotion).
 Click path: compose project details → header secondary **Convert to Kubernetes**
 (also `⋯` / right-click on compose groups, pods, containers, quadlets, and the
 bulk bar when several containers are selected) → tab **Kompose · <source>**:
-- header: target cluster, namespace and generator pickers (Kompose 1.38,
-  `podman generate kube`, Score), **Export ▾** (Helm chart, Kustomize, raw YAML,
-  Quadlet `.kube`), **Dry run**, primary **Deploy**;
-- **Services**: per service controller (Deployment / StatefulSet / DaemonSet),
-  replicas, Service type, expose (Route on OpenShift targets, Ingress
-  elsewhere), PVC size + StorageClass per named volume, image strategy (keep,
-  push to Quay, load into kind / minc), edited from the row menu;
-- **Manifests**: generated files (`kompose convert` semantics) with a diff
-  state vs the cluster (New / Modified / Unchanged) and the YAML (Ctrl+F);
+- header: segmented **Manifests | Warnings**, **Export ▾** (Helm chart,
+  Kustomize, raw YAML, Quadlet `.kube`), **Dry run**, primary **Deploy**;
+- **Target** bar (second row): cluster / namespace and generator (Kompose,
+  `podman generate kube`, Score). The kompose binary and its version are
+  managed in Settings › CLI Tools (Kompose card);
+- **Manifests** (default): generated files grouped per compose service
+  (`io.kompose.service`); the group row summarizes the service (controller ×
+  replicas · Service type :port · Route / Ingress host · PVC · image strategy)
+  and its **Options** menu edits controller, replicas, Service type, expose,
+  PVC size and image strategy (keep, push to Quay, load into kind / minc);
+  children are its files (Deployment, Service, Ingress / Route, PVC) with a
+  diff state vs the cluster (New / Modified / Unchanged); YAML on the right (Ctrl+F);
 - **Warnings**: dropped / lossy compose features (depends_on, networks, build
   contexts, healthcheck → livenessProbe, PVC on the default StorageClass).
 
