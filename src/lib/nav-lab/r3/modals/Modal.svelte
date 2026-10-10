@@ -33,6 +33,11 @@ interface Props {
 let { title, icon, sub, primary, primaryIcon, disabled = false, onprimary, secondary, width = '36rem', testid = 'flow-modal', children }: Props = $props();
 </script>
 
+<svelte:window
+  onkeydown={(e): void => {
+    if (e.key === 'Escape') closeModal();
+  }} />
+
 <div class="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--pd-modal-fade)]" role="presentation" onclick={closeModal}>
   <div
     role="dialog"
@@ -42,9 +47,7 @@ let { title, icon, sub, primary, primaryIcon, disabled = false, onprimary, secon
     class="flex flex-col max-h-[86vh] rounded-xl bg-[var(--pd-modal-bg)] border border-[var(--pd-modal-border)] shadow-xl text-[var(--pd-modal-text)]"
     style:width
     onclick={(e): void => e.stopPropagation()}
-    onkeydown={(e): void => {
-      if (e.key === 'Escape') closeModal();
-    }}>
+    onkeydown={(): void => undefined}>
     <div class="flex items-center gap-2 px-5 h-14 shrink-0 border-b border-[var(--pd-modal-header-divider)]">
       {#if icon}<LabIcon {icon} size={16} />{/if}
       <div class="flex-1 min-w-0">

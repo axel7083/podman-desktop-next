@@ -58,6 +58,7 @@ export const EXTENSIONS: LabExtension[] = [
   E('tas', 'Trusted Artifact Signer', 'redhat.trusted-artifact-signer.png', 'Sign and verify images with Sigstore (Fulcio, Rekor)'),
   E('ai-inference', 'Red Hat AI Inference Server', 'redhat.ai-inference-server.png', 'Serve models with vLLM on a local GPU'),
   E('modelcar', 'ModelCar', 'redhat.modelcar.png', 'Package models as OCI images for OpenShift AI'),
+  E('kompose', 'Kompose', 'kubernetes.kompose.png', 'Convert Compose projects, pods and containers to Kubernetes resources and deploy them'),
   E('image-builder', 'Image Builder', 'redhat.image-builder.png', 'Build RHEL images and composes'),
 ];
 

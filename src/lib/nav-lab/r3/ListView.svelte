@@ -30,8 +30,9 @@ import { ext, installExt, isInstalled } from './exts.ts';
 import { altFor, HB_CONN } from './hb-data.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import Head from './Head.svelte';
-import { can, deleteRes, imageMenu, isUp, live, openMenu, resActions, resStatus, showGroupLogs, startRes, stopRes } from './live.svelte.ts';
+import { can, deleteRes, imageMenu, isUp, live, type MenuItem, openMenu, resActions, resStatus, showGroupLogs, startRes, stopRes } from './live.svelte.ts';
 import RowsTable from './RowsTable.svelte';
+import { komposeTarget } from './kompose.svelte.ts';
 import SegFilter from './SegFilter.svelte';
 
 interface Props {
@@ -177,6 +178,10 @@ const rows = $derived.by((): LabRow[] => {
     const members = kids.map(k => k.r!).filter(Boolean);
     const project = g.chip === 'Compose' ? resourcesOf(c.id, 'compose').find(x => x.name === g.title) : undefined;
     const gIcon = g.icon;
+    const pod = resourcesOf(c.id, 'pods').find(x => x.name === g.title);
+    const source = project ?? pod;
+    const convert = (): void => onopen(komposeTarget(source ? [source] : members), {});
+    g.menu = (): MenuItem[] => [{ label: isInstalled('kompose') ? 'Convert to Kubernetes' : 'Convert to Kubernetes (install Kompose)', icon: ext('kompose')?.icon, run: convert }];
     g.buttons = [
       upN ? { title: 'Stop group', icon: faStop, run: (): void => members.forEach(stopRes) } : { title: 'Start group', icon: faPlay, run: (): void => members.forEach(startRes) },
       { title: 'See logs', icon: faAlignLeft, run: (): void => showGroupLogs(g.title, c.id, members, project ? { kind: 'resource', connId: c.id, sectionId: 'compose', resId: project.id } : undefined, gIcon) },
@@ -246,7 +251,7 @@ const modern = $derived(lab.table !== 'classic');
   {/if}
   <div class="flex flex-1 min-h-0 overflow-auto" class:px-2={!modern} class:pb-2={!modern}>
     {#if rows.length}
-      <RowsTable kind="p13-{s.id}" {rows} {cols} />
+      <RowsTable kind="p13-{s.id}" {rows} {cols} bulkActions={s.id === 'containers' ? [{ label: 'Convert to Kubernetes', icon: ext('kompose')?.icon, run: (sel): void => onopen(komposeTarget(sel.map(x => x.r).filter((x): x is LabResource => !!x)), {}) }] : undefined} />
     {:else if all.length && modern}
       <div class="flex items-center gap-2 px-4 py-3 text-[12px] text-[var(--pd-table-body-text)]">
         No {noun} match “{search || filter}”.

@@ -6,6 +6,8 @@
  */
 import { Table, TableColumn, TableRow } from '@podman-desktop/ui-svelte';
 
+import type { IconRef } from '#lib/ext/types.ts';
+
 import { lab } from '../lab.svelte.ts';
 import ActionsCell from './cells/ActionsCell.svelte';
 import NameCell from './cells/NameCell.svelte';
@@ -20,9 +22,11 @@ interface Props {
   /** Text columns: [title, key in `row.cols`, width, numeric sort?]. */
   cols: [string, string, string, boolean?][];
   actionsWidth?: string;
+  /** Extra bulk-bar actions (modern / grid tables). */
+  bulkActions?: { label: string; icon?: IconRef; run: (rows: LabRow[]) => void }[];
 }
 
-let { kind, rows, cols, actionsWidth = '120px' }: Props = $props();
+let { kind, rows, cols, actionsWidth = '120px', bulkActions }: Props = $props();
 
 function num(v: string): number {
   const m = /([\d.]+)\s*(GB|MB|kB|B|minute|hour|day|week)?/.exec(v);
@@ -50,7 +54,7 @@ const row = new TableRow<LabRow, LabRow>({ selectable: (): boolean => true, chil
 </script>
 
 {#if lab.table !== 'classic'}
-  <ModernTable {rows} {cols} variant={lab.table} />
+  <ModernTable {rows} {cols} variant={lab.table} {bulkActions} />
 {:else}
 <div data-testid="rows-table" class="flex min-w-full grow">
   {#key columns}

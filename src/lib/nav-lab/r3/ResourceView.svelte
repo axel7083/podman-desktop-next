@@ -33,6 +33,7 @@ import { altFor, cveTotal, HB_CONN, hbImage, mb } from './hb-data.ts';
 import { openAlternative } from './hummingbird.ts';
 import { chainOf, flows, openModal } from './flows.svelte.ts';
 import Timeline, { type TimelineStep } from './Timeline.svelte';
+import { deploymentsFor, komposeTarget, sourceLabel, undeploy } from './kompose.svelte.ts';
 import Head from './Head.svelte';
 import KV from './KV.svelte';
 import {
@@ -95,6 +96,8 @@ const views = $derived<[string, string][]>([
   ...xviews.map(v => [v.id, v.label] as [string, string]),
 ]);
 const h = $derived(hash(res.name));
+/** Kompose deployments of this compose project / pod / container. */
+const deps = $derived(deploymentsFor(res.id));
 /** Hummingbird: hardened alternative of this image (only computed on the Hummingbird connection). */
 const hbAlt = $derived(isImage && c.id === HB_CONN ? altFor(res.name) : undefined);
 const hbAltImg = $derived(hbImage(hbAlt?.hb));
@@ -242,6 +245,7 @@ function kubeYaml(): string[] {
     <ActBtn icon={faRocket} label="Deploy to…" onclick={(): void => openModal('deploy', { resId: res.id })} />
     <ActBtn icon={faEllipsisVertical} label="More actions" onclick={(e): void => openMenu(e, [...imageMenu(res, onopen), { label: 'Delete image', icon: faTrash, danger: true, sep: true, run: (): void => deleteRes(res) }])} />
   {:else if isCompose}
+    <Btn icon={ext('kompose')?.icon} testid="compose-convert" onclick={(): void => onopen(komposeTarget([res]), {})}>Convert to Kubernetes</Btn>
     <ActBtn icon={faAlignLeft} label="See logs" onclick={composeLogs} />
     {#if upCount}
       <ActBtn icon={faStop} label="Stop all" onclick={(): void => services.forEach(x => stopRes(x.ctr))} />
@@ -451,6 +455,33 @@ function kubeYaml(): string[] {
         {/if}
       </div>
 
+      {#if deps.length}
+        <Section title="Deployments" count={deps.length} testid="kompose-deployments">
+          <ModernTable
+            {variant}
+            readonly
+            initialSort=""
+            rows={deps.map(([k, d]) => ({
+              name: k,
+              status: d.drifted ? 'DEGRADED' : 'RUNNING',
+              icon: ext('kompose')?.icon ?? icon,
+              title: `${d.connId} / ${d.ns}`,
+              sub: [],
+              cols: { state: d.drifted ? 'Drifted' : 'Synced', count: `${d.resIds.length} resources`, src: sourceLabel(k), at: d.at },
+              open: (): void => onopen({ kind: 'kompose', connId: c.id, resId: k }, {}),
+              buttons: [
+                { title: 'Redeploy (show diff)', icon: faRotateRight, run: (): void => onopen({ kind: 'kompose', connId: c.id, resId: k }, {}) },
+                { title: 'Undeploy', icon: faTrash, danger: true, run: (): void => undeploy(k) },
+              ],
+              menu: () => [
+                { label: 'Redeploy (show diff)', icon: faRotateRight, run: (): void => onopen({ kind: 'kompose', connId: c.id, resId: k }, {}) },
+                { label: 'Open cluster', run: (): void => onopen({ kind: 'connection', connId: d.connId }, {}) },
+                { label: 'Undeploy', icon: faTrash, danger: true, sep: true, run: (): void => undeploy(k) },
+              ],
+            }))}
+            cols={[['State', 'state', '90px'], ['Resources', 'count', '110px'], ['Source', 'src', 'minmax(8rem, 1fr)'], ['Deployed', 'at', '100px']]} />
+        </Section>
+      {/if}
       {#if isCompose}
         <Section title="Services" count={serviceRows.length} testid="compose-services">
           <ModernTable {variant} initialSort="" rows={serviceRows} cols={[['Container', 'ctr', 'minmax(8rem, 1.2fr)'], ['Image', 'image', 'minmax(8rem, 2fr)'], ['Ports', 'ports', '130px'], ['Uptime', 'uptime', '100px', true]]} />

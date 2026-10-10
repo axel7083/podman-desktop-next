@@ -39,6 +39,7 @@ export const EXT_LINKS: Record<string, ExtLinks> = {
   'kube-dashboard': { docs: `${PD_DOCS}/kubernetes`, repo: `${GH}/podman-desktop/extension-kubernetes-dashboard` },
   helm: { product: 'https://helm.sh', docs: 'https://helm.sh/docs/', repo: `${GH}/helm/helm` },
   mcp: { product: 'https://modelcontextprotocol.io', docs: 'https://modelcontextprotocol.io/docs', repo: `${GH}/containers/kubernetes-mcp-server` },
+  kompose: { product: 'https://kompose.io/', docs: 'https://kompose.io/user-guide/', repo: `${GH}/kubernetes/kompose` },
   grype: { product: 'https://anchore.com/opensource/', docs: `${GH}/anchore/grype#readme`, repo: `${GH}/podman-desktop/extension-grype` },
   'layers-explorer': { repo: `${GH}/podman-desktop/extension-layers-explorer` },
   'apple-container': { docs: `${GH}/apple/container#readme`, repo: `${GH}/podman-desktop/extension-apple-container` },

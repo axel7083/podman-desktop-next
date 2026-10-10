@@ -18,6 +18,7 @@ extension's `package.json`).
 | `redhat.openshift-checker.png` | `ext-image-checker-openshift/podman-desktop-extension/icon.png` |
 | `podman-desktop.kind-ext.png` | `ext-kind/icon.png` |
 | `podman-desktop.kreate.png` | `ext-kreate/packages/backend/icon.png` |
+| `kubernetes.kompose.png` | https://raw.githubusercontent.com/kubernetes/kompose/main/docs/assets/images/logo.png (kubernetes/kompose, Apache-2.0) |
 | `podman-desktop.kubernetes-contexts.png` | `ext-kubernetes-contexts/packages/extension/icon.png` |
 | `podman-desktop.kubernetes-dashboard.png` | `ext-kubernetes-dashboard/packages/extension/icon.png` |
 | `podman-desktop.layers-explorer.png` | `ext-layers-explorer/icon.png` |

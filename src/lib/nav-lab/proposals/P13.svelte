@@ -56,6 +56,8 @@ import { nsMenu } from '../r3/kube-menu.ts';
 import KubeOverview from '../r3/KubeOverview.svelte';
 import KubeResourceView from '../r3/KubeResourceView.svelte';
 import OperatorsView from '../r3/OperatorsView.svelte';
+import KomposeView from '../r3/KomposeView.svelte';
+import { kompose } from '../r3/kompose.svelte.ts';
 import KubePlayView from '../r3/KubePlayView.svelte';
 import ListView from '../r3/ListView.svelte';
 import ScanView from '../r3/ScanView.svelte';
@@ -123,6 +125,17 @@ $effect(() => {
   untrack(() => {
     flows.select = undefined;
     select(id);
+  });
+});
+
+// Kompose deploy: expand the folders holding the new resources on that cluster.
+$effect(() => {
+  const r = kompose.reveal;
+  if (!r) return;
+  untrack(() => {
+    kompose.reveal = undefined;
+    const cur = expanded[r.connId] ?? [];
+    expanded[r.connId] = [...new Set([...cur, ...r.keys])];
   });
 });
 
@@ -250,6 +263,8 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
     data-key={o.key}
     class="group/row flex items-center gap-1.5 h-6 pr-1 cursor-pointer whitespace-nowrap text-[var(--pd-secondary-nav-text)] hover:bg-[var(--pd-secondary-nav-text-hover-bg)]"
     class:bg-[var(--pd-secondary-nav-selected-bg)]={on}
+    class:fresh={!on && !!o.target.resId && kompose.fresh.includes(o.target.resId)}
+    data-fresh={o.target.resId && kompose.fresh.includes(o.target.resId) ? '' : undefined}
     class:!text-[var(--pd-secondary-nav-text-selected)]={on}
     style:padding-left="{6 + depth * 14}px"
     onclick={(): void => open(o.target, { preview: true })}
@@ -401,6 +416,8 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
           <ListView c={tc} s={ts} onopen={open} />
         {:else if t?.kind === 'resource' && tc && ts && tr && tc.group === 'Kubernetes' && KUBE_KINDS.includes(ts.id)}
           <KubeResourceView res={tr} c={tc} s={ts} onopen={open} />
+        {:else if t?.kind === 'kompose' && t.resId}
+          <KomposeView key={t.resId} onopen={open} />
         {:else if t?.kind === 'scan' && tr}
           <ScanView res={tr} onopen={open} />
         {:else if t?.kind === 'settings'}
@@ -428,3 +445,10 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
     <BottomPanel {sessions} onopen={open} />
   </div>
 </Frame>
+
+<style>
+/* Resources just deployed by a flow (Kompose): soft accent tint until the next deploy. */
+.fresh {
+  background: color-mix(in srgb, var(--pd-status-running) 14%, transparent);
+}
+</style>

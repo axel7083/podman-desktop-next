@@ -25,6 +25,7 @@ import { conn as findConn, type ConnStatus, type LabConnection, type LabResource
 import { lab } from '../lab.svelte.ts';
 import { ext, installExt, isInstalled } from './exts.ts';
 import { grypeGate } from './chain.ts';
+import { komposeTarget } from './kompose.svelte.ts';
 import { addChain, flows, openModal } from './flows.svelte.ts';
 import { altFor, HB_CONN, hbNodeId } from './hb-data.ts';
 
@@ -271,6 +272,8 @@ export function resActions(r: LabResource, onopen: (t: LabTarget, o: { preview?:
   const extra: MenuItem[] = [];
   if (r.sectionId === 'images') extra.push(...imageMenu(r, onopen).map(x => ({ ...x, sep: false })));
   if (r.sectionId === 'containers') extra.push({ label: isInstalled('grype') ? "Scan the container's image" : "Scan the container's image (install Grype)", icon: ext('grype')?.icon, run: () => scanRes(r, onopen) });
+  if (['compose', 'pods', 'containers', 'quadlets'].includes(r.sectionId))
+    extra.push({ label: isInstalled('kompose') ? 'Convert to Kubernetes' : 'Convert to Kubernetes (install Kompose)', icon: ext('kompose')?.icon, run: () => onopen(komposeTarget([r]), {}) });
   if (r.sectionId === 'containers' && isInstalled('quadlet')) extra.push({ label: 'Generate Quadlet', icon: ext('quadlet')?.icon, run: () => lab.openCreate(`Quadlet for ${r.name}`) });
   if (['kpods', 'deployments', 'services'].includes(r.sectionId) && isInstalled('kube-dashboard') && lab.install === 'all')
     extra.push({ label: 'Open in Kubernetes dashboard', icon: ext('kube-dashboard')?.icon, run: () => inspectRes(r, onopen) });

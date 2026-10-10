@@ -746,7 +746,7 @@ export const WORKFLOWS = [
 /* Tabs                                                                */
 /* ------------------------------------------------------------------ */
 
-export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node' | 'scan' | 'kubeplay';
+export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node' | 'scan' | 'kubeplay' | 'kompose';
 
 export interface LabTarget {
   kind: TargetKind;

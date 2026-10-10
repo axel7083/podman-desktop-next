@@ -272,6 +272,16 @@ export function describe(t: LabTarget): TargetInfo {
         crumb: [c?.name ?? "", "Grype"],
       };
     }
+    case "kompose": {
+      const ids = (t.resId ?? "").split(",");
+      const r = resource(ids[0]);
+      return {
+        title: `Kompose · ${ids.length > 1 ? `${ids.length} containers` : (r?.name ?? "?")}`,
+        icon: "icons/kubernetes.kompose.png",
+        connId: c?.id,
+        crumb: [c?.name ?? "", "Kompose"],
+      };
+    }
     case "kubeplay":
       return {
         title: "Play Kubernetes YAML",

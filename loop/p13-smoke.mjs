@@ -1,6 +1,6 @@
 // Headless smoke test of the P13 app (no screenshots): switcher elevation,
 // bootc pages + build task, Kubernetes grouped tree + namespace multi-select,
-// the 7 Red Hat flows end-to-end and the Vanilla promotions. Fails on any
+// the 7 Red Hat flows end-to-end, Kompose (flow 8) and the Vanilla promotions. Fails on any
 // console error / page error.
 //   node loop/p13-smoke.mjs [baseUrl]   (default http://localhost:5173/)
 import { chromium } from '@playwright/test';
@@ -266,6 +266,46 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   await page.context().close();
 }
 
+/* ---------------------------------------------------------------- E Kompose */
+{
+  const page = await session('panel=on');
+  await step('E Kompose: convert compose → dry run → deploy to kind-dev → undeploy', async () => {
+    await expand(page, 'compose');
+    await tree(page).getByRole('treeitem', { name: 'orders-stack' }).first().dblclick();
+    await page.getByTestId('compose-convert').click();
+    await page.getByTestId('kompose-services').waitFor();
+    await page.getByTestId('head-views').getByRole('radio', { name: /Warnings/ }).click();
+    await page.getByTestId('kompose-warnings').getByText('depends_on').first().waitFor();
+    await page.getByTestId('head-views').getByRole('radio', { name: /Manifests/ }).click();
+    await page.getByTestId('kompose-yaml').waitFor();
+    await page.getByTestId('kompose-dryrun').click();
+    await panelText(page, 'Dry run OK');
+    await page.getByTestId('kompose-deploy').click();
+    await panelText(page, 'services deployed to kind-dev', 25000);
+    await useConn(page, 'kind-dev');
+    await tree(page).locator('[data-fresh]').first().waitFor({ timeout: 4000 });
+    await key(page, 'deployments').click();
+    await page.getByTestId('kube-list').locator('[data-fresh], :text-is("worker")').first().waitFor({ timeout: 4000 });
+    await useConn(page, 'podman-machine-default');
+    await expand(page, 'compose');
+    await tree(page).getByRole('treeitem', { name: 'orders-stack' }).first().dblclick();
+    await page.getByTestId('kompose-deployments').getByText('kind-dev / default').click({ button: 'right' });
+    await page.getByTestId('nav-lab-context-menu').getByText('Undeploy').click();
+    await panelText(page, 'Removed', 15000);
+    await page.getByTestId('kompose-deployments').waitFor({ state: 'detached', timeout: 4000 });
+  });
+  await step('E Kompose: bulk convert of 2 containers', async () => {
+    await key(page, 'containers').click();
+    const checks = page.getByTestId('modern-table').getByTestId('mt-check');
+    await checks.nth(0).check();
+    await checks.nth(1).check();
+    await page.getByTestId('bulk-bar').getByText('Convert to Kubernetes').click();
+    await page.getByText('Kompose · 2 containers').first().waitFor();
+    await page.getByTestId('kompose-services').getByTestId('mt-row').nth(1).waitFor();
+  });
+  await page.context().close();
+}
+
 /* ---------------------------------------------------------------- Vanilla */
 {
   const page = await session('install=vanilla&panel=off');
@@ -278,6 +318,13 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await page.getByTestId('switcher-add').click();
     await page.locator('[data-factory="rhel-machine"]').getByText('Installs').waitFor();
     await page.keyboard.press('Escape');
+  });
+  await step('Vanilla: Kompose promotion on Convert to Kubernetes', async () => {
+    await expand(page, 'compose');
+    await tree(page).getByRole('treeitem', { name: 'orders-stack' }).first().click({ button: 'right' });
+    await page.getByTestId('nav-lab-context-menu').getByText('Convert to Kubernetes (install Kompose)').click();
+    await page.getByTestId('kompose-view').getByTestId('promo-install').click();
+    await page.getByTestId('kompose-services').waitFor();
   });
   await page.context().close();
 }

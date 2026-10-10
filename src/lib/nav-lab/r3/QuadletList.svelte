@@ -5,6 +5,8 @@ import { Button } from '@podman-desktop/ui-svelte';
 
 import type { LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
+import { addResource } from './flows.svelte.ts';
+import { komposeTarget } from './kompose.svelte.ts';
 import type { LabRow } from './cells/types.ts';
 import Btn from './Btn.svelte';
 import Head from './Head.svelte';
@@ -37,12 +39,20 @@ function open(n: TreeNode, preview = true): void {
   onopen({ kind: 'node', connId: f.connId, nodeId: n.id }, { preview });
 }
 
+/** Kompose source for a quadlet unit (a resource of the connection's quadlets section). */
+function convertQuadlet(n: TreeNode): void {
+  const r = { id: `${f.connId}/quadlets/${n.label}`, name: n.label, connId: f.connId, sectionId: 'quadlets', status: 'running', sub: `quay.io/acme/${n.label.split('.')[0]}:1.0`, age: '2 days' };
+  addResource(r);
+  onopen(komposeTarget([r]), {});
+}
+
 function menu(n: TreeNode): MenuItem[] {
   const svc = n.data?.service ?? '';
   return [
     { label: 'Open', run: (): void => open(n, false) },
     { label: 'Logs (journalctl)', icon: faAlignLeft, run: (): void => showJournal(n.label, svc, f.connId), sep: true },
     { label: 'Restart', icon: faRotateRight, run: (): void => void (live.status[n.id] = 'running') },
+    { label: 'Convert to Kubernetes', icon: 'icons/kubernetes.kompose.png', sep: true, run: (): void => convertQuadlet(n) },
     { label: 'Delete', icon: faTrash, danger: true, run: (): void => lab.openCreate(`Remove ${n.label}`), sep: true },
   ];
 }

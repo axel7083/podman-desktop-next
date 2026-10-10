@@ -102,6 +102,8 @@ Click paths: [p13-red-hat-flows.md](p13-red-hat-flows.md).
 - Every Red Hat extension has product / docs / repository links (`r3/ext-links.ts`) in a
   Resources card and on the Extensions page.
 
+- **Kompose** (new): Convert to Kubernetes tab for compose projects, pods, containers and quadlets (flow 8).
+
 Still missing: Kubernetes contexts, Minikube, Lima, PostgreSQL, GitHub / IBM Cloud accounts,
 Skills, the Red Hat extension pack card, the v1-only checkers of section B.
 

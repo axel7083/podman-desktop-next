@@ -1,6 +1,6 @@
 # P13: Red Hat flows (products working together)
 
-Seven end-to-end flows in the P13 app (`#/`), each declared by extensions and
+Eight end-to-end flows in the P13 app (`#/`), each declared by extensions and
 built only from existing P13 surfaces: the connection switcher, the tree, tabs,
 header actions, `⋯` / right-click menus, bottom-panel tasks and sessions, and
 the Vanilla promotions. State: `src/lib/nav-lab/r3/flows.svelte.ts` (modal,
@@ -125,6 +125,33 @@ OpenShift AI → playground):
   Installed.
 - **Developer Sandbox** as a deploy target (flow 4), signed in through the
   Red Hat account.
+
+## 8. Kompose: engine to Kubernetes
+
+Research: [research/kompose-engine-to-kube.md](research/kompose-engine-to-kube.md).
+Extension `kompose` (modelled like Grype: its own tab, Vanilla promotion).
+
+Click path: compose project details → header secondary **Convert to Kubernetes**
+(also `⋯` / right-click on compose groups, pods, containers, quadlets, and the
+bulk bar when several containers are selected) → tab **Kompose · <source>**:
+- header: target cluster, namespace and generator pickers (Kompose 1.38,
+  `podman generate kube`, Score), **Export ▾** (Helm chart, Kustomize, raw YAML,
+  Quadlet `.kube`), **Dry run**, primary **Deploy**;
+- **Services**: per service controller (Deployment / StatefulSet / DaemonSet),
+  replicas, Service type, expose (Route on OpenShift targets, Ingress
+  elsewhere), PVC size + StorageClass per named volume, image strategy (keep,
+  push to Quay, load into kind / minc), edited from the row menu;
+- **Manifests**: generated files (`kompose convert` semantics) with a diff
+  state vs the cluster (New / Modified / Unchanged) and the YAML (Ctrl+F);
+- **Warnings**: dropped / lossy compose features (depends_on, networks, build
+  contexts, healthcheck → livenessProbe, PVC on the default StorageClass).
+
+Deploy: task (load / push images → apply PVCs, Services, workloads, Routes /
+Ingresses → rollout status) → resources highlighted in the cluster tree
+(Compute ▸ Deployments expanded), and the source Summary gets a
+**Deployments** table (cluster / namespace, Synced / Drifted after an edit,
+Redeploy with diff, Undeploy). Vanilla: "Convert to Kubernetes (install
+Kompose)" opens the tab with the install promotion.
 
 Every Red Hat extension lists its product / docs / repository links in a
 **Resources** card (extension Overview tabs, extension pages) and on the

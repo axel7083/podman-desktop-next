@@ -14,6 +14,7 @@ const collapsed = new SvelteSet<string>();
  */
 import { faCheck, faChevronDown, faChevronRight, faEllipsis, faEllipsisVertical, faPlay, faSortDown, faSortUp, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import AppIcon from '#lib/components/AppIcon.svelte';
+import type { IconRef } from '#lib/ext/types.ts';
 
 import LabIcon from '../ui/LabIcon.svelte';
 
@@ -29,11 +30,13 @@ interface Props {
   initialSort?: string;
   /** Column keys rendered in monospace (versions, digests…). */
   mono?: string[];
+  /** Extra bulk-bar actions on the selected rows (e.g. Convert to Kubernetes). */
+  bulkActions?: { label: string; icon?: IconRef; run: (rows: LabRow[]) => void }[];
   /** Hide the row checkbox / bulk bar (read-only results). */
   readonly?: boolean;
 }
 
-let { rows, cols, variant, initialSort = '__name', mono = [], readonly = false }: Props = $props();
+let { rows, cols, variant, initialSort = '__name', mono = [], readonly = false, bulkActions = [] }: Props = $props();
 
 const grid = $derived(variant === 'grid');
 
@@ -246,6 +249,9 @@ function subOf(r: LabRow): string[] {
         <button type="button" class="ghost-txt" onclick={(): void => bulk('Start')}><AppIcon icon={faPlay} size="xs" />Start</button>
         <button type="button" class="ghost-txt" onclick={(): void => bulk('Stop')}><AppIcon icon={faStop} size="xs" />Stop</button>
         <button type="button" class="ghost-txt danger" onclick={(): void => bulk('Delete')}><AppIcon icon={faTrash} size="xs" />Delete</button>
+        {#each bulkActions as a (a.label)}
+          <button type="button" class="ghost-txt" data-testid="bulk-action" onclick={(): void => a.run(selRows)}>{#if a.icon}<LabIcon icon={a.icon} size={14} />{/if}{a.label}</button>
+        {/each}
         <span class="flex-1"></span>
         <button type="button" class="ghost-txt" data-testid="bulk-clear" onclick={(): void => selected.clear()}>Clear</button>
       </div>
@@ -305,7 +311,7 @@ function subOf(r: LabRow): string[] {
         onclick={(e): void => click(e, f)}
         ondblclick={(): void => r.pin?.()}
         onkeydown={(): void => undefined}
-        oncontextmenu={(e): void => openMenu(e, r.buttons.map(b => ({ label: b.title, icon: b.icon, danger: b.danger, run: b.run })))}>
+        oncontextmenu={(e): void => openMenu(e, [...r.buttons.map(b => ({ label: b.title, icon: b.icon, danger: b.danger, run: b.run })), ...(r.menu?.().map((m, i) => ({ ...m, sep: i === 0 })) ?? [])])}>
         {#if grid}<span class="gut">{i + 1}</span>{/if}
         <span class="chev" data-testid="mt-group-toggle"><AppIcon icon={collapsed.has(r.name) ? faChevronRight : faChevronDown} size="xs" /></span>
         <span class="name" style:grid-column="span {shown.length}">
