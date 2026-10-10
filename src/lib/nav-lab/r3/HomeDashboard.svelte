@@ -4,7 +4,7 @@
  * pencil, the recommended-extension banner (purple gradient, close ✕),
  * collapsible "Explore Features", "Learning Center" (carousel) and "System
  * Overview" (status pill, providers with version, status and start/stop).
- * "Red Hat workflows": one card per flow (docs/p13-red-hat-flows.md) with its
+ * "Demo workflows": one card per flow (docs/p13-red-hat-flows.md) with its
  * product chain and a Start button launching the guided tour (r3/tours.svelte.ts).
  */
 import {
@@ -164,7 +164,7 @@ function version(id: string): string {
       </div>
     {/if}
 
-    {@render sectionHead('workflows', 'Red Hat workflows')}
+    {@render sectionHead('workflows', 'Demo workflows')}
     {#if !collapsed.includes('workflows')}
       <div data-testid="rh-workflows" class="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
         {#each TOURS as t (t.id)}

@@ -5,11 +5,12 @@
  * - Images: bootc images table (base, version, size, `bootc container lint`),
  *   quick actions Build disk image / Run as VM;
  * - Disk images: build results (type, arch, size, built, status), quick
- *   actions Boot in RHEL VM / Run on OpenShift Virtualization / Download;
+ *   actions Run in a VM (local VM provider, macadam) / Download, ⋯ for
+ *   Run on OpenShift Virtualization… / Show in folder / Delete;
  * - Examples: cards (size, arch, More details, Pull image).
  * Header: secondary "Pull image" + primary "Build disk image" (rule D12).
  */
-import { faArrowCircleDown, faArrowUpRightFromSquare, faCompactDisc, faDownload, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faArrowUpRightFromSquare, faCompactDisc, faDesktop, faDownload, faFolderOpen, faPlay, faServer, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
 
@@ -80,9 +81,10 @@ function download(d: DiskImage): void {
 function diskMenu(d: DiskImage): MenuItem[] {
   const bootable = d.status === 'success' && ['qcow2', 'raw'].includes(d.type);
   return [
-    { label: 'Boot in RHEL VM', icon: 'icons/redhat.rhel-vms.png', disabled: !bootable, run: (): void => openModal('boot-vm', { disk: d.name }) },
-    { label: 'Run on OpenShift Virtualization', icon: 'icons/redhat.openshift-virtualization.png', disabled: !bootable, run: (): void => openModal('run-virt', { disk: d.name }) },
-    { label: 'Download', icon: faDownload, disabled: d.status !== 'success', run: (): void => download(d) },
+    { label: 'Run in a VM', icon: faDesktop, disabled: !bootable, run: (): void => openModal('boot-vm', { disk: d.name }) },
+    { label: 'Run on OpenShift Virtualization…', icon: faServer, disabled: !bootable, run: (): void => openModal('run-virt', { disk: d.name }) },
+    { label: 'Download', icon: faDownload, disabled: d.status !== 'success', run: (): void => download(d), sep: true },
+    { label: 'Show in folder', icon: faFolderOpen, disabled: d.status !== 'success', run: (): void => lab.openCreate(`Show ${d.folder}/${d.type}`) },
     { label: 'Delete', icon: faTrash, danger: true, sep: true, run: (): void => void (flows.disks = flows.disks.filter(x => x !== d)) },
   ];
 }
@@ -115,18 +117,15 @@ const disks = $derived<LabRow[]>(
       const bootable = d.status === 'success' && ['qcow2', 'raw'].includes(d.type);
       return {
         name: d.name,
-        status: d.status === 'success' ? 'RUNNING' : d.status === 'building' ? 'CREATED' : 'EXITED',
+        // No dot on success (rule B7): spinner while building, red when failed.
+        status: d.status === 'building' ? 'BUILDING' : d.status === 'success' ? '' : 'ERROR',
+        dotTitle: d.status === 'building' ? 'Building' : 'Build failed',
         icon: faCompactDisc,
         title: d.name,
         sub: [],
         cols: { image: d.image, type: d.type, arch: d.arch, size: d.size, built: d.built, status: d.status === 'building' ? 'Building' : d.status === 'success' ? 'Success' : 'Error' },
         buttons: [
-          ...(bootable
-            ? [
-                { title: 'Boot in RHEL VM', icon: 'icons/redhat.rhel-vms.png', run: (): void => openModal('boot-vm', { disk: d.name }) },
-                { title: 'Run on OpenShift Virtualization', icon: 'icons/redhat.openshift-virtualization.png', run: (): void => openModal('run-virt', { disk: d.name }) },
-              ]
-            : []),
+          ...(bootable ? [{ title: 'Run in a VM', icon: faDesktop, run: (): void => openModal('boot-vm', { disk: d.name }) }] : []),
           ...(d.status === 'success' ? [{ title: 'Download', icon: faDownload, run: (): void => download(d) }] : []),
         ],
         menu: (): MenuItem[] => diskMenu(d),
@@ -217,7 +216,7 @@ function open(label: string): void {
         <div class="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-4 items-start">
           <Card title="Get started">
             <ol class="flex flex-col gap-3 text-[13px]">
-              {#each [['1', 'Pull or build a bootc image', 'Start from an example or a RHEL / Fedora / CentOS bootc base.', 'Examples'], ['2', 'Build a disk image', 'qcow2, raw, ISO, AMI, VMDK or VHD with bootc-image-builder.', 'Images'], ['3', 'Boot it', 'In a RHEL VM on this machine or as a VirtualMachine on OpenShift Virtualization.', 'Disk Images']] as [n, title, d, to] (n)}
+              {#each [['1', 'Pull or build a bootc image', 'Start from an example or a RHEL / Fedora / CentOS bootc base.', 'Examples'], ['2', 'Build a disk image', 'qcow2, raw, ISO, AMI, VMDK or VHD with bootc-image-builder.', 'Images'], ['3', 'Boot it', 'In a VM on this machine or as a VirtualMachine on OpenShift Virtualization.', 'Disk Images']] as [n, title, d, to] (n)}
                 <li class="flex items-start gap-3">
                   <span class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[11px] font-semibold bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]">{n}</span>
                   <span class="flex-1"
@@ -233,7 +232,7 @@ function open(label: string): void {
                 { k: 'Description', v: 'Build a bootable OS from a container image, then turn it into a disk image.' },
                 { k: 'Connection', v: f.connId, onclick: (): void => onopen({ kind: 'connection', connId: f.connId }, {}) },
                 { k: 'Output folder', v: '~/bootc/output', mono: true },
-                { k: 'Works with', v: 'RHEL VMs · OpenShift Virtualization · Red Hat account' },
+                { k: 'Works with', v: 'Local VMs (macadam) · OpenShift Virtualization · Red Hat account' },
               ]} />
           </Card>
           <ResourcesCard id="bootc" />

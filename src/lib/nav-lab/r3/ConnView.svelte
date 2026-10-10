@@ -1,20 +1,20 @@
 <script lang="ts">
 /**
  * Connection Overview tab (P13): header (Overview icon, start / stop quick
- * actions), resource counters, key-value card, and promotion cards for related extensions
+ * actions), resource counters, key-value card, and one "Extend X" grid of equal cards for every
+ * extension extending this provider
  * ("Install" in Vanilla flips the extension on; "Open" when installed).
  */
 import { faEllipsisVertical, faPlay, faRotateRight, faStop, faTerminal } from '@fortawesome/free-solid-svg-icons';
 
-import type { LabConnection, LabTarget } from '../data.ts';
+import { type LabConnection, type LabTarget, TOOLS } from '../data.ts';
 import ActBtn from './ActBtn.svelte';
 import Card from './Card.svelte';
 import ExtCards from './ExtCards.svelte';
-import { ext, isInstalled, type LabExtension, promotionsFor, sectionVisible } from './exts.ts';
+import { isInstalled, type LabExtension, promotionsFor, sectionVisible } from './exts.ts';
 import Head from './Head.svelte';
 import KV from './KV.svelte';
 import { connActions, connStatus, isUp, openConnTerminal, openMenu, toggleConn } from './live.svelte.ts';
-import PromoEmpty from './PromoEmpty.svelte';
 import Btn from './Btn.svelte';
 import { flows, openModal } from './flows.svelte.ts';
 import LabIcon from '../ui/LabIcon.svelte';
@@ -34,24 +34,17 @@ const trees = $derived(TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) && is
 /** Same collections as the tree: sections replaced by an extension tree are listed once (as the tree). */
 const sections = $derived(c.sections.filter(s => sectionVisible(s) && !trees.some(p => p.replaces.includes(s.id))));
 const promos = $derived(promotionsFor(c));
-/** First promoted extension not installed yet: shown as the PD empty-state promotion. */
-const missing = $derived(promos.find(e => !isInstalled(e.id)));
-const PROMO_TEXT: Record<string, [string, string, string]> = {
-  quadlet: ['No Quadlets', 'Run containers, pods and Kubernetes YAML as systemd services that start at boot, restart on failure and auto-update.', 'docs.podman.io/quadlet'],
-  bootc: ['No bootable images', 'Turn a container image into a bootable OS: build qcow2, raw, ISO or AMI disk images from a Containerfile.', 'containers.github.io/bootc'],
-  'ai-lab': ['No AI models', 'Run open models locally, try recipes and chat with them in playgrounds, then serve them with an OpenAI-compatible API.', 'podman-desktop.io/docs/ai-lab'],
-  'kube-dashboard': ['No Kubernetes dashboard', 'See workloads, events and metrics of this cluster at a glance.', 'podman-desktop.io/extensions'],
-  'openshift-console': ['No OpenShift Console', 'Install the OpenShift web console on this local cluster to browse workloads, logs and events in your browser.', 'github.com/openshift/console'],
-  hummingbird: ['No hardened images', 'Find a minimal, zero-CVE Red Hat Hardened Image for your local images and rebuild them on it.', 'hummingbird-project.io'],
-  helm: ['No Helm releases', 'Install charts and manage releases and revisions on this cluster.', 'helm.sh'],
-};
 
 function openExt(e: LabExtension): void {
   const sec = c.sections.find(s => s.ext?.id === e.id);
   const tree = TREE_PROVIDERS.find(p => p.extId === e.id && p.connIds.includes(c.id));
   if (tree) onopen({ kind: 'node', connId: c.id, nodeId: treeRoot(tree, c.id).id }, {});
   else if (sec) onopen({ kind: 'list', connId: c.id, sectionId: sec.id }, {});
-  else onopen({ kind: 'tool', toolId: e.id }, {});
+  else if (!TOOLS.some(t => t.id === e.id)) {
+    // Extensions acting on engine resources (layers, scans, Kompose): open the collection they act on.
+    const target = e.id === 'kompose' ? 'containers' : 'images';
+    if (c.sections.some(x => x.id === target)) onopen({ kind: 'list', connId: c.id, sectionId: target }, {});
+  } else onopen({ kind: 'tool', toolId: e.id }, {});
 }
 </script>
 
@@ -91,14 +84,8 @@ function openExt(e: LabExtension): void {
         <Btn icon="icons/redhat.redhat-authentication.png" onclick={(): void => openModal('rh-signin')}>{isInstalled('redhat-account') ? 'Sign in with Red Hat' : 'Install Red Hat Authentication'}</Btn>
       </div>
     {/if}
-    {#if missing}
-      {@const txt = PROMO_TEXT[missing.id] ?? [`No ${missing.name}`, `${missing.description}.`, 'podman-desktop.io/extensions']}
-      <div class="rounded-lg bg-[color-mix(in_srgb,var(--pd-content-card-bg)_40%,transparent)]">
-        <PromoEmpty icon={ext(missing.id)?.icon ?? ''} title={txt[0]} description={txt[1]} extId={missing.id} info={txt[2]} onbrowse={(): void => onopen({ kind: 'extensions' }, {})} onaction={(): void => openExt(missing)} actionLabel="Open" />
-      </div>
-    {/if}
-    {#if promos.some(e => e.id !== missing?.id)}
-      <ExtCards ids={promos.filter(e => e.id !== missing?.id).map(e => e.id)} title="Extend {c.product}" onopenext={openExt} />
+    {#if promos.length}
+      <ExtCards ids={promos.map(e => e.id)} title="Extend {c.product}" onopenext={openExt} />
     {/if}
   </div>
 </div>

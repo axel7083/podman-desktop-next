@@ -1,7 +1,7 @@
 /**
  * P13 bootc end-to-end actions (Bootable containers + RHEL VMs + OpenShift
  * Virtualization): build a disk image (bootc-image-builder task → Disk
- * images), boot it in a RHEL VM (new VM connection + console session), run
+ * images), run it in a local VM (macadam; new VM connection + console session), run
  * it as a VirtualMachine on OpenShift Virtualization (minc / OpenShift Local),
  * pull an example.
  */
@@ -76,15 +76,14 @@ export function buildDisk(o: BuildOpts): void {
   });
 }
 
-/** Boot a disk image in a new RHEL VM (RHEL VMs extension): VM connection in the switcher + console session. */
+/** Run a disk image in a new local VM (VM provider, macadam): VM connection under Other in the switcher + console session. */
 export function bootInVm(d: DiskImage, o: { name: string; cpus: string; memory: string }): void {
-  installExt('rhel-vms');
   const id = o.name;
   runTask({
     title: `Boot ${id}`,
     connId: BOOTC_CONN,
-    icon: 'icons/redhat.rhel-vms.png',
-    label: 'RHEL VMs',
+    icon: 'icons/redhat.bootc.png',
+    label: 'Run in a VM',
     target: bootcTarget('Disk Images'),
     cmd: `macadam init --name ${id} --cpus ${o.cpus} --memory ${Number(o.memory) * 1024} --username alice --ssh-identity-path ~/.ssh/id_ed25519 ${d.folder}/${d.type}/disk.${EXT_OF[d.type] ?? d.type}`,
     lines: ['Copying disk image to the VM storage…', `Machine "${id}" created (libkrun)`, `macadam start ${id}`, `Machine "${id}" started successfully`, `✔ ${id} is running · ssh alice@${id}`],
@@ -93,7 +92,7 @@ export function bootInVm(d: DiskImage, o: { name: string; cpus: string; memory: 
         id,
         name: id,
         group: 'VMs & services',
-        product: 'RHEL VM',
+        product: 'Virtual machine',
         detail: `${d.image} · ${o.cpus} CPU · ${o.memory} GB · libkrun`,
         icon: 'icons/redhat.rhel-vms.png',
         status: 'running',

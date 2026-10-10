@@ -64,6 +64,7 @@ import KomposeView from '../r3/KomposeView.svelte';
 import { kompose } from '../r3/kompose.svelte.ts';
 import KubePlayView from '../r3/KubePlayView.svelte';
 import ListView from '../r3/ListView.svelte';
+import LayersView from '../r3/LayersView.svelte';
 import ScanView from '../r3/ScanView.svelte';
 import SettingsView from '../r3/SettingsView.svelte';
 import ToolView from '../r3/ToolView.svelte';
@@ -440,6 +441,8 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
           <KubeResourceView res={tr} c={tc} s={ts} onopen={open} />
         {:else if t?.kind === 'kompose' && t.resId}
           <KomposeView key={t.resId} onopen={open} />
+        {:else if t?.kind === 'layers' && tr}
+          <LayersView res={tr} onopen={open} />
         {:else if t?.kind === 'scan' && tr}
           <ScanView res={tr} onopen={open} />
         {:else if t?.kind === 'settings'}

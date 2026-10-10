@@ -14,6 +14,7 @@ import { describe, HOME, lab, type LabTab, type Workbench } from '../lab.svelte.
 import { ctxColor } from '../r2/ctx.ts';
 import { type MenuItem } from '../r3/live.svelte.ts';
 import Tab from './Tab.svelte';
+import { tabCloseMenu } from './tab-menu.ts';
 import TabIcon from './TabIcon.svelte';
 
 interface Props {
@@ -90,12 +91,11 @@ function homeTarget(): LabTarget | undefined {
 }
 
 function tabMenu(key: string): MenuItem[] {
-  const idx = wb.tabs.findIndex(t => t.key === key);
-  return [
-    { label: 'Close', run: (): void => wb.close(key) },
-    { label: 'Close others', disabled: wb.tabs.length < 2, run: (): void => wb.tabs.filter(t => t.key !== key).forEach(t => wb.close(t.key)) },
-    { label: 'Close tabs to the right', disabled: idx === wb.tabs.length - 1, run: (): void => wb.tabs.slice(idx + 1).forEach(t => wb.close(t.key)) },
-  ];
+  return tabCloseMenu(
+    wb.tabs.map(t => t.key),
+    key,
+    k => wb.close(k),
+  );
 }
 </script>
 

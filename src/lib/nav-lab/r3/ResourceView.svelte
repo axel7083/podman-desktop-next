@@ -27,7 +27,7 @@ import Btn from './Btn.svelte';
 import Card from './Card.svelte';
 import type { LabRow } from './cells/types.ts';
 import CodeView from './CodeView.svelte';
-import { composeDir, composeFile, composeServices, composeVolumes, composeYaml, containerInfo, hash, imageInfo, inspectText, isKube, kubeConditions, kubeEvents, relatedPods } from './details.ts';
+import { composeDir, composeFile, composeServices, composeVolumes, composeYaml, containerInfo, hash, imageInfo, inspectText, usedByCount, isKube, kubeConditions, kubeEvents, relatedPods } from './details.ts';
 import { ext, installExt, isInstalled } from './exts.ts';
 import { altFor, cveTotal, HB_CONN, hbImage, mb } from './hb-data.ts';
 import { openAlternative } from './hummingbird.ts';
@@ -39,6 +39,7 @@ import KV from './KV.svelte';
 import {
   can,
   deleteRes,
+  exploreLayers,
   extViews,
   hasTty,
   imageMenu,
@@ -81,6 +82,8 @@ $effect(() => {
 });
 
 const st = $derived(resStatus(res));
+/** Images / volumes: no meaningless "ready" pill, only "In use" / "Unused" (rule B7). */
+const usage = $derived(s.id === 'images' || s.id === 'volumes' ? (usedByCount(res) ? 'In use' : 'Unused') : undefined);
 const up = $derived(isUp(st));
 const deleted = $derived(live.deleted.includes(res.id));
 const isImage = $derived(s.id === 'images');
@@ -240,6 +243,7 @@ function kubeYaml(): string[] {
   {#if isImage}
     <ActBtn icon={faPlay} label="Run image" onclick={(): void => lab.openCreate(`Run ${res.name}`)} />
     {#if hbAlt && isInstalled('hummingbird')}<ActBtn icon={ext('hummingbird')?.icon ?? faTrash} label="Rebase on Hummingbird (find hardened alternative)" onclick={(): void => openAlternative(res.name, c.id, onopen)} />{/if}
+    {#if isInstalled('layers-explorer')}<ActBtn icon={ext('layers-explorer')?.icon ?? faTrash} label="Explore layers" testid="explore-layers" onclick={(): void => exploreLayers(res, onopen)} />{/if}
     <ActBtn icon={ext('grype')?.icon ?? faTrash} label="Scan vulnerabilities" onclick={(): void => scanRes(res, onopen)} />
     <ActBtn icon="icons/redhat.quay.png" label="Push to Quay" onclick={(): void => openModal('push-quay', { resId: res.id })} />
     <ActBtn icon={faRocket} label="Deploy to…" onclick={(): void => openModal('deploy', { resId: res.id })} />
@@ -277,7 +281,7 @@ function kubeYaml(): string[] {
     {icon}
     title={isImage ? repoTag[0] : res.name}
     extra={isImage ? imageExtra : undefined}
-    status={deleted ? 'deleted' : st}
+    status={deleted ? 'deleted' : usage ?? st}
     connId={c.id}
     onconn={(): void => onopen({ kind: 'connection', connId: c.id }, {})}
     provenance={s.ext?.name}
@@ -334,19 +338,6 @@ function kubeYaml(): string[] {
           {/if}
         </div>
       </Card>
-      <Card title="Vulnerabilities · Grype">
-        <div class="flex items-center gap-3 text-[13px]">
-          <span class="flex-1 text-[var(--pd-table-body-text)]">Scan the OS packages and language dependencies of this image for known CVEs.</span>
-          <Btn icon={ext('grype')?.icon} testid="check-scan" onclick={(): void => scanRes(res, onopen)}>Scan vulnerabilities</Btn>
-        </div>
-      </Card>
-    </div>
-  {:else if view === 'layers'}
-    {@const im = imageInfo(res)}
-    <div class="flex-1 min-h-0 overflow-auto px-5 py-4">
-      <Section title="Layers · Layers explorer" count={im.layers.length}>
-        <ModernTable {variant} readonly initialSort="" mono={['size']} rows={textRows(im.layers.map(l => [l.id, l.size, l.cmd]), ['size', 'cmd'])} cols={[['Size', 'size', '90px'], ['Created by', 'cmd', 'minmax(12rem, 3fr)']]} />
-      </Section>
     </div>
   {:else}
     <div data-testid="summary" class="flex-1 min-h-0 overflow-auto px-5 py-4 flex flex-col gap-4">

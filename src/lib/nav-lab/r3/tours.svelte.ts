@@ -1,6 +1,6 @@
 /**
- * P13 guided tours of the 8 Red Hat workflows (docs/p13-red-hat-flows.md):
- * the dashboard "Red Hat workflows" cards and the "Tour: …" palette entries
+ * P13 guided tours of the 8 demo workflows (docs/p13-red-hat-flows.md):
+ * the dashboard "Demo workflows" cards and the "Tour: …" palette entries
  * start them, `r3/TourOverlay.svelte` plays them. A step highlights an
  * existing element (data-testid / tree key), says why, and advances when its
  * `done` condition holds (or when the highlighted element is clicked). "Show
@@ -223,7 +223,7 @@ export const TOURS: Tour[] = [
   {
     id: 'bootc',
     title: 'bootc end to end',
-    outcome: 'Turn a bootable container into a disk image and boot it in a RHEL VM.',
+    outcome: 'Turn a bootable container into a disk image and run it in a VM.',
     logos: [
       ['icons/redhat.bootc.png', 'Bootable containers'],
       ['icons/redhat.image-builder.png', 'bootc-image-builder'],
@@ -242,8 +242,8 @@ export const TOURS: Tour[] = [
       primary('Build', 'Pick types and architecture, then build.'),
       wait('Building', 'bootc-image-builder runs in the bottom panel.', '[data-testid="nav-lab-panel-body"]', () => panelHas('Build complete')),
       { title: 'Open Disk Images', why: 'Built disks land here.', target: treeKey(`${BOOTC}/Disk Images`), done: () => has('[data-testid="bootc-disks"]') },
-      { title: 'Right-click the qcow2 disk', why: 'Disk actions: boot locally or run on OpenShift Virtualization.', target: '[data-testid="bootc-disks"] [data-testid="mt-row"]', text: 'orders-os-v3.qcow2', act: rightClick, done: () => !!menuItem('Boot in RHEL VM')() || modalIs('boot-vm') },
-      { title: 'Boot in RHEL VM', why: 'Boots the disk with macadam on this machine.', target: menuItem('Boot in RHEL VM'), done: () => modalIs('boot-vm') },
+      { title: 'Right-click the qcow2 disk', why: 'Disk actions: run in a local VM or on OpenShift Virtualization.', target: '[data-testid="bootc-disks"] [data-testid="mt-row"]', text: 'orders-os-v3.qcow2', act: rightClick, done: () => !!menuItem('Run in a VM')() || modalIs('boot-vm') },
+      { title: 'Run in a VM', why: 'Runs the disk in a local VM (macadam) on this machine.', target: menuItem('Run in a VM'), done: () => modalIs('boot-vm') },
       primary('Boot', 'Name, CPUs and memory, then boot.'),
       wait('Booting', 'The VM becomes a connection and its serial console opens in the panel.', '[data-testid="nav-lab-panel-body"]', () => panelHas('login:')),
     ],

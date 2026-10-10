@@ -121,8 +121,8 @@ export function visibleConns(): LabConnection[] {
 export function promotionsFor(c: LabConnection): LabExtension[] {
   const p = c.product.toLowerCase();
   let ids: string[];
-  if (p.includes('podman')) ids = ['bootc', 'quadlet', 'hummingbird', 'ai-lab', 'mcp'];
-  else if (p.includes('docker')) ids = ['ai-lab', 'mcp', 'grype'];
+  if (p.includes('podman')) ids = ['quadlet', 'bootc', 'hummingbird', 'ai-lab', 'mcp', 'kompose', 'grype', 'layers-explorer'];
+  else if (p.includes('docker')) ids = ['ai-lab', 'mcp', 'kompose', 'grype', 'layers-explorer'];
   else if (p.includes('openshift') || p.includes('sandbox')) ids = ['helm', 'pipelines', 'kube-dashboard'];
   else if (c.group === 'Kubernetes') ids = ['openshift-console', 'kube-dashboard', 'helm'];
   else ids = ['insights', 'aap'];

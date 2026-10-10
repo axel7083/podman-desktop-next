@@ -12,13 +12,13 @@ P13 (`#/`). What each one gets you, in one line:
 4. **Image supply chain**: an image is rebased on Hummingbird, scanned, signed,
    pushed to Quay and deployed to OpenShift, with its provenance on its Summary.
 5. **bootc end to end**: a bootable container becomes a disk image, then a running
-   RHEL VM or an OpenShift Virtualization VM.
+   local VM (macadam) or an OpenShift Virtualization VM.
 6. **AI chain**: a local model is served with vLLM, packaged as a ModelCar, pushed
    to Quay and served by OpenShift AI, then compared in the playground.
 7. **Local OpenShift**: a local cluster gets the OpenShift console and operators.
 8. **Kompose**: a Compose project becomes Kubernetes manifests deployed to a cluster.
 
-**Discover and learn them in the app.** The Dashboard has a collapsible **Red Hat
+**Discover and learn them in the app.** The Dashboard has a collapsible **Demo
 workflows** section (`data-testid="rh-workflows"`): one card per flow with its
 title, outcome and product chain (e.g. Hummingbird → Grype → Quay → Trusted
 Artifact Signer → OpenShift) and a **Start** button. Start launches a guided tour:
@@ -121,8 +121,8 @@ user + SSH key; RHEL bases need the Red Hat account) → task
 (`bootc-image-builder`) → row in **Disk Images** (Building → Success).
 
 Then on a qcow2 / raw disk image:
-- **Boot in RHEL VM** → modal (name, CPUs, memory) → task (`macadam init/start`)
-  → new **RHEL VM** connection in the switcher (Other), made current, and its
+- **Run in a VM** → modal (name, CPUs, memory) → task (`macadam init/start`)
+  (local VM provider) → new **VM** connection in the switcher (Other), made current, and its
   serial console session in the panel;
 - **Run on OpenShift Virtualization** → modal (OpenShift Local or minc) → task
   (`virtctl image-upload`, VirtualMachine, `virtctl start`) → VirtualMachine

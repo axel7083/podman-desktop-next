@@ -12,10 +12,11 @@ interface Props {
   label: string;
   disabled?: boolean;
   danger?: boolean;
+  testid?: string;
   onclick: (e: MouseEvent) => void;
 }
 
-let { icon, label, disabled = false, danger = false, onclick }: Props = $props();
+let { icon, label, disabled = false, danger = false, testid, onclick }: Props = $props();
 </script>
 
 <button
@@ -23,6 +24,7 @@ let { icon, label, disabled = false, danger = false, onclick }: Props = $props()
   aria-label={label}
   title={label}
   data-btn="ghost"
+  data-testid={testid}
   {disabled}
   class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md {disabled ? 'opacity-40 cursor-default' : danger ? 'hover:bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-status-dead)]' : 'hover:bg-[var(--pd-action-button-details-bg)] hover:text-[var(--pd-action-button-details-hover-text)]'}"
   {onclick}><LabIcon {icon} size={14} /></button>

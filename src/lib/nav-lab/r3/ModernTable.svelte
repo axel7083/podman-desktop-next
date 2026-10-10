@@ -36,9 +36,15 @@ interface Props {
   readonly?: boolean;
   /** Column keys whose comma-separated values render as compact chips (arch, variants…). */
   chips?: string[];
+  /** Column keys drawn with a proportional bar (`row.bar`, 0…1) behind the value (layer sizes). */
+  bars?: string[];
+  /** Override the name column: [title, width] (layers: ['#', '44px']). */
+  nameCol?: [string, string];
+  /** Rows have no quick actions: narrow trailing column (column menu only). */
+  noActs?: boolean;
 }
 
-let { rows, cols, variant, initialSort = '__name', mono = [], readonly = false, bulkActions = [], chips = [] }: Props = $props();
+let { rows, cols, variant, initialSort = '__name', mono = [], readonly = false, bulkActions = [], chips = [], bars = [], nameCol, noActs = false }: Props = $props();
 
 const grid = $derived(variant === 'grid');
 
@@ -60,12 +66,12 @@ interface Col {
 }
 
 const allCols = $derived<Col[]>([
-  { key: '__name', title: 'Name', width: 'minmax(14rem, 2fr)', numeric: false },
+  { key: '__name', title: nameCol?.[0] ?? 'Name', width: nameCol?.[1] ?? 'minmax(14rem, 2fr)', numeric: false },
   ...cols.map(([title, key, width, numeric]) => ({ key, title, width, numeric: !!numeric || /size|age|uptime/i.test(key) })),
 ]);
 const shown = $derived(allCols.filter(c => !hidden.has(c.key)));
 const template = $derived(
-  [grid ? '40px 20px' : readonly ? '12px' : '28px', ...shown.map(c => (widths[c.key] ? `${widths[c.key]}px` : c.width)), grid ? '96px' : '132px'].join(' '),
+  [grid ? '40px 20px' : readonly ? '12px' : '28px', ...shown.map(c => (widths[c.key] ? `${widths[c.key]}px` : c.width)), noActs ? '32px' : grid ? '96px' : '132px'].join(' '),
 );
 
 function num(v: string): number {
@@ -204,7 +210,7 @@ function resize(e: PointerEvent, c: Col): void {
 
 function tone(st: string): string {
   if (/^(CRITICAL|HIGH|MEDIUM|LOW|NEGLIGIBLE)$/.test(st)) return `sev-${st.toLowerCase()}`;
-  return st === 'RUNNING' || st === 'USED' ? 'running' : st === 'DEGRADED' ? 'degraded' : st === 'CREATED' ? 'created' : 'stopped';
+  return st === 'RUNNING' || st === 'USED' ? 'running' : st === 'DEGRADED' ? 'degraded' : st === 'CREATED' ? 'created' : st === 'BUILDING' ? 'busy' : st === 'ERROR' ? 'failed' : 'stopped';
 }
 
 /** Drop the uppercase status word from the PD second line (the dot says it). */
@@ -218,9 +224,13 @@ function subOf(r: LabRow): string[] {
 {/snippet}
 
 {#snippet acts(r: LabRow)}
-  <div class="acts" class:always={r.buttons.some(b => b.label)}>
+  <div class="acts" class:always={r.buttons.some(b => b.label || b.status)}>
     {#each r.buttons as b (b.title)}
-      {#if b.label}
+      {#if b.status === 'done'}
+        <span class="st done" data-testid="row-status" title={b.title}><AppIcon icon={b.icon} size="xs" />{b.title}</span>
+      {:else if b.status === 'action'}
+        <button type="button" class="ghost-txt st" data-testid="row-btn" disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(e); }}><AppIcon icon={b.icon} size="xs" />{b.title}</button>
+      {:else if b.label}
         <button type="button" class="ghost-txt lbl" data-testid="row-btn" disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(e); }}><AppIcon icon={b.icon} size="xs" />{b.title}</button>
       {:else}
         <button type="button" class="ghost" class:danger={b.danger} title={b.title} aria-label={b.title} disabled={b.enabled === false} onclick={(e): void => { e.stopPropagation(); b.run(); }}><AppIcon icon={b.icon} size="xs" /></button>
@@ -335,7 +345,7 @@ function subOf(r: LabRow): string[] {
         tabindex="-1"
         aria-selected={selected.has(r.name)}
         style:grid-template-columns={template}
-        class:hl={highlight === r.name}
+        class:hl={highlight === r.name || (highlight === undefined && r.selected)}
         class:sel={selected.has(r.name)}
         onclick={(e): void => click(e, f)}
         ondblclick={(): void => (r.pin ?? r.open)?.()}
@@ -365,7 +375,7 @@ function subOf(r: LabRow): string[] {
             </span>
           {:else}
             <span class="cell" class:num={c.numeric} class:mono={(grid && (c.numeric || /id|size/i.test(c.key))) || mono.includes(c.key)} title={r.badge?.col === c.key ? `${r.badge.title ?? r.badge.text} · ${r.cols[c.key] ?? ''}` : r.cols[c.key]}
-              >{#if r.badge?.col === c.key}<span class="badge {tone(r.badge.tone)}" data-testid="mt-badge">{r.badge.text}</span>{/if}{#if chips.includes(c.key)}{#each (r.cols[c.key] ?? '').split(', ').filter(Boolean) as ch (ch)}<span class="chip">{ch}</span>{/each}{:else}{r.cols[c.key] ?? ''}{/if}</span>
+              >{#if r.badge?.col === c.key}<span class="badge {tone(r.badge.tone)}" data-testid="mt-badge">{r.badge.text}</span>{/if}{#if bars.includes(c.key)}<span class="bar" style:width="{Math.round((r.bar ?? 0) * 100)}%"></span><span class="relative">{r.cols[c.key] ?? ''}</span>{:else if chips.includes(c.key)}{#each (r.cols[c.key] ?? '').split(', ').filter(Boolean) as ch (ch)}<span class="chip">{ch}</span>{/each}{:else}{r.cols[c.key] ?? ''}{/if}</span>
           {/if}
         {/each}
         {@render acts(r)}
@@ -378,6 +388,16 @@ function subOf(r: LabRow): string[] {
 </div>
 
 <style>
+.bar {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  height: 16px;
+  transform: translateY(-50%);
+  max-width: calc(100% - 16px);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--pd-tab-highlight) 22%, transparent);
+}
 .mt {
   --line: color-mix(in srgb, var(--pd-content-divider) 55%, transparent);
   --accent: var(--pd-button-primary-bg);
@@ -674,6 +694,7 @@ function subOf(r: LabRow): string[] {
   background: var(--pd-status-running);
 }
 .cell {
+  position: relative;
   padding: 0 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -715,6 +736,23 @@ function subOf(r: LabRow): string[] {
 }
 .cb input:disabled {
   visibility: hidden;
+}
+.dot.failed {
+  background: var(--pd-status-dead);
+}
+/* In-progress (bootc disk building): spinner instead of a dot. */
+.dot.busy {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border: 1.5px solid var(--pd-status-starting);
+  border-top-color: transparent;
+  animation: mt-spin 0.8s linear infinite;
+}
+@keyframes mt-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .dot.created {
   background: transparent;
@@ -789,6 +827,20 @@ function subOf(r: LabRow): string[] {
   white-space: nowrap;
   border: 1px solid var(--pd-button-secondary-border, var(--pd-content-divider));
   border-radius: 6px;
+}
+.st {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 84px;
+  height: 24px;
+  padding: 0 8px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.st.done {
+  color: var(--pd-table-body-text);
 }
 .ghost-txt:disabled {
   opacity: 0.4;

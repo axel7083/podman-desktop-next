@@ -203,7 +203,6 @@ export function inspectRes(r: LabResource, onopen: (t: LabTarget, o: { preview?:
 /** Views contributed by extensions to a resource tab (when installed). */
 export function extViews(sectionId: string): { id: string; label: string; extId: string }[] {
   const out: { id: string; label: string; extId: string }[] = [];
-  if (sectionId === 'images' && isInstalled('layers-explorer')) out.push({ id: 'layers', label: 'Layers', extId: 'layers-explorer' });
   return out;
 }
 
@@ -212,6 +211,11 @@ export function scanRes(r: LabResource, onopen: (t: LabTarget, o: { preview?: bo
   const target: LabTarget = { kind: 'scan', connId: r.connId, resId: r.id };
   if (r.sectionId === 'images' && isInstalled('grype')) addChain(r.name, { step: 'scanned', title: 'Scanned', detail: `Grype · ${grypeGate(r.name)[1]}`, at: 'just now', target });
   onopen(target, {});
+}
+
+/** Layers explorer of an image in its own "Layers · <image>" tab (promotion when not installed). */
+export function exploreLayers(r: LabResource, onopen: (t: LabTarget, o: { preview?: boolean }) => void): void {
+  onopen({ kind: 'layers', connId: r.connId, resId: r.id }, {});
 }
 
 function showView(r: LabResource, view: string, onopen: (t: LabTarget, o: { preview?: boolean }) => void): void {
@@ -228,7 +232,8 @@ export function imageMenu(r: LabResource, onopen: (t: LabTarget, o: { preview?: 
     { label: 'Save Image', icon: faDownload, run: () => lab.openCreate(`Save ${r.name}`) },
     { label: 'Push image to Kind cluster', icon: ext('kind')?.icon, run: () => lab.openCreate(`Push ${r.name} to kind-dev`) },
   ];
-  items.push({ label: isInstalled('grype') ? 'Scan vulnerabilities' : 'Scan vulnerabilities (install Grype)', icon: ext('grype')?.icon, run: () => scanRes(r, onopen), sep: true });
+  items.push({ label: isInstalled('layers-explorer') ? 'Explore layers' : 'Explore layers (install Layers explorer)', icon: ext('layers-explorer')?.icon, run: () => exploreLayers(r, onopen), sep: true });
+  items.push({ label: isInstalled('grype') ? 'Scan vulnerabilities' : 'Scan vulnerabilities (install Grype)', icon: ext('grype')?.icon, run: () => scanRes(r, onopen) });
   if (altFor(r.name) && r.connId === HB_CONN)
     items.push({
       label: isInstalled('hummingbird') ? 'Find hardened alternative' : 'Find hardened alternative (install Hummingbird)',

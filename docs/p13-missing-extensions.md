@@ -87,7 +87,7 @@ Click paths: [p13-red-hat-flows.md](p13-red-hat-flows.md).
   Kaoto, Developer Hub, Services catalog, Apicurio, Debezium, AI Lab, MCP, Lightspeed, AI
   Inference Server, ModelCar, MaaS, Grype); the bootc tool page is the bootc extension.
 - **Bootable containers**: Overview (get started, resources), bootc Images (base, version,
-  size, lint), Disk images (status, Boot in RHEL VM, Run on OpenShift Virtualization,
+  size, lint), Disk images (status, Run in a VM, Run on OpenShift Virtualization,
   Download), Examples (PD examples + RHEL presets, arch, More details, Pull image), Build disk
   image modal → task → Disk images.
 - **Kubernetes**: PD Kubernetes extension structure (Overview dashboard, Nodes, Compute /

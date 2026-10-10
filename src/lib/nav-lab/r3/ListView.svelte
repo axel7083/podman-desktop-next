@@ -15,6 +15,7 @@ import {
   faPlusCircle,
   faStop,
   faTrash,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, EmptyScreen, FilteredEmptyScreen } from '@podman-desktop/ui-svelte';
 
@@ -23,11 +24,12 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf, section as findSection } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
-import { containerInfo, hash, imageInfo } from './details.ts';
+import { containerInfo, hash, imageInfo, usedByCount } from './details.ts';
+import { dismiss, isDismissed } from './dismiss.svelte.ts';
 import ActBtn from './ActBtn.svelte';
 import Btn from './Btn.svelte';
 import { ext, installExt, isInstalled } from './exts.ts';
-import { altFor, HB_CONN } from './hb-data.ts';
+import { altFor, HB_CONN, hbNodeId } from './hb-data.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import Head from './Head.svelte';
 import { can, deleteRes, imageMenu, isUp, live, type MenuItem, openMenu, resActions, resStatus, showGroupLogs, startRes, stopRes } from './live.svelte.ts';
@@ -52,15 +54,22 @@ const all = $derived.by(() => {
   return resourcesOf(c.id, s.id).filter(r => !live.deleted.includes(r.id));
 });
 /** Vanilla: Hummingbird promotion above the Images list of its connection (rule E21, once per surface). */
-const hbPromo = $derived(s.id === 'images' && c.id === HB_CONN && !isInstalled('hummingbird'));
+const hbPromo = $derived(s.id === 'images' && c.id === HB_CONN && !isInstalled('hummingbird') && !isDismissed('hb-promo'));
+/** Installed: the real hint (also dismissible). */
+const hbHint = $derived(s.id === 'images' && c.id === HB_CONN && isInstalled('hummingbird') && !isDismissed('hb-hint'));
 const hbCount = $derived(all.filter(r => altFor(r.name)).length);
 const tabs = $derived<[string, string][]>(
   s.id === 'containers' || s.id === 'pods' ? [['all', 'All'], ['running', 'Running'], ['stopped', 'Stopped']] : s.id === 'images' || s.id === 'volumes' ? [['all', 'All'], ['used', 'Used'], ['unused', 'Unused']] : [],
 );
 
 function used(r: LabResource): boolean {
-  if (r.sectionId === 'volumes') return hash(r.name) % 3 !== 0;
-  return imageInfo(r).usedBy.length > 0;
+  return usedByCount(r) > 0;
+}
+
+/** Leading dot only for images / volumes in use (rule B7), with its tooltip. */
+function usedDot(r: LabResource): { status: string; dotTitle?: string } {
+  const n = usedByCount(r);
+  return n ? { status: 'RUNNING', dotTitle: `In use by ${n} container${n > 1 ? 's' : ''}` } : { status: '' };
 }
 
 const visible = $derived(
@@ -96,7 +105,7 @@ function toRow(r: LabResource): LabRow {
     return {
       name: r.id,
       r,
-      status: im.usedBy.length ? 'USED' : 'UNUSED',
+      ...usedDot(r),
       icon,
       title: repo,
       shortId: (hash(r.name) * 2654435761).toString(16).slice(0, 12).padEnd(12, '0'),
@@ -127,7 +136,7 @@ function toRow(r: LabResource): LabRow {
   return {
     name: r.id,
     r,
-    status: upper(st),
+    ...(s.id === 'volumes' ? usedDot(r) : { status: upper(st) }),
     icon,
     title: r.name,
     sub: [r.sub],
@@ -239,14 +248,22 @@ const modern = $derived(lab.table !== 'classic');
       {/each}
     </div>
   {/if}
-  {#if hbPromo && hbCount}
+  {#if hbPromo}
     <div data-testid="hb-promo" class="flex items-center gap-3 mx-4 mt-3 p-3 rounded-lg bg-[var(--pd-content-card-bg)] shrink-0">
       <LabIcon icon={ext('hummingbird')?.icon ?? ''} size={32} />
       <div class="flex-1 min-w-0">
-        <div class="text-[14px] font-semibold text-[var(--pd-content-header)]">Hardened alternatives for {hbCount} of your images</div>
-        <div class="text-[13px] text-[var(--pd-table-body-text)]">Hummingbird finds a minimal, zero-CVE Red Hat Hardened Image for your local images and rebuilds them on it.</div>
+        <div class="text-[14px] font-semibold text-[var(--pd-content-header)]">Use hardened base images</div>
+        <div class="text-[13px] text-[var(--pd-table-body-text)]">Hummingbird suggests minimal, zero-CVE Red Hat Hardened Images for your images.</div>
       </div>
       <Btn icon={faDownload} testid="hb-promo-install" onclick={(): void => installExt('hummingbird')}>Install Hummingbird</Btn>
+      <ActBtn icon={faXmark} label="Dismiss" testid="hb-promo-dismiss" onclick={(): void => dismiss('hb-promo')} />
+    </div>
+  {:else if hbHint && hbCount}
+    <div data-testid="hb-hint" class="flex items-center gap-3 mx-4 mt-3 px-3 h-10 rounded-lg bg-[var(--pd-content-card-bg)] shrink-0 text-[13px]">
+      <LabIcon icon={ext('hummingbird')?.icon ?? ''} size={16} />
+      <span class="flex-1 min-w-0 truncate text-[var(--pd-content-header)]">{hbCount} image{hbCount > 1 ? 's have' : ' has'} a hardened alternative</span>
+      <Btn testid="hb-hint-review" onclick={(): void => onopen({ kind: 'node', connId: c.id, nodeId: hbNodeId(c.id, 'Alternatives') }, {})}>Review</Btn>
+      <ActBtn icon={faXmark} label="Dismiss" testid="hb-hint-dismiss" onclick={(): void => dismiss('hb-hint')} />
     </div>
   {/if}
   <div class="flex flex-1 min-h-0 overflow-auto" class:px-2={!modern} class:pb-2={!modern}>

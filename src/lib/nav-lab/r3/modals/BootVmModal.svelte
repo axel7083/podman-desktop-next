@@ -1,6 +1,6 @@
 <script lang="ts">
-/** "Boot in RHEL VM" (RHEL VMs extension): name and resources of the VM booting a bootc disk image. */
-import { faPlay } from '@fortawesome/free-solid-svg-icons';
+/** "Run in a VM" (local VM provider, macadam): name and resources of the VM booting a bootc disk image. */
+import { faDesktop, faPlay } from '@fortawesome/free-solid-svg-icons';
 
 import { lab } from '../../lab.svelte.ts';
 import { bootInVm } from '../bootc.ts';
@@ -24,7 +24,7 @@ function boot(): void {
 }
 </script>
 
-<Modal title="Boot in a RHEL VM" icon="icons/redhat.rhel-vms.png" sub="{disk?.name} · {disk?.type} · {disk?.arch}" primary="Boot" primaryIcon={faPlay} disabled={!disk || disk.type !== 'qcow2' && disk.type !== 'raw'} onprimary={boot} testid="boot-vm">
+<Modal title="Run in a VM" icon={faDesktop} sub="{disk?.name} · {disk?.type} · {disk?.arch}" primary="Run" primaryIcon={faPlay} disabled={!disk || disk.type !== 'qcow2' && disk.type !== 'raw'} onprimary={boot} testid="boot-vm">
   <Field label="VM name"><input class={INPUT} aria-label="VM name" bind:value={name} /></Field>
   <div class="grid grid-cols-2 gap-3">
     <Field label="CPUs"><select class={INPUT} aria-label="CPUs" bind:value={cpus}>{#each ['2', '4'] as v (v)}<option value={v}>{v}</option>{/each}</select></Field>

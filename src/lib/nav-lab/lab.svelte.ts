@@ -272,6 +272,15 @@ export function describe(t: LabTarget): TargetInfo {
         crumb: [c?.name ?? "", "Grype"],
       };
     }
+    case "layers": {
+      const r = resource(t.resId);
+      return {
+        title: `Layers · ${r?.name ?? "?"}`,
+        icon: "icons/podman-desktop.layers-explorer.png",
+        connId: c?.id,
+        crumb: [c?.name ?? "", "Layers explorer"],
+      };
+    }
     case "kompose": {
       const ids = (t.resId ?? "").split(",");
       const r = resource(ids[0]);

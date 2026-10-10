@@ -192,3 +192,10 @@ export function composeVolumes(project: LabResource): string[] {
     .filter(s => /db|cache|postgres|valkey/.test(s.service))
     .map(s => `${project.name}_${s.service}-data`);
 }
+
+/** Containers using an image or a volume (0 = unused): drives the list dot and the details pill. */
+export function usedByCount(r: LabResource): number {
+  if (r.sectionId === 'volumes') return hash(r.name) % 3 !== 0 ? (hash(r.name) % 2) + 1 : 0;
+  if (r.sectionId === 'images') return imageInfo(r).usedBy.length;
+  return 0;
+}

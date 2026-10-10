@@ -756,7 +756,7 @@ export const WORKFLOWS = [
 /* Tabs                                                                */
 /* ------------------------------------------------------------------ */
 
-export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node' | 'scan' | 'kubeplay' | 'kompose';
+export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node' | 'scan' | 'layers' | 'kubeplay' | 'kompose';
 
 export interface LabTarget {
   kind: TargetKind;
@@ -907,6 +907,7 @@ export const STATUS_DOT: Record<string, string> = {
   degraded: 'bg-[var(--pd-status-degraded)]',
   error: 'bg-[var(--pd-status-dead)]',
   starting: 'bg-[var(--pd-status-starting)]',
+  'In use': 'bg-[var(--pd-status-running)]',
 };
 
 /** Fallback icon used for tab of a settings/extension page. */

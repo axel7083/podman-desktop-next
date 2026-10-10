@@ -6,7 +6,7 @@
  * with a hardened alternative) and the comparison of a local image with its
  * alternative (current vs hardened, "Rebuild on hardened image" task).
  */
-import { faArrowCircleDown, faArrowsRotate, faBookOpen, faCodeCompare, faCopy, faHammer } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faArrowsRotate, faBookOpen, faCodeCompare, faCheck, faCopy, faHammer } from '@fortawesome/free-solid-svg-icons';
 
 import ImageIcon from '#lib/images/ImageIcon.svelte';
 
@@ -14,7 +14,7 @@ import { conn as findConn, type LabTarget, resource } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import Btn from './Btn.svelte';
 import Card from './Card.svelte';
-import type { LabRow } from './cells/types.ts';
+import type { ActionBtn, LabRow } from './cells/types.ts';
 import CodeView from './CodeView.svelte';
 import { imageInfo } from './details.ts';
 import { altFor, cveTotal, HB_ALTS, HB_CATALOG, type HardenedImage, hbImage, hbNodeId, hbRef, type HbAlternative, mb } from './hb-data.ts';
@@ -82,6 +82,13 @@ function pullLabel(h: HardenedImage, tag = h.tags[0]): string {
   return s === 'pulled' ? 'Pulled' : s === 'pulling' ? 'Pulling…' : 'Pull image';
 }
 
+/** Status slot (same width in every row): "✓ Pulled" muted, or a labelled ghost "Pull" button. */
+function pullBtn(h: HardenedImage, tag = h.tags[0]): ActionBtn {
+  const s = pullState(h, tag);
+  if (s === 'pulled') return { title: 'Pulled', icon: faCheck, status: 'done', run: (): void => undefined };
+  return { title: s === 'pulling' ? 'Pulling…' : 'Pull', icon: faArrowCircleDown, status: 'action', enabled: !s, run: (): void => pullHardened(h, connId, tag) };
+}
+
 function imageMenu(h: HardenedImage): MenuItem[] {
   return [
     { label: 'Open', run: (): void => openImage(h, false) },
@@ -103,9 +110,8 @@ const catalogRows = $derived.by((): LabRow[] => {
   const t = search.toLowerCase();
   return HB_CATALOG.filter(h => (cat === 'all' || h.category === cat) && (!t || h.name.includes(t) || h.description.toLowerCase().includes(t))).map(h => ({
     name: `hb:${h.name}`,
-    // Dot only means "pulled locally".
-    status: pullState(h) === 'pulled' ? 'RUNNING' : '',
-    dotTitle: 'Pulled',
+    // No leading dot: the pull state is the fixed status slot before the row actions.
+    status: '',
     icon: ImageIcon,
     title: `hummingbird/${h.name}`,
     desc: h.description,
@@ -113,7 +119,7 @@ const catalogRows = $derived.by((): LabRow[] => {
     cols: { tags: h.tags.join(', '), variants: h.variants.join(', '), cves: '0', size: mb(h.sizeMB), arch: h.arch.join(', '), updated: h.updated },
     open: (): void => openImage(h),
     pin: (): void => openImage(h, false),
-    buttons: [{ title: pullLabel(h), icon: faArrowCircleDown, label: true, enabled: !pullState(h), run: (): void => pullHardened(h, connId) }],
+    buttons: [pullBtn(h)],
     menu: (): MenuItem[] => imageMenu(h),
   }));
 });
@@ -153,13 +159,12 @@ const tagRows = $derived.by((): LabRow[] => {
       const full = v === 'default' ? tag : `${tag}-${v}`;
       return {
         name: `tag:${full}`,
-        status: pullState(img, full) === 'pulled' ? 'RUNNING' : '',
-        dotTitle: 'Pulled',
+        status: '',
         icon: ImageIcon,
         title: full,
         sub: [],
         cols: { variant: v, arch: img.arch.join(', '), size: mb(v === 'builder' ? img.sizeMB * 3 : img.sizeMB), cves: '0' },
-        buttons: [{ title: pullLabel(img, full), icon: faArrowCircleDown, label: true, enabled: !pullState(img, full), run: (): void => pullHardened(img, connId, full) }],
+        buttons: [pullBtn(img, full)],
       };
     }),
   );

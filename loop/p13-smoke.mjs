@@ -60,6 +60,19 @@ async function expand(page, k) {
   const row = key(page, k);
   if ((await row.getAttribute('aria-expanded')) !== 'true') await row.locator('[data-chevron]').click();
 }
+/** No horizontal overflow: scrollWidth <= clientWidth on the element and its scroll container. */
+async function noOverflowX(loc, what) {
+  await loc.first().waitFor();
+  const r = await loc.first().evaluate(el => {
+    const out = [];
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      if (n.scrollWidth > n.clientWidth + 1 && getComputedStyle(n).overflowX !== 'visible') out.push(`${n.dataset.testid ?? n.className}: ${n.scrollWidth}>${n.clientWidth}`);
+    }
+    if (el.scrollWidth > el.clientWidth + 1) out.unshift(`self ${el.scrollWidth}>${el.clientWidth}`);
+    return out;
+  });
+  expect(r.length === 0, `${what} overflows: ${r.join(', ')}`);
+}
 const modal = page => page.getByRole('dialog');
 const primary = page => page.getByTestId('modal-primary');
 /** Wait for a task line in the bottom panel. */
@@ -207,13 +220,13 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await page.getByTestId('kube-list').getByText('orders-api', { exact: true }).first().waitFor({ timeout: 4000 });
   });
 
-  await step('C5 bootc → disk → RHEL VM + OpenShift Virtualization', async () => {
+  await step('C5 bootc → disk → Run in a VM + OpenShift Virtualization', async () => {
     await useConn(page, 'podman-machine-default');
     await expand(page, BOOTC);
     await key(page, `${BOOTC}/Disk Images`).click();
     const row = page.getByTestId('bootc-disks').getByText('orders-os-v3.qcow2').first();
     await row.click({ button: 'right' });
-    await page.getByTestId('nav-lab-context-menu').getByText('Boot in RHEL VM').click();
+    await page.getByTestId('nav-lab-context-menu').getByText('Run in a VM').click();
     await primary(page).click();
     await panelText(page, 'login: alice', 15000);
     await page.waitForTimeout(300);
@@ -309,19 +322,6 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
 /* ---------------------------------------------------------------- F polish at 1280px */
 {
   const page = await session('panel=off', 1280);
-  /** No horizontal overflow: scrollWidth <= clientWidth on the element and its scroll container. */
-  async function noOverflowX(loc, what) {
-    await loc.first().waitFor();
-    const r = await loc.first().evaluate(el => {
-      const out = [];
-      for (let n = el; n && n !== document.body; n = n.parentElement) {
-        if (n.scrollWidth > n.clientWidth + 1 && getComputedStyle(n).overflowX !== 'visible') out.push(`${n.dataset.testid ?? n.className}: ${n.scrollWidth}>${n.clientWidth}`);
-      }
-      if (el.scrollWidth > el.clientWidth + 1) out.unshift(`self ${el.scrollWidth}>${el.clientWidth}`);
-      return out;
-    });
-    expect(r.length === 0, `${what} overflows: ${r.join(', ')}`);
-  }
   await step('F Kompose header + target bar fit at 1280px, manifests grouped per service, no status dots', async () => {
     await expand(page, 'compose');
     await tree(page).getByRole('treeitem', { name: 'orders-stack' }).first().dblclick();
@@ -384,6 +384,126 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   await page.context().close();
 }
 
+
+/* ---------------------------------------------------------------- G polish round (provider overview, sessions, layers, dots, banners, bootc) */
+{
+  const page = await session('panel=on', 1280);
+  await step('G1 provider overview: one "Extend" grid of equal cards, no empty-state promo', async () => {
+    await useConn(page, 'podman-machine-default');
+    await tree(page).getByRole('treeitem', { name: 'Overview' }).first().click();
+    const v = page.getByTestId('conn-view');
+    await v.getByTestId('ext-cards').waitFor();
+    expect((await v.getByTestId('promo-empty').count()) === 0, 'big empty-state promo still on the overview');
+    const cards = v.getByTestId('ext-cards').getByRole('group');
+    const n = await cards.count();
+    expect(n >= 7, `${n} extension cards`);
+    const boxes = await cards.evaluateAll(els => els.map(e => Math.round(e.getBoundingClientRect().width)));
+    expect(new Set(boxes).size === 1, `card widths differ: ${boxes.join(',')}`);
+    for (const name of ['Podman Quadlet', 'Bootable containers', 'Hummingbird', 'Kompose', 'Grype']) await cards.filter({ hasText: name }).first().waitFor();
+  });
+  await step('G2 session tab menu = editor tab menu; closing the last session hides the panel', async () => {
+    const tab = page.getByTestId('panel-tab').first();
+    await tab.waitFor();
+    await tab.click({ button: 'right' });
+    const menu = page.getByTestId('nav-lab-context-menu');
+    for (const l of ['Close', 'Close others', 'Close tabs to the right', 'Close all']) await menu.getByText(l, { exact: true }).waitFor();
+    await menu.getByText('Close all', { exact: true }).click();
+    await page.getByTestId('nav-lab-panel-body').waitFor({ state: 'detached', timeout: 3000 });
+  });
+  await step('G3 Explore layers opens a Layers tab, layer select + All layers', async () => {
+    await expand(page, 'images');
+    await tree(page).getByRole('treeitem', { name: 'quay.io/acme/orders-api:1.4' }).first().dblclick();
+    expect(['In use', 'Unused'].includes((await page.getByTestId('head-status').innerText()).trim()), 'image pill is not In use / Unused');
+    await page.getByTestId('explore-layers').click();
+    const v = page.getByTestId('layers-view');
+    await v.getByTestId('layers-summary').getByText('Wasted space').waitFor();
+    await noOverflowX(v.getByTestId('layers-table').getByTestId('modern-table'), 'layers table');
+    await v.getByTestId('layers-table').getByTestId('mt-row').nth(1).click();
+    expect((await v.getByTestId('layer-files').innerText()).includes('Layer 2'), 'layer 2 not selected');
+    const only = await v.getByTestId('layer-file').count();
+    await v.getByTestId('layers-scope').getByText('All layers').click();
+    const all = await v.getByTestId('layer-file').count();
+    expect(all > only, `All layers (${all}) not larger than this layer (${only})`);
+    expect((await v.locator('[data-change="added"]').count()) > 0, 'no added files coloured');
+    await page.getByTestId('head-search').locator('input').fill('passwd');
+    expect((await v.getByTestId('layer-file').count()) < all, 'path filter does nothing');
+  });
+  await step('G4 no Grype section in the image Check view', async () => {
+    await tree(page).getByRole('treeitem', { name: 'quay.io/acme/orders-api:1.4' }).first().dblclick();
+    await page.getByTestId('head-views').getByText('Check', { exact: true }).click();
+    const t = await page.getByTestId('check').innerText();
+    expect(!t.includes('Grype'), 'Grype still in Check');
+  });
+  await step('G5 Images list: dots only for in-use images, with tooltip; volumes too', async () => {
+    for (const sec of ['images', 'volumes']) {
+      await key(page, sec).click();
+      const lv = page.getByTestId('list-view');
+      await lv.getByTestId('mt-row').first().waitFor();
+      const rows = await lv.getByTestId('mt-row').count();
+      const titles = await lv.getByTestId('mt-dot').evaluateAll(els => els.map(e => e.getAttribute('title')));
+      expect(titles.length > 0 && titles.length < rows, `${sec}: ${titles.length} dots for ${rows} rows`);
+      expect(titles.every(t => /^In use by \d+ containers?$/.test(t ?? '')), `${sec} dot titles: ${titles.join(',')}`);
+    }
+  });
+  await step('G6 Hummingbird catalog: no dots, one fixed-width status slot per row', async () => {
+    await expand(page, 'hummingbird@podman-machine-default');
+    await tree(page).locator('[data-key="hummingbird@podman-machine-default/Catalog"]').first().dblclick();
+    const t = page.getByTestId('hb-catalog');
+    await t.getByTestId('mt-row').first().waitFor();
+    expect((await t.getByTestId('mt-dot').count()) === 0, 'dots in the catalog');
+    await t.getByTestId('row-btn').first().click();
+    await t.getByTestId('row-status').first().waitFor({ timeout: 8000 });
+    const widths = await t.locator('[data-testid="row-status"], [data-testid="row-btn"]').evaluateAll(els => els.map(e => Math.round(e.getBoundingClientRect().width)));
+    expect(new Set(widths).size === 1, `status widths ${widths.join(',')}`);
+  });
+  await step('G7 bootc disk images: ghost icon actions, Run in a VM, no success dots', async () => {
+    await expand(page, BOOTC);
+    await key(page, `${BOOTC}/Disk Images`).click();
+    const d = page.getByTestId('bootc-disks');
+    const row = d.getByTestId('mt-row').filter({ hasText: 'orders-os-v3.qcow2' }).first();
+    await row.hover();
+    await row.getByRole('button', { name: 'Run in a VM' }).waitFor();
+    expect((await row.locator('.acts img').count()) === 0, 'brand logos in row actions');
+    expect((await row.getByTestId('mt-dot').count()) === 0, 'dot on a successful disk image');
+    await row.getByRole('button', { name: /More actions/ }).click();
+    const menu = page.getByTestId('nav-lab-context-menu');
+    for (const l of ['Run on OpenShift Virtualization…', 'Show in folder', 'Delete']) await menu.getByText(l, { exact: true }).waitFor();
+    await page.keyboard.press('Escape');
+  });
+  await step('G8 dashboard: "Demo workflows"', async () => {
+    await page.getByRole('tab', { name: /Dashboard/ }).first().click().catch(() => {});
+    await page.getByTestId('rh-workflows').waitFor();
+    await page.getByText('Demo workflows', { exact: true }).first().waitFor();
+    expect((await page.getByText('Red Hat workflows').count()) === 0, 'Red Hat workflows still shown');
+  });
+  await page.context().close();
+}
+{
+  const page = await session('install=vanilla&panel=off');
+  await step('G9 Vanilla: Hummingbird banner is generic, dismissible and remembered', async () => {
+    await key(page, 'images').click();
+    const b = page.getByTestId('hb-promo');
+    await b.waitFor();
+    const t = await b.innerText();
+    expect(!/of your images|\d+ images/.test(t), `promo claims scan results: ${t}`);
+    await page.getByTestId('hb-promo-dismiss').click();
+    await b.waitFor({ state: 'detached' });
+    await page.reload();
+    await page.waitForSelector('[data-testid="p13-tree"]');
+    await key(page, 'images').click();
+    await page.getByTestId('list-view').getByTestId('mt-row').first().waitFor();
+    expect((await page.getByTestId('hb-promo').count()) === 0, 'banner back after reload');
+  });
+  await step('G10 Vanilla: Explore layers promotes the Layers explorer', async () => {
+    await expand(page, 'images');
+    await tree(page).getByRole('treeitem', { name: 'quay.io/acme/orders-api:1.4' }).first().click({ button: 'right' });
+    await page.getByTestId('nav-lab-context-menu').getByText('Explore layers (install Layers explorer)').click();
+    await page.getByTestId('layers-view').getByTestId('promo-install').click();
+    await page.getByTestId('layers-summary').waitFor();
+  });
+  await page.context().close();
+}
+
 /* ---------------------------------------------------------------- Vanilla */
 {
   const page = await session('install=vanilla&panel=off');
@@ -413,7 +533,7 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   const probe = await session('panel=off');
   await probe.getByTestId('rh-workflows').waitFor().catch(() => {});
   const flowsIds = await probe.getByTestId('rh-flow-card').evaluateAll(els => els.map(e => e.getAttribute('data-flow')));
-  await step('T dashboard shows 8 Red Hat workflow cards', async () => {
+  await step('T dashboard shows 8 demo workflow cards', async () => {
     await probe.getByTestId('rh-workflows').waitFor();
     expect(flowsIds.length === 8, `${flowsIds.length} cards`);
   });

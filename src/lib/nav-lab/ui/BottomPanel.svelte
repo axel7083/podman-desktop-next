@@ -17,6 +17,7 @@ import { lab } from '../lab.svelte.ts';
 import { chatClosed } from '../r3/lightspeed.svelte.ts';
 import { logLine, type MenuItem } from '../r3/live.svelte.ts';
 import Tab from './Tab.svelte';
+import { tabCloseMenu } from './tab-menu.ts';
 import TabIcon from './TabIcon.svelte';
 import SessionPane, { sessionSource } from './SessionPane.svelte';
 
@@ -145,6 +146,8 @@ function close(id: string): void {
   panes = panes.filter(x => x !== id);
   if (active === id) active = panes.at(-1) ?? (sessions[idx] ?? sessions[idx - 1])?.id ?? '';
   if (!panes.length && active) panes = [active];
+  // Closing the last session closes the panel.
+  if (!sessions.length) lab.panel = false;
 }
 
 function newTerminal(): void {
@@ -183,8 +186,12 @@ function newTerminal(): void {
           onselect={(): void => show(s.id)}
           onclose={(): void => close(s.id)}
           menu={(): MenuItem[] => [
-            { label: 'Close', run: (): void => close(s.id) },
-            { label: 'Split right', disabled: panes.includes(s.id), run: (): void => split(s.id) },
+            ...tabCloseMenu(
+              sessions.map(x => x.id),
+              s.id,
+              close,
+            ),
+            { label: 'Split right', sep: true, disabled: panes.includes(s.id), run: (): void => split(s.id) },
             ...(src.target ? [{ label: `Open ${src.name}`, run: (): void => onopen?.(src.target!, {}), sep: true }] : []),
           ]} />
       {/each}

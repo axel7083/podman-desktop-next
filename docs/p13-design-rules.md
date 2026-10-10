@@ -16,7 +16,8 @@ violation is a code smell you can grep for.
    - **active**: primary text + 2px accent bar at the bottom (JetBrains); inactive: secondary text; hover: hover background;
    - close ✕: 16px hit box, visible on the active tab and on hover, middle-click closes;
    - preview tab: italic label; double-click pins;
-   - right-click opens the tab context menu (Close, Close others, Close tabs to the right).
+   - right-click opens the tab context menu (Close, Close others, Close tabs to the right, Close all),
+     the same menu for editor and session tabs (`ui/tab-menu.ts`); closing the last session hides the panel.
 2. **Panel header = tool-window title + the same tabs + toolbar** (JetBrains "Terminal  Local ×  Local (2) ×"):
    `Sessions` title (12px semibold), session tabs (kind icon: terminal / logs / YAML, provider
    badge, source name), then the toolbar (Split, New terminal, Maximize, Hide).
@@ -39,8 +40,11 @@ violation is a code smell you can grep for.
    Config = sliders, Network = network-wired, Storage = database, Access Control = shield; Nodes = server;
    Namespaces = layer-group. Never a generic folder icon for a typed group.
 7. Table rows carry **no per-row icon**: status dot + name. Only group rows (Compose / Pod / Kompose service) show their kind icon.
-   The **status dot is only drawn when it means something** (running state, "Pulled", "Rebuilt") and
-   always has a tooltip (`dotTitle`); otherwise no dot. Severity is a small badge (`badge`), not a dot.
+   The **status dot is only drawn when it means something** (running state, images / volumes in use
+   "In use by N containers", "Rebuilt", disk image building = spinner / failed = red) and always has a
+   tooltip (`dotTitle`); otherwise no dot. Catalog pull state is a fixed-width status slot ("✓ Pulled" /
+   ghost "Pull") before the row actions, never a dot. Header status pills follow the same rule (images /
+   volumes: "In use" / "Unused", never "ready"). Severity is a small badge (`badge`), not a dot.
 
 ## C. Color
 
@@ -96,8 +100,10 @@ violation is a code smell you can grep for.
 19. **Cards**: `--pd-content-card-bg`, radius 8px, padding 16px, no border; card title 14px semibold primary.
 20. **Empty states**: list without rows → `EmptyScreen`; filter without match → inline row
     "No X match … Clear filters"; missing extension → `r3/PromoEmpty.svelte` (48px hero, one primary install).
-21. **Promotion**: an extension is promoted at most once per surface (`PromoEmpty` for the first missing one,
-    `ExtCards` for the others, the dashboard banner); install is the only primary in a promotion; the purple
+21. **Promotion**: an extension is promoted at most once per surface; a connection Overview shows **every**
+    extension extending that provider in one equal-card `ExtCards` grid ("Extend Podman", no empty-state promo);
+    `PromoEmpty` is for a page the missing extension would fill; promo banners never claim results the
+    extension has not computed yet and are dismissible (`r3/dismiss.svelte.ts`, remembered); install is the only primary in a promotion; the purple
     brand gradient is reserved for the dashboard banner.
 22. **Spacing**: 4px grid (4 / 8 / 12 / 16 / 20 / 24). Page padding 20px, card gap 16px, row gap 8px.
     Heights: tree row 24, tab 32, button / input / segmented 28, table row 34, header 48.
