@@ -57,16 +57,18 @@ const errors = CONNECTIONS.filter(c => c.status === 'error').length;
   <div data-frame-body class="flex flex-1 min-h-0 min-w-0">
     {@render children()}
   </div>
+  <!-- Classic: dark strip. Islands (islands.css): on the window canvas, muted text, hover pills (.sb-item). -->
   <footer
     data-statusbar
     class="dark relative flex items-center gap-3 h-6 shrink-0 pr-2 text-sm bg-[var(--pd-statusbar-bg)] text-[var(--pd-statusbar-text)]"
     class:pl-2={!statusLeft}
     style:background={statusTint ? `color-mix(in srgb, ${statusTint} 70%, #111)` : undefined}>
     {#if statusLeft}{@render statusLeft()}{/if}
-    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[var(--pd-status-running)]"></span>{running} running</span>
-    <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[var(--pd-status-dead)]"></span>{errors} errors</span>
+    <span class="sb-item flex items-center gap-1" data-testid="status-running"><span class="w-2 h-2 rounded-full bg-[var(--pd-status-running)]"></span>{running} running</span>
+    <span class="sb-item flex items-center gap-1" data-testid="status-errors"><span class="w-2 h-2 rounded-full bg-[var(--pd-status-dead)]"></span>{errors} errors</span>
     <span class="flex-1"></span>
-    <button type="button" class="flex items-center gap-1 px-1 hover:bg-[var(--pd-statusbar-hover-bg)]" onclick={(): void => { lab.panel = !lab.panel; }}><AppIcon icon={faTerminal} size="xs" /> Panel <kbd class="opacity-70">`</kbd></button>
-    <span>v3.0.0-next</span>
+    <button type="button" class="sb-item flex items-center gap-1 px-1 hover:bg-[var(--pd-statusbar-hover-bg)]" onclick={(): void => { lab.panel = !lab.panel; }}><AppIcon icon={faTerminal} size="xs" /> Panel <kbd class="opacity-70">`</kbd></button>
+    <button type="button" class="sb-item flex items-center px-1 hover:bg-[var(--pd-statusbar-hover-bg)]" title="Notifications" aria-label="Notifications"><AppIcon icon={faBell} size="xs" /></button>
+    <span class="sb-item">v3.0.0-next</span>
   </footer>
 </div>

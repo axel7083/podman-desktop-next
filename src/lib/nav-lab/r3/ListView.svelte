@@ -226,7 +226,9 @@ const modern = $derived(lab.table !== 'classic');
     <Btn kind="primary" icon={faPlusCircle} onclick={(): void => lab.openCreate('Create a container')}>Create</Btn>
   {:else if s.id === 'pods'}
     {@render more([['Prune pods', faTrash]])}
-    <Btn kind="primary" icon={faPlay} onclick={(): void => onopen({ kind: 'kubeplay', connId: c.id }, {})}>Play Kubernetes YAML</Btn>
+    {#if c.caps.kubePlay}
+      <Btn kind="primary" icon={faPlay} onclick={(): void => onopen({ kind: 'kubeplay', connId: c.id }, {})}>Play Kubernetes YAML</Btn>
+    {/if}
   {:else if s.id === 'volumes' || s.id === 'networks'}
     {@render more([[`Prune unused ${noun}`, faTrash]])}
     <Btn kind="primary" icon={faPlusCircle} onclick={(): void => lab.openCreate(`Create ${noun.replace(/s$/, '')}`)}>Create</Btn>

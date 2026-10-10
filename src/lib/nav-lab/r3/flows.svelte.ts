@@ -8,7 +8,7 @@
  */
 import type { IconRef } from '#lib/ext/types.ts';
 
-import { CONNECTIONS, type LabConnection, type LabResource, type LabTarget, RESOURCES } from '../data.ts';
+import { capsFor, CONNECTIONS, type LabConnection, type LabResource, type LabTarget, RESOURCES } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { live } from './live.svelte.ts';
 
@@ -138,7 +138,8 @@ export function runTask(o: { title: string; connId: string; cmd: string; lines: 
 }
 
 /** Add a connection at runtime (RHEL Podman machine, RHEL VM…), optionally make it current. */
-export function addConnection(c: LabConnection, select = true): void {
+export function addConnection(raw: Omit<LabConnection, 'caps'>, select = true): void {
+  const c: LabConnection = { ...raw, caps: capsFor(raw.engine) };
   if (!CONNECTIONS.some(x => x.id === c.id)) CONNECTIONS.push(c);
   flows.conns++;
   if (select) flows.select = c.id;

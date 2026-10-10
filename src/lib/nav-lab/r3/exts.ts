@@ -113,18 +113,19 @@ export function visibleConns(): LabConnection[] {
 }
 
 /**
- * Promotion cards on a connection summary: related extensions per product.
- * PD does not compete with OpenShift: no "connect to an OpenShift cluster"
- * promotion anywhere; local Kubernetes / MicroShift clusters only get the
- * OpenShift Console add-on (installed on that cluster).
+ * Promotion cards on a connection summary: related extensions per product,
+ * gated on the connection capabilities (`c.caps`). PD does not compete with
+ * OpenShift: no "connect to an OpenShift cluster" promotion anywhere; only
+ * MicroShift-in-Container (minc) gets the OpenShift Console add-on.
  */
 export function promotionsFor(c: LabConnection): LabExtension[] {
-  const p = c.product.toLowerCase();
+  const k = c.caps;
   let ids: string[];
-  if (p.includes('podman')) ids = ['quadlet', 'bootc', 'hummingbird', 'ai-lab', 'mcp', 'kompose', 'grype', 'layers-explorer'];
-  else if (p.includes('docker')) ids = ['ai-lab', 'mcp', 'kompose', 'grype', 'layers-explorer'];
-  else if (p.includes('openshift') || p.includes('sandbox')) ids = ['helm', 'pipelines', 'kube-dashboard'];
-  else if (c.group === 'Kubernetes') ids = ['openshift-console', 'kube-dashboard', 'helm'];
+  if (c.group === 'Engines') {
+    ids = [k.quadlets && 'quadlet', k.bootc && 'bootc', c.engine === 'podman' && 'hummingbird', 'ai-lab', 'mcp', 'kompose', 'grype', 'layers-explorer'].filter((x): x is string => !!x);
+    if (c.engine === 'wslc' || c.engine === 'apple') ids = ids.filter(x => x !== 'ai-lab' && x !== 'mcp');
+  } else if (c.engine === 'openshift') ids = ['helm', 'pipelines', 'kube-dashboard'];
+  else if (k.kube) ids = [k.consoleAddon && 'openshift-console', 'kube-dashboard', 'helm'].filter((x): x is string => !!x);
   else ids = ['insights', 'aap'];
   return ids.map(ext).filter((e): e is LabExtension => !!e);
 }

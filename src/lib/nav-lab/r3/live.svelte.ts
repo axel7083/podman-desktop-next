@@ -247,7 +247,7 @@ export function imageMenu(r: LabResource, onopen: (t: LabTarget, o: { preview?: 
   items.push({ label: isInstalled('quay') ? 'Push to Quay' : 'Push to Quay (install Quay)', icon: 'icons/redhat.quay.png', run: () => openModal('push-quay', { resId: r.id }), sep: true });
   items.push({ label: 'Deploy to…', icon: 'icons/redhat.openshift-local.png', run: () => openModal('deploy', { resId: r.id }) });
   const known = flows.bootc.some(b => r.name === `${b.name}:${b.tag}`);
-  if ((known || r.name.includes('bootc')) && isInstalled('bootc'))
+  if ((known || r.name.includes('bootc')) && isInstalled('bootc') && findConn(r.connId)?.caps.bootc)
     items.push({
       label: 'Build disk image',
       icon: ext('bootc')?.icon,
@@ -279,7 +279,7 @@ export function resActions(r: LabResource, onopen: (t: LabTarget, o: { preview?:
   if (r.sectionId === 'containers') extra.push({ label: isInstalled('grype') ? "Scan the container's image" : "Scan the container's image (install Grype)", icon: ext('grype')?.icon, run: () => scanRes(r, onopen) });
   if (['compose', 'pods', 'containers', 'quadlets'].includes(r.sectionId))
     extra.push({ label: isInstalled('kompose') ? 'Convert to Kubernetes' : 'Convert to Kubernetes (install Kompose)', icon: ext('kompose')?.icon, run: () => onopen(komposeTarget([r]), {}) });
-  if (r.sectionId === 'containers' && isInstalled('quadlet')) extra.push({ label: 'Generate Quadlet', icon: ext('quadlet')?.icon, run: () => lab.openCreate(`Quadlet for ${r.name}`) });
+  if (r.sectionId === 'containers' && isInstalled('quadlet') && findConn(r.connId)?.caps.quadlets) extra.push({ label: 'Generate Quadlet', icon: ext('quadlet')?.icon, run: () => lab.openCreate(`Quadlet for ${r.name}`) });
   if (['kpods', 'deployments', 'services'].includes(r.sectionId) && isInstalled('kube-dashboard') && lab.install === 'all')
     extra.push({ label: 'Open in Kubernetes dashboard', icon: ext('kube-dashboard')?.icon, run: () => inspectRes(r, onopen) });
   if (extra.length) items.push(...extra.map((x, i) => ({ ...x, sep: i === 0 })));

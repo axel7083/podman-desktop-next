@@ -146,3 +146,24 @@ Research and values: [islands-theme.md](islands-theme.md).
     26px rounded (6px) pill inside the 32px strip; the strip has no own background.
 33. **Resizers live in the gaps** (tree ↔ editor, editor ↔ panel): the whole gap is the
     hit area, a 2px accent line shows on hover. Tree rows use rounded (6px) inset selection.
+34. **Status bar on the canvas** (JetBrains Islands): same background as `--pdn-canvas`,
+    no strip and no top border, 24px, muted 11.5px text (`--pdn-sb-text`), horizontal
+    padding = `--island-gap` so items line up with the island gutters; items are
+    `.sb-item` hover pills (18px, 5px radius). Left: context (current connection icon,
+    name · status, then the active tab breadcrumb), running / error counts. Right:
+    Panel toggle, notifications, version. Classic keeps the dark `--pd-statusbar-bg` bar.
+
+## H. Capabilities
+
+Every connection has an `engine` type and explicit `caps` (`capsFor()` in `data.ts`).
+Trees (`TreeProvider.cap`, `treesFor()`), sections, menus, actions, promotions,
+"Extend X" cards and tours are gated on `caps`, never on connection ids or product names.
+
+35. **Pods**: Podman engines (machines, RHEL Podman) and Kubernetes. Not WSL.C, Docker,
+    Apple container. "Play Kubernetes YAML" (`kubePlay`) on Podman engines only.
+36. **Bootable containers** (`bootc`) and **Quadlets** (`quadlets`): Podman engines only
+    (podman + bootc-image-builder / systemd). No tree, menu item or promotion elsewhere.
+37. **OpenShift Console add-on** (`consoleAddon`): MicroShift-in-Container (minc) only;
+    never on kind, OpenShift Local, OpenShift clusters, Sandbox or OpenShift AI.
+38. **Kompose / Deploy targets**: any Kubernetes (`kube`); "Convert to Kubernetes" from
+    pods only exists where pods exist (rule 35).

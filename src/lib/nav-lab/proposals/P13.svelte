@@ -38,7 +38,7 @@ import {
   targetKey,
   tool as findTool,
 } from '../data.ts';
-import { HOME, lab, Workbench } from '../lab.svelte.ts';
+import { describe, HOME, lab, Workbench } from '../lab.svelte.ts';
 import Frame from '../r2/Frame.svelte';
 import SimpleSwitcher from '../r2/SimpleSwitcher.svelte';
 import { extPagesFor, labConns } from '../r2/simple.ts';
@@ -68,11 +68,11 @@ import LayersView from '../r3/LayersView.svelte';
 import ScanView from '../r3/ScanView.svelte';
 import SettingsView from '../r3/SettingsView.svelte';
 import ToolView from '../r3/ToolView.svelte';
-import { connActions, isUp, live, type MenuItem, openMenu, resActions, resStatus } from '../r3/live.svelte.ts';
+import { connActions, connStatus, isUp, live, type MenuItem, openMenu, resActions, resStatus } from '../r3/live.svelte.ts';
 import NodeView from '../r3/NodeView.svelte';
 import { hbImage } from '../r3/hb-data.ts';
 import { pullHardened, pullState, rebuildOnHardened, rebuildState } from '../r3/hummingbird.ts';
-import { OVERVIEW_ICON, TREE_PROVIDERS, type TreeNode, treeRoot } from '../r3/trees.ts';
+import { OVERVIEW_ICON, type TreeNode, treeRoot, treesFor } from '../r3/trees.ts';
 import BottomPanel from '../ui/BottomPanel.svelte';
 import Content from '../ui/Content.svelte';
 import LabIcon from '../ui/LabIcon.svelte';
@@ -163,7 +163,7 @@ tour.host = {
 const c = $derived(findConn(labConns().some(x => x.id === sel) ? sel : labConns()[0]?.id));
 const f = $derived(filter.trim().toLowerCase());
 const open1 = $derived(c ? (expanded[c.id] ?? []) : []);
-const trees = $derived(c ? TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) && isInstalled(p.extId)) : []);
+const trees = $derived(c ? treesFor(c).filter(p => isInstalled(p.extId)) : []);
 const sections = $derived(c ? c.sections.filter(s => sectionVisible(s) && !trees.some(p => p.replaces.includes(s.id))) : []);
 /** Core resources (no extension) first; extension-contributed sections go under EXTENSIONS. */
 const coreSections = $derived(sections.filter(s => !s.ext));
@@ -379,7 +379,22 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
 {/snippet}
 {#snippet titleRight()}<TitleActions side="right" active={activeKind} onopen={(t): void => open(t)} />{/snippet}
 
-<Frame {titleLeft} {titleCenter} {titleRight}>
+{#snippet statusLeft()}
+  {#if c}
+    {@const st = connStatus(c)}
+    {@const at = wb.activeTarget}
+    {@const info = at && at.kind !== 'connection' ? describe(at) : undefined}
+    <button type="button" data-testid="status-context" class="sb-item flex items-center gap-1.5 px-1.5 hover:bg-[var(--pd-statusbar-hover-bg)]" title="{c.name} · {st}" onclick={(): void => open({ kind: 'connection', connId: c.id })}>
+      <LabIcon icon={c.icon} size={12} /><span>{c.name}</span><span class="w-1.5 h-1.5 rounded-full {STATUS_DOT[st] ?? STATUS_DOT.running}"></span><span class="opacity-80">{st}</span>
+    </button>
+    {#if info}
+      <span class="sb-sep">›</span>
+      <span data-testid="status-crumb" class="sb-item truncate max-w-[40ch]">{[...info.crumb.filter(x => x !== c.name), info.title].join(' › ')}</span>
+    {/if}
+  {/if}
+{/snippet}
+
+<Frame {titleLeft} {titleCenter} {titleRight} {statusLeft}>
   {#if c}
     <aside data-island="tree" tabindex="-1" style:width="{treeW}px" class="flex flex-col shrink-0 h-full bg-[var(--pd-secondary-nav-bg)] border-r border-[var(--pd-global-nav-bg-border)]">
       <div class="px-2 pt-2 pb-1 shrink-0">

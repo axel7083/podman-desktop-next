@@ -62,6 +62,7 @@ function create(): void {
     done: () => {
       addConnection({
         id,
+        engine: 'podman',
         name: id,
         group: 'Engines',
         product: `RHEL Podman (${provider})`,

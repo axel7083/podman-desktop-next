@@ -79,8 +79,39 @@ export interface LabConnection {
   /** Avatar colour for hotbar / tab groups (mockup palette). */
   color: string;
   initials: string;
+  /** Engine / platform type the capabilities are derived from. */
+  engine: EngineType;
+  /** What the connection supports (derived from `engine`); gates trees, menus, promotions and tours. */
+  caps: ConnCaps;
   sections: LabSection[];
 }
+
+export type EngineType = 'podman' | 'docker' | 'wslc' | 'apple' | 'kubernetes' | 'openshift' | 'microshift' | 'vm' | 'service';
+
+/** Explicit connection capabilities (see docs/p13-design-rules.md, Capabilities). */
+export interface ConnCaps {
+  /** Pods: Podman engines and Kubernetes (not Docker, WSL.C, Apple container). */
+  pods: boolean;
+  /** Quadlets: Podman engines (machines, RHEL Podman). */
+  quadlets: boolean;
+  /** Bootable containers: Podman engines (podman + bootc-image-builder). */
+  bootc: boolean;
+  /** `podman kube play`: Podman engines. */
+  kubePlay: boolean;
+  /** Kubernetes API (Kompose / Deploy targets, Helm…). */
+  kube: boolean;
+  /** OpenShift Console add-on: MicroShift-in-Container (minc) only. */
+  consoleAddon: boolean;
+}
+
+export function capsFor(engine: EngineType): ConnCaps {
+  const podman = engine === 'podman';
+  const kube = engine === 'kubernetes' || engine === 'openshift' || engine === 'microshift';
+  return { pods: podman || kube, quadlets: podman, bootc: podman, kubePlay: podman, kube, consoleAddon: engine === 'microshift' };
+}
+
+/** Sections that only exist with a capability. */
+const SECTION_CAP: Record<string, keyof ConnCaps> = { pods: 'pods', quadlets: 'quadlets', bootc: 'bootc' };
 
 export interface LabResource {
   id: string;
@@ -211,9 +242,10 @@ const OPENSHIFT_EXTRA = (s: number): LabSection[] => [
 /* Connections (18)                                                    */
 /* ------------------------------------------------------------------ */
 
-export const CONNECTIONS: LabConnection[] = [
+const RAW_CONNECTIONS: Omit<LabConnection, 'caps'>[] = [
   {
     id: 'podman-machine-default',
+    engine: 'podman',
     name: 'podman-machine-default',
     group: 'Engines',
     product: 'Podman',
@@ -230,6 +262,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'podman-machine-dev',
+    engine: 'podman',
     name: 'podman-machine-dev',
     group: 'Engines',
     product: 'Podman',
@@ -242,6 +275,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'rhel-10',
+    engine: 'podman',
     name: 'rhel-10',
     group: 'Engines',
     product: 'RHEL Podman (WSL)',
@@ -254,6 +288,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'wslc-default',
+    engine: 'wslc',
     name: 'wslc-default',
     group: 'Engines',
     product: 'WSL containers',
@@ -266,6 +301,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'desktop-linux',
+    engine: 'docker',
     name: 'desktop-linux',
     group: 'Engines',
     product: 'Docker',
@@ -278,6 +314,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'apple-container',
+    engine: 'apple',
     name: 'apple-container',
     group: 'Engines',
     product: 'Apple container',
@@ -290,6 +327,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'kind-dev',
+    engine: 'kubernetes',
     name: 'kind-dev',
     group: 'Kubernetes',
     product: 'Kind',
@@ -302,6 +340,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'minc',
+    engine: 'microshift',
     name: 'minc',
     group: 'Kubernetes',
     product: 'MicroShift in a container',
@@ -314,6 +353,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'openshift-local',
+    engine: 'openshift',
     name: 'openshift-local',
     group: 'Kubernetes',
     product: 'OpenShift Local',
@@ -326,6 +366,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'ocp-dev',
+    engine: 'openshift',
     name: 'ocp-dev',
     group: 'Kubernetes',
     product: 'OpenShift',
@@ -338,6 +379,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'ocp-prod',
+    engine: 'openshift',
     name: 'ocp-prod',
     group: 'Kubernetes',
     product: 'OpenShift',
@@ -350,6 +392,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'rhoai-dev',
+    engine: 'openshift',
     name: 'rhoai-dev',
     group: 'Kubernetes',
     product: 'OpenShift AI',
@@ -366,6 +409,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'sandbox',
+    engine: 'openshift',
     name: 'sandbox',
     group: 'Kubernetes',
     product: 'Developer Sandbox',
@@ -378,6 +422,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'rhel10-dev',
+    engine: 'vm',
     name: 'rhel10-dev',
     group: 'VMs & services',
     product: 'RHEL VM',
@@ -395,6 +440,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'acme-kafka',
+    engine: 'service',
     name: 'acme-kafka',
     group: 'VMs & services',
     product: 'Kafka cluster',
@@ -411,6 +457,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'acme-keycloak',
+    engine: 'service',
     name: 'acme-keycloak',
     group: 'VMs & services',
     product: 'Keycloak',
@@ -426,6 +473,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'mcp-gateway',
+    engine: 'service',
     name: 'mcp-gateway',
     group: 'VMs & services',
     product: 'MCP gateway',
@@ -441,6 +489,7 @@ export const CONNECTIONS: LabConnection[] = [
   },
   {
     id: 'aap-acme-prod',
+    engine: 'service',
     name: 'acme-prod (AAP)',
     group: 'VMs & services',
     product: 'Ansible Automation Platform',
@@ -456,6 +505,11 @@ export const CONNECTIONS: LabConnection[] = [
     ],
   },
 ];
+
+export const CONNECTIONS: LabConnection[] = RAW_CONNECTIONS.map(c => {
+  const caps = capsFor(c.engine);
+  return { ...c, caps, sections: c.sections.filter(s => !SECTION_CAP[s.id] || caps[SECTION_CAP[s.id]]) };
+});
 
 export const CONN_GROUPS: ConnGroup[] = ['Engines', 'Kubernetes', 'VMs & services'];
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 /**
- * OpenShift Console add-on on a local cluster (minc, kind; built into
- * OpenShift Local): install task (console Deployment + port-forward), then a
+ * OpenShift Console add-on, MicroShift-in-Container (minc) only (`caps.consoleAddon`):
+ * install task (console Deployment + port-forward), then a
  * warning that authentication is disabled and the link to open it.
  */
 import { faArrowUpRightFromSquare, faDownload, faTrash, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
@@ -24,9 +24,8 @@ interface Props {
 let { connId, onopen }: Props = $props();
 
 const c = $derived(conn(connId));
-const builtin = $derived(connId === 'openshift-local');
-const st = $derived(builtin ? 'installed' : flows.console[connId]);
-const url = $derived(builtin ? 'https://console-openshift-console.apps-crc.testing' : 'http://localhost:9000');
+const st = $derived(flows.console[connId]);
+const url = 'http://localhost:9000';
 const IMAGE = 'quay.io/openshift/origin-console:4.20';
 
 function install(): void {
@@ -56,7 +55,7 @@ function install(): void {
 
 {#snippet actions()}
   {#if st === 'installed'}
-    {#if !builtin}<Btn icon={faTrash} onclick={(): void => void delete flows.console[connId]}>Uninstall</Btn>{/if}
+    <Btn icon={faTrash} onclick={(): void => void delete flows.console[connId]}>Uninstall</Btn>
     <Btn kind="primary" icon={faArrowUpRightFromSquare} testid="console-open" onclick={(): void => void window.open(url, '_blank', 'noreferrer')}>Open console</Btn>
   {:else}
     <Btn kind="primary" icon={faDownload} testid="console-install" disabled={st === 'installing'} onclick={install}>{st === 'installing' ? 'Installing…' : 'Install console'}</Btn>
@@ -66,7 +65,7 @@ function install(): void {
 <div data-testid="console-view" data-state={st ?? 'none'} class="flex flex-col h-full min-h-0">
   <Head icon="icons/redhat.openshift-cluster-manager.svg" title="OpenShift Console" status={st === 'installed' ? 'running' : st === 'installing' ? 'starting' : undefined} {connId} onconn={(): void => onopen({ kind: 'connection', connId }, {})} provenance="OpenShift Console" {actions} />
   <div class="flex-1 min-h-0 overflow-auto px-5 py-4 flex flex-col gap-4">
-    {#if st === 'installed' && !builtin}
+    {#if st === 'installed'}
       <div data-testid="console-auth-warning" class="flex gap-2 p-3 rounded-lg bg-[color-mix(in_srgb,var(--pd-status-degraded)_14%,transparent)] text-[13px]">
         <span class="pt-0.5 text-[var(--pd-status-degraded)]"><AppIcon icon={faTriangleExclamation} /></span>
         <span class="text-[var(--pd-content-header)]">Authentication is disabled. The console runs with a cluster-admin service account: anyone who can reach {url} on this computer can manage {c?.name}. Use it for local development only.</span>
@@ -80,10 +79,10 @@ function install(): void {
         <KV
           rows={[
             { k: 'Cluster', v: c?.name, onclick: (): void => onopen({ kind: 'connection', connId }, {}) },
-            { k: 'Status', v: st === 'installed' ? (builtin ? 'Built into OpenShift Local' : 'Running') : st === 'installing' ? 'Installing' : 'Not installed' },
+            { k: 'Status', v: st === 'installed' ? 'Running' : st === 'installing' ? 'Installing' : 'Not installed' },
             { k: 'URL', v: st === 'installed' ? url : '—', href: st === 'installed' ? url : undefined },
-            { k: 'Image', v: builtin ? 'OpenShift 4.20 console operator' : IMAGE, mono: true },
-            { k: 'Authentication', v: builtin ? 'kubeadmin / developer (OAuth)' : 'Disabled (--user-auth=disabled)' },
+            { k: 'Image', v: IMAGE, mono: true },
+            { k: 'Authentication', v: 'Disabled (--user-auth=disabled)' },
           ]} />
       </Card>
       <ResourcesCard id="openshift-console" />

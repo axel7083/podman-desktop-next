@@ -284,7 +284,7 @@ export const TOURS: Tour[] = [
   {
     id: 'local-openshift',
     title: 'Local OpenShift',
-    outcome: 'Add the OpenShift console and operators to a local MicroShift cluster.',
+    outcome: 'Add the OpenShift console and operators to MicroShift in a container (minc), the only connection offering the console add-on.',
     logos: [
       ['icons/minc-org.minc.png', 'MicroShift (minc)'],
       ['icons/redhat.openshift-cluster-manager.svg', 'OpenShift Console'],
@@ -295,7 +295,7 @@ export const TOURS: Tour[] = [
       tour.host?.select('minc');
     },
     steps: [
-      { title: 'Open OpenShift Console', why: 'minc ships without the web console; the extension adds it.', target: treeKey('console@minc'), done: () => has('[data-testid="console-install"]') || has('[data-testid="console-auth-warning"]') },
+      { title: 'Open OpenShift Console', why: 'minc ships without the web console; the add-on is offered on minc only.', target: treeKey('console@minc'), done: () => has('[data-testid="console-install"]') || has('[data-testid="console-auth-warning"]') },
       { title: 'Install console', why: 'Deploys the console and port-forwards it to localhost:9000.', target: '[data-testid="console-install"]', done: () => !!flows.console.minc },
       wait('Installing', 'The console is ready when the warning shows.', '[data-testid="console-auth-warning"], [data-testid="console-install"]', () => has('[data-testid="console-auth-warning"]')),
       { title: 'Open Operators', why: 'OLM installs operators from the cluster catalogs.', target: treeKey('operators'), done: () => has('[data-testid="operators-seg"]') },

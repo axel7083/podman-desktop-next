@@ -90,6 +90,7 @@ export function bootInVm(d: DiskImage, o: { name: string; cpus: string; memory: 
     done: () => {
       addConnection({
         id,
+        engine: 'vm',
         name: id,
         group: 'VMs & services',
         product: 'Virtual machine',

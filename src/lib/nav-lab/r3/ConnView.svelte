@@ -19,7 +19,7 @@ import Btn from './Btn.svelte';
 import { flows, openModal } from './flows.svelte.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import StatGrid from './StatGrid.svelte';
-import { OVERVIEW_ICON, TREE_PROVIDERS, treeRoot } from './trees.ts';
+import { OVERVIEW_ICON, treeRoot, treesFor } from './trees.ts';
 
 interface Props {
   c: LabConnection;
@@ -30,14 +30,14 @@ let { c, onopen }: Props = $props();
 
 const st = $derived(connStatus(c));
 const up = $derived(isUp(st));
-const trees = $derived(TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) && isInstalled(p.extId)));
+const trees = $derived(treesFor(c).filter(p => isInstalled(p.extId)));
 /** Same collections as the tree: sections replaced by an extension tree are listed once (as the tree). */
 const sections = $derived(c.sections.filter(s => sectionVisible(s) && !trees.some(p => p.replaces.includes(s.id))));
 const promos = $derived(promotionsFor(c));
 
 function openExt(e: LabExtension): void {
   const sec = c.sections.find(s => s.ext?.id === e.id);
-  const tree = TREE_PROVIDERS.find(p => p.extId === e.id && p.connIds.includes(c.id));
+  const tree = treesFor(c).find(p => p.extId === e.id);
   if (tree) onopen({ kind: 'node', connId: c.id, nodeId: treeRoot(tree, c.id).id }, {});
   else if (sec) onopen({ kind: 'list', connId: c.id, sectionId: sec.id }, {});
   else if (!TOOLS.some(t => t.id === e.id)) {

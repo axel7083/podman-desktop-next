@@ -527,6 +527,53 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   await page.context().close();
 }
 
+/* ---------------------------------------------------------------- H capabilities + Islands status bar */
+{
+  const page = await session('panel=off');
+  /** Tree keys + "Extend" card names present on a connection overview. */
+  async function capsOf(name) {
+    await useConn(page, name);
+    await tree(page).getByRole('treeitem', { name: 'Overview' }).first().click();
+    // Engines: ConnView ("Extend" cards); Kubernetes: KubeOverview (tree only).
+    const v = page.getByTestId('conn-view');
+    await v.waitFor({ timeout: 1500 }).catch(() => {});
+    const keys = await tree(page).locator('[data-key]').evaluateAll(els => els.map(e => e.getAttribute('data-key')));
+    const cards = (await v.getByTestId('ext-cards').count()) ? await v.getByTestId('ext-cards').getByRole('group').allInnerTexts() : [];
+    const has = re => keys.some(k => re.test(k));
+    const card = t => cards.some(c => c.includes(t));
+    return { pods: has(/^pods$/), bootc: has(/^bootc/) || card('Bootable containers'), quadlets: has(/^quadlets/) || card('Podman Quadlet'), console: has(/^console@/) || card('OpenShift Console') };
+  }
+  await step('H1 wslc: no Pods / bootc / Quadlets', async () => {
+    const k = await capsOf('wslc-default');
+    expect(!k.pods && !k.bootc && !k.quadlets, JSON.stringify(k));
+  });
+  await step('H2 docker: no Pods / bootc', async () => {
+    const k = await capsOf('desktop-linux');
+    expect(!k.pods && !k.bootc && !k.quadlets, JSON.stringify(k));
+  });
+  await step('H3 podman machine keeps Pods / bootc / Quadlets', async () => {
+    const k = await capsOf('podman-machine-default');
+    expect(k.pods && k.bootc && k.quadlets && !k.console, JSON.stringify(k));
+  });
+  await step('H4 Console add-on on minc only (not kind / OpenShift Local)', async () => {
+    expect((await capsOf('minc')).console, 'minc has no console add-on');
+    expect(!(await capsOf('kind-dev')).console, 'kind-dev offers the console add-on');
+    expect(!(await capsOf('openshift-local')).console, 'openshift-local offers the console add-on');
+  });
+  await step('H5 Islands status bar sits on the canvas with context', async () => {
+    const [sb, canvas, border] = await page.evaluate(() => {
+      const s = document.querySelector('[data-statusbar]');
+      return [getComputedStyle(s).backgroundColor, getComputedStyle(document.querySelector('[data-frame]')).backgroundColor, getComputedStyle(s).borderTopWidth];
+    });
+    expect(sb === canvas, `status bar ${sb} vs canvas ${canvas}`);
+    expect(border === '0px', `border-top ${border}`);
+    await useConn(page, 'podman-machine-default');
+    const ctx = await page.getByTestId('status-context').innerText();
+    expect(/podman-machine-default\s*running/.test(ctx), `context "${ctx}"`);
+  });
+  await page.context().close();
+}
+
 /* ---------------------------------------------------------------- T Red Hat workflow tours (dashboard cards + palette) */
 /* Each card's tour is started then auto-played with "Show me" in a fresh page, until the overlay reports done. */
 {

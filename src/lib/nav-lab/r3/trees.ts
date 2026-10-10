@@ -27,6 +27,7 @@ import NetworkIcon from '#lib/images/NetworkIcon.svelte';
 import PodIcon from '#lib/images/PodIcon.svelte';
 import VolumeIcon from '#lib/images/VolumeIcon.svelte';
 
+import type { ConnCaps, LabConnection } from '../data.ts';
 import { flows } from './flows.svelte.ts';
 import { altFor, HB_ALTS, HB_CATALOG, HB_CONN } from './hb-data.ts';
 
@@ -60,6 +61,8 @@ export interface TreeProvider {
   icon: string;
   /** Connections the tree is contributed to. */
   connIds: string[];
+  /** Connection capability the tree needs (gated even if listed in `connIds`). */
+  cap?: keyof ConnCaps;
   /** Flat sections of the dataset the tree replaces in P13. */
   replaces: string[];
   build: (connId: string) => Raw[];
@@ -201,18 +204,23 @@ const hummingbird = (): Raw[] => [
   },
 ];
 
-/** OpenShift Console add-on: a single page per local cluster. */
+/** OpenShift Console add-on: a single page, MicroShift-in-Container (minc) only. */
 const consoleTree = (): Raw[] => [];
 
 export const TREE_PROVIDERS: TreeProvider[] = [
-  { id: 'bootc', extId: 'bootc', label: 'Bootable containers', icon: 'icons/redhat.bootc.png', connIds: ['podman-machine-default'], replaces: ['bootc'], build: bootc },
-  { id: 'quadlets', extId: 'quadlet', label: 'Quadlets', icon: 'icons/podman-desktop.quadlet.png', connIds: ['podman-machine-default'], replaces: ['quadlets'], build: quadlets },
+  { id: 'bootc', extId: 'bootc', label: 'Bootable containers', icon: 'icons/redhat.bootc.png', connIds: ['podman-machine-default'], cap: 'bootc', replaces: ['bootc'], build: bootc },
+  { id: 'quadlets', extId: 'quadlet', label: 'Quadlets', icon: 'icons/podman-desktop.quadlet.png', connIds: ['podman-machine-default'], cap: 'quadlets', replaces: ['quadlets'], build: quadlets },
   { id: 'ai-lab', extId: 'ai-lab', label: 'AI Lab', icon: 'icons/redhat.ai-lab.png', connIds: ['podman-machine-default'], replaces: [], build: aiLab },
   { id: 'mcp', extId: 'mcp', label: 'MCP servers', icon: 'icons/podman-desktop.mcp.png', connIds: ['podman-machine-default', 'mcp-gateway'], replaces: ['mcpservers', 'mcptools'], build: mcp },
   { id: 'hummingbird', extId: 'hummingbird', label: 'Hummingbird', icon: 'icons/redhat.hummingbird.png', connIds: [HB_CONN], replaces: [], build: hummingbird },
-  { id: 'console', extId: 'openshift-console', label: 'OpenShift Console', icon: 'icons/redhat.openshift-cluster-manager.svg', connIds: ['openshift-local', 'minc', 'kind-dev'], replaces: [], build: consoleTree },
+  { id: 'console', extId: 'openshift-console', label: 'OpenShift Console', icon: 'icons/redhat.openshift-cluster-manager.svg', connIds: ['minc'], cap: 'consoleAddon', replaces: [], build: consoleTree },
   { id: 'helm', extId: 'helm', label: 'Helm releases', icon: 'icons/podman-desktop.helm.png', connIds: ['kind-dev', 'openshift-local', 'ocp-dev', 'ocp-prod'], replaces: ['helm'], build: helm },
 ];
+
+/** Extension trees contributed to a connection (listed for it and allowed by its capabilities). */
+export function treesFor(c: LabConnection): TreeProvider[] {
+  return TREE_PROVIDERS.filter(p => p.connIds.includes(c.id) && (!p.cap || c.caps[p.cap]));
+}
 
 function withIds(prefix: string, raw: Raw[]): TreeNode[] {
   return raw.map(r => {

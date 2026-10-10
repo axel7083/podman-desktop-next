@@ -58,9 +58,39 @@ html.style-islands [data-titlebar] {
 html.style-islands [data-frame-body] {
   padding: 0 var(--island-gap) var(--island-gap);
 }
-html.style-islands.light [data-statusbar] {
-  background: var(--pdn-canvas);
-  color: #3f3f46;
+/* status bar (JetBrains Islands): on the canvas, no strip / border, muted 11.5px text,
+   gutters aligned with the islands, items as subtle hover pills */
+html.style-islands.dark {
+  --pdn-sb-text: #a1a1aa;
+  --pdn-sb-hover: rgb(255 255 255 / 0.08);
+}
+html.style-islands.light {
+  --pdn-sb-text: #52525b;
+  --pdn-sb-hover: rgb(0 0 0 / 0.07);
+}
+html.style-islands [data-statusbar] {
+  background: var(--pdn-canvas) !important;
+  color: var(--pdn-sb-text);
+  border-top: 0;
+  height: 24px;
+  gap: 2px;
+  padding: 0 var(--island-gap);
+  font-size: 11.5px;
+}
+html.style-islands [data-statusbar] .sb-item {
+  display: flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+}
+html.style-islands [data-statusbar] .sb-item:hover {
+  background: var(--pdn-sb-hover);
+}
+html.style-islands [data-statusbar] .sb-sep {
+  opacity: 0.5;
 }
 
 /* ---- islands ---- */
