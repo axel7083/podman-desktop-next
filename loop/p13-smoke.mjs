@@ -228,9 +228,20 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await row.click({ button: 'right' });
     await page.getByTestId('nav-lab-context-menu').getByText('Run in a VM').click();
     await primary(page).click();
-    await panelText(page, 'login: alice', 15000);
+    await panelText(page, 'Booted image', 15000);
     await page.waitForTimeout(300);
     expect((await page.getByTestId('switcher-button').innerText()).includes('orders-os-v3-vm'), 'VM not current');
+    // A bootc OS ships Podman: the VM is a Podman engine (ENGINES) with Containers / Pods.
+    await page.getByTestId('switcher-button').click();
+    const sw = (await page.getByTestId('switcher-menu').innerText()).toLowerCase();
+    await page.keyboard.press('Escape');
+    const iE = sw.indexOf('engines'), iV = sw.indexOf('orders-os-v3-vm'), iK = sw.indexOf('kubernetes');
+    expect(iE >= 0 && iV > iE && (iK < 0 || iV < iK), 'bootc VM not under ENGINES');
+    expect(sw.includes('podman (bootc vm)') || sw.includes('orders-os-v3-vm'), 'no Podman (bootc VM)');
+    await key(page, 'containers').waitFor();
+    await key(page, 'pods').waitFor();
+    await key(page, 'containers').click();
+    await page.getByText('orders-db', { exact: true }).first().waitFor({ timeout: 4000 });
     await useConn(page, 'podman-machine-default');
     await expand(page, BOOTC);
     await key(page, `${BOOTC}/Disk Images`).click();
@@ -551,6 +562,31 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     const k = await capsOf('desktop-linux');
     expect(!k.pods && !k.bootc && !k.quadlets, JSON.stringify(k));
   });
+  /** Visible text of the tree, the overview and an image context menu. */
+  async function surfaces(name) {
+    await useConn(page, name);
+    await tree(page).getByRole('treeitem', { name: 'Overview' }).first().click();
+    await page.waitForTimeout(300);
+    const treeText = await tree(page).innerText();
+    const overview = await page.getByTestId('conn-view').innerText().catch(() => '');
+    let menu = '';
+    await key(page, 'images').click();
+    const row = page.locator('[data-testid="mt-row"]').first();
+    if (await row.count()) {
+      await row.click({ button: 'right' });
+      const m = page.getByTestId('nav-lab-context-menu');
+      if (await m.count()) menu = await m.innerText();
+      await page.keyboard.press('Escape');
+    }
+    return `${treeText}\n${overview}\n${menu}`;
+  }
+  for (const name of ['wslc-default', 'desktop-linux', 'apple-container']) {
+    await step(`H-caps ${name}: no Bootable containers / Build disk image / Quadlet / Pods`, async () => {
+      const t = await surfaces(name);
+      const bad = ['Bootable containers', 'Build disk image', 'Quadlet', 'Pods'].filter(w => t.includes(w));
+      expect(!bad.length, `found ${bad.join(', ')}`);
+    });
+  }
   await step('H3 podman machine keeps Pods / bootc / Quadlets', async () => {
     const k = await capsOf('podman-machine-default');
     expect(k.pods && k.bootc && k.quadlets && !k.console, JSON.stringify(k));

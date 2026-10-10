@@ -2,7 +2,7 @@
  * Round-3 helpers (P12–P14): the visible connection set (lab toggles
  * "Connections: 1 | many" and "Install: Vanilla | All extensions") and the extension pages relevant to a connection.
  */
-import { CONNECTIONS, type LabConnection, type LabTool, TOOLS } from '../data.ts';
+import { CONNECTIONS, type ConnCaps, type LabConnection, type LabTool, TOOLS } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { connVisible, toolVisible } from '../r3/exts.ts';
 import { flows } from '../r3/flows.svelte.ts';
@@ -28,8 +28,11 @@ const PAGES_BY_GROUP: Record<LabConnection['group'], string[]> = {
   'VMs & services': ['ansible', 'satellite'],
 };
 
-/** Extension pages for the selected connection: connection-relevant first, then the global ones. */
+/** Extension pages that need a capability (Bootable containers: Podman engines only). */
+const PAGE_CAP: Record<string, keyof ConnCaps> = { bootc: 'bootc' };
+
+/** Extension pages for the selected connection: connection-relevant first, then the global ones (gated on `c.caps`). */
 export function extPagesFor(c: LabConnection | undefined): LabTool[] {
-  const ids = [...(c ? PAGES_BY_GROUP[c.group] : []), ...GLOBAL_PAGES];
+  const ids = [...(c ? PAGES_BY_GROUP[c.group] : []), ...GLOBAL_PAGES].filter(id => !PAGE_CAP[id] || !!c?.caps[PAGE_CAP[id]]);
   return ids.map(id => TOOLS.find(t => t.id === id)).filter((t): t is LabTool => !!t && toolVisible(t));
 }

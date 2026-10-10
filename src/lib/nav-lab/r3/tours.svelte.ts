@@ -223,16 +223,15 @@ export const TOURS: Tour[] = [
   {
     id: 'bootc',
     title: 'bootc end to end',
-    outcome: 'Turn a bootable container into a disk image and run it in a VM.',
+    outcome: 'Turn a Fedora bootc image into a disk image and boot it as a new Podman engine (no account needed).',
     logos: [
       ['icons/redhat.bootc.png', 'Bootable containers'],
       ['icons/redhat.image-builder.png', 'bootc-image-builder'],
-      ['icons/redhat.rhel-vms.png', 'RHEL VMs'],
+      ['icons/podman-desktop.podman.png', 'Podman (bootc VM)'],
       ['icons/redhat.openshift-virtualization.png', 'OpenShift Virtualization'],
     ],
-    start: ensureSignedIn,
     ensure: (): void => {
-      install('bootc', 'rhel-vms', 'virt');
+      install('bootc', 'virt');
       tour.host?.select(PMD);
       tour.host?.expand(PMD, [BOOTC]);
     },
@@ -243,9 +242,9 @@ export const TOURS: Tour[] = [
       wait('Building', 'bootc-image-builder runs in the bottom panel.', '[data-testid="nav-lab-panel-body"]', () => panelHas('Build complete')),
       { title: 'Open Disk Images', why: 'Built disks land here.', target: treeKey(`${BOOTC}/Disk Images`), done: () => has('[data-testid="bootc-disks"]') },
       { title: 'Right-click the qcow2 disk', why: 'Disk actions: run in a local VM or on OpenShift Virtualization.', target: '[data-testid="bootc-disks"] [data-testid="mt-row"]', text: 'orders-os-v3.qcow2', act: rightClick, done: () => !!menuItem('Run in a VM')() || modalIs('boot-vm') },
-      { title: 'Run in a VM', why: 'Runs the disk in a local VM (macadam) on this machine.', target: menuItem('Run in a VM'), done: () => modalIs('boot-vm') },
+      { title: 'Run in a VM', why: 'Runs the disk in a local VM (macadam: libkrun, applehv or WSL per platform).', target: menuItem('Run in a VM'), done: () => modalIs('boot-vm') },
       primary('Boot', 'Name, CPUs and memory, then boot.'),
-      wait('Booting', 'The VM becomes a connection and its serial console opens in the panel.', '[data-testid="nav-lab-panel-body"]', () => panelHas('login:')),
+      wait('Booting', 'A bootc OS ships Podman: the VM becomes a Podman engine under ENGINES and an ssh session opens in the panel.', '[data-testid="nav-lab-panel-body"]', () => panelHas('Booted image')),
     ],
   },
   {

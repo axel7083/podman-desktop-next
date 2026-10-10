@@ -30,5 +30,5 @@ function boot(): void {
     <Field label="CPUs"><select class={INPUT} aria-label="CPUs" bind:value={cpus}>{#each ['2', '4'] as v (v)}<option value={v}>{v}</option>{/each}</select></Field>
     <Field label="Memory"><select class={INPUT} aria-label="Memory" bind:value={memory}>{#each ['2', '4', '8'] as v (v)}<option value={v}>{v} GB</option>{/each}</select></Field>
   </div>
-  <div class="text-[12px] text-[var(--pd-table-body-text)]">The VM runs with libkrun (macadam), user <span class="font-mono">alice</span> and key <span class="font-mono">~/.ssh/id_ed25519</span>. It appears in the connection switcher under Other; its serial console opens in the bottom panel.</div>
+  <div class="text-[12px] text-[var(--pd-table-body-text)]">The VM runs with libkrun (macadam), user <span class="font-mono">alice</span> and key <span class="font-mono">~/.ssh/id_ed25519</span>. A bootc OS ships Podman: the VM appears in the connection switcher under ENGINES as a Podman connection; an ssh session opens in the bottom panel.</div>
 </Modal>

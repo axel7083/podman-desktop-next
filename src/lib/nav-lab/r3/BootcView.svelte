@@ -44,16 +44,17 @@ let filter = $state('all');
 let arch = $state<Record<string, string>>({});
 const variant = $derived(lab.table === 'grid' ? 'grid' : 'modern');
 
-/** PD bootc examples (backend/assets/examples.json) + RHEL presets: [title, description, image, base, size, archs, more]. */
+/** Fedora / CentOS Stream bases first (open source, no account), PD bootc examples (backend/assets/examples.json), RHEL presets (Red Hat account): [title, description, image, base, size, archs, more]. */
 const EXAMPLES: [string, string, string, BootcImage['base'], string, string[], string][] = [
-  ['RHEL 10 base', 'Red Hat Enterprise Linux 10 image mode base image.', 'registry.redhat.io/rhel10/rhel-bootc:10.2', 'RHEL', '1.8 GB', ['amd64', 'arm64'], 'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/using_image_mode_for_rhel_to_build_deploy_and_manage_operating_systems'],
+  ['Fedora bootc 42', 'Fedora bootc base image: open source, no account needed.', 'quay.io/fedora/fedora-bootc:42', 'Fedora', '1.6 GB', ['amd64', 'arm64'], 'https://docs.fedoraproject.org/en-US/bootc/'],
+  ['CentOS Stream 10', 'CentOS Stream bootc base image, upstream of RHEL 10.', 'quay.io/centos-bootc/centos-bootc:stream10', 'CentOS Stream', '1.5 GB', ['amd64', 'arm64'], 'https://docs.fedoraproject.org/en-US/bootc/'],
+  ['RHEL 10 base', 'RHEL 10 image mode base image (requires a Red Hat account).', 'registry.redhat.io/rhel10/rhel-bootc:10.2', 'RHEL', '1.8 GB', ['amd64', 'arm64'], 'https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/using_image_mode_for_rhel_to_build_deploy_and_manage_operating_systems'],
   ['Fedora httpd', 'Fedora bootc with the Apache web server enabled.', 'quay.io/bootc-extension/httpd:latest', 'Fedora', '1.7 GB', ['amd64', 'arm64'], 'https://gitlab.com/fedora/bootc/examples/-/tree/main/httpd'],
   ['Fedora Tailscale', 'Fedora bootc joining your tailnet at first boot.', 'quay.io/bootc-extension/tailscale:latest', 'Fedora', '1.6 GB', ['amd64', 'arm64'], 'https://gitlab.com/fedora/bootc/examples/-/tree/main/tailscale'],
   ['Podman systemd', 'Fedora bootc running a containerized app as a Quadlet.', 'quay.io/bootc-extension/podman-systemd:latest', 'Fedora', '1.7 GB', ['amd64', 'arm64'], 'https://gitlab.com/fedora/bootc/examples/-/tree/main/podman-systemd'],
   ['QEMU guest agent', 'Fedora bootc with qemu-guest-agent for virtualization.', 'quay.io/bootc-extension/qemu-agent:latest', 'Fedora', '1.6 GB', ['amd64'], 'https://gitlab.com/fedora/bootc/examples/-/tree/main/qemu-guest-agent'],
   ['Wi-Fi', 'Fedora bootc with NetworkManager Wi-Fi support.', 'quay.io/bootc-extension/wifi:latest', 'Fedora', '1.7 GB', ['amd64', 'arm64'], 'https://gitlab.com/fedora/bootc/examples/-/tree/main/wifi'],
   ['MicroShift on RHEL 9', 'Single-node MicroShift edge appliance.', 'quay.io/acme/microshift-bootc:4.20-rhel9.8', 'RHEL', '2.6 GB', ['amd64', 'arm64'], 'https://docs.redhat.com/en/documentation/red_hat_build_of_microshift/'],
-  ['CentOS Stream 10', 'CentOS Stream bootc image, upstream of RHEL 10.', 'quay.io/centos-bootc/centos-bootc:stream10', 'CentOS Stream', '1.5 GB', ['amd64', 'arm64'], 'https://docs.fedoraproject.org/en-US/bootc/'],
 ];
 
 const LINT: Record<BootcImage['lint'], [string, string]> = { pass: ['RUNNING', 'Passed'], warn: ['DEGRADED', '1 warning'], fail: ['EXITED', 'Failed'] };

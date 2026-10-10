@@ -1,11 +1,11 @@
 /**
  * P13 bootc end-to-end actions (Bootable containers + RHEL VMs + OpenShift
  * Virtualization): build a disk image (bootc-image-builder task → Disk
- * images), run it in a local VM (macadam; new VM connection + console session), run
+ * images), run it in a local VM (macadam; new Podman connection + ssh session), run
  * it as a VirtualMachine on OpenShift Virtualization (minc / OpenShift Local),
  * pull an example.
  */
-import { CONNECTIONS, EXT, type LabTarget } from '../data.ts';
+import { CONNECTIONS, engineSections, EXT, type LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { installExt } from './exts.ts';
 import { type BootcImage, addConnection, addResource, type DiskImage, flows, runTask, sha } from './flows.svelte.ts';
@@ -76,59 +76,82 @@ export function buildDisk(o: BuildOpts): void {
   });
 }
 
-/** Run a disk image in a new local VM (VM provider, macadam): VM connection under Other in the switcher + console session. */
+/** OS name of a bootc image (banner of the booted VM). */
+export function osOf(image: string): string {
+  if (image.includes('rhel')) return 'Red Hat Enterprise Linux 10.2 (Coughlan)';
+  if (image.includes('centos')) return 'CentOS Stream 10 (Coughlan)';
+  return 'Fedora Linux 42 (Adams)';
+}
+
+/**
+ * Run a disk image in a new local VM (macadam: libkrun / applehv / WSL per
+ * platform). A bootc OS image ships Podman, so the booted VM registers a
+ * Podman connection under ENGINES (Podman caps: containers, pods, images,
+ * volumes, networks, quadlets, bootc) and opens an ssh session into it.
+ */
 export function bootInVm(d: DiskImage, o: { name: string; cpus: string; memory: string }): void {
   const id = o.name;
   runTask({
     title: `Boot ${id}`,
     connId: BOOTC_CONN,
-    icon: 'icons/redhat.bootc.png',
+    icon: ICON,
     label: 'Run in a VM',
     target: bootcTarget('Disk Images'),
     cmd: `macadam init --name ${id} --cpus ${o.cpus} --memory ${Number(o.memory) * 1024} --username alice --ssh-identity-path ~/.ssh/id_ed25519 ${d.folder}/${d.type}/disk.${EXT_OF[d.type] ?? d.type}`,
-    lines: ['Copying disk image to the VM storage…', `Machine "${id}" created (libkrun)`, `macadam start ${id}`, `Machine "${id}" started successfully`, `✔ ${id} is running · ssh alice@${id}`],
+    lines: [
+      'Copying disk image to the VM storage…',
+      `Machine "${id}" created (libkrun)`,
+      `macadam start ${id}`,
+      `Machine "${id}" started successfully`,
+      `podman system connection add ${id} --identity ~/.ssh/id_ed25519 ssh://alice@${id}/run/user/1000/podman/podman.sock`,
+      `✔ ${id} is running · Podman connection ${id} added`,
+    ],
     done: () => {
+      const sections = engineSections(0, 0, 0).map(s => ({ ...s, count: 0 }));
       addConnection({
         id,
-        engine: 'vm',
+        engine: 'podman',
         name: id,
-        group: 'VMs & services',
-        product: 'Virtual machine',
-        detail: `${d.image} · ${o.cpus} CPU · ${o.memory} GB · libkrun`,
-        icon: 'icons/redhat.rhel-vms.png',
+        group: 'Engines',
+        product: 'Podman (bootc VM)',
+        detail: `bootc · libkrun/applehv/WSL per platform · ${o.cpus} CPU · ${o.memory} GB`,
+        icon: 'icons/podman-desktop.podman.png',
         status: 'running',
-        color: '#ee0000',
-        initials: 'VM',
-        sections: [
-          { id: 'overview', label: 'Overview', icon: 'icons/redhat.rhel-vms.png', count: 1 },
-          { id: 'containers', label: 'Containers', icon: 'icons/podman-desktop.podman.png', count: 0 },
-          { id: 'subscription', label: 'Subscription', icon: 'icons/redhat.rhel-registration.png', count: 1, ext: EXT.rhel },
-        ],
+        color: '#3c6eb4',
+        initials: 'BV',
+        sections,
       });
-      addResource({ id: `${id}/overview/${id}`, name: id, connId: id, sectionId: 'overview', status: 'running', sub: d.image, age: '1 minute' });
+      const seed: [string, string, string, string][] = [
+        ['containers', 'web', 'running', 'docker.io/library/caddy:2 · :8080'],
+        ['containers', 'orders-db', 'running', 'quay.io/fedora/postgresql-16:latest'],
+        ['containers', 'backup-job', 'stopped', 'quay.io/fedora/fedora-minimal:42'],
+        ['pods', 'orders-pod', 'running', '2 containers'],
+        ['images', 'docker.io/library/caddy:2', 'ready', '48 MB'],
+        ['images', 'quay.io/fedora/postgresql-16:latest', 'ready', '412 MB'],
+        ['images', 'quay.io/fedora/fedora-minimal:42', 'ready', '112 MB'],
+        ['volumes', 'orders-data', 'ready', `orders-data.${id}`],
+        ['networks', 'podman', 'ready', 'bridge · 10.88.0.0/16'],
+      ];
+      for (const [sec, name, status, sub] of seed) addResource({ id: `${id}/${sec}/${name}`, name, connId: id, sectionId: sec, status, sub, age: '1 minute' });
       live.status[`conn:${id}`] = 'running';
       lab.addSession({
-        id: `console-${id}`,
+        id: `ssh-${id}`,
         kind: 'terminal',
-        title: `${id} console`,
-        label: 'serial console',
+        title: `${id} ssh`,
+        label: 'ssh',
         connId: id,
         target: { kind: 'connection', connId: id },
-        icon: 'icons/redhat.rhel-vms.png',
+        icon: 'icons/podman-desktop.podman.png',
         lines: [
-          '[    0.000000] Linux version 6.12.0-55.el10.x86_64 (mockbuild@x86-64-01.build.eng.rdu2.redhat.com)',
-          '[    1.204411] systemd[1]: Detected virtualization kvm.',
-          '[  OK  ] Reached target Basic System.',
-          '[  OK  ] Started bootc-fetch-apply-updates.timer.',
-          `[  OK  ] Booted ${d.image} (ostree deployment 0)`,
-          '',
-          'Red Hat Enterprise Linux 10.2 (Coughlan)',
-          `Kernel 6.12.0-55.el10.x86_64 on ${o.name}`,
-          '',
-          `${id} login: alice`,
+          `$ ssh -i ~/.ssh/id_ed25519 alice@${id}`,
+          `${osOf(d.image)}`,
+          `Last login: just now from 192.168.127.1`,
           `[alice@${id} ~]$ sudo bootc status | head -3`,
           'Booted image: ' + d.image,
           `        Digest: sha256:${sha(d.image, 16)}`,
+          `[alice@${id} ~]$ podman ps --format '{{.Names}}'`,
+          'web',
+          'orders-db',
           `[alice@${id} ~]$ `,
         ],
       });

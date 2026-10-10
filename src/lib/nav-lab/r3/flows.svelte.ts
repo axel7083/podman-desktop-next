@@ -89,11 +89,12 @@ class Flows {
     { name: 'orders-os-v3.iso', image: 'quay.io/acme/orders-os:v3', type: 'anaconda-iso', arch: 'arm64', size: '1.4 GB', built: '1 day ago', status: 'success', folder: '~/bootc/output/orders-os-v3' },
     { name: 'edge-kiosk-2.1.raw', image: 'quay.io/acme/edge-kiosk:2.1', type: 'raw', arch: 'amd64', size: '10 GB', built: '6 days ago', status: 'success', folder: '~/bootc/output/edge-kiosk' },
   ]);
-  /** bootc images on podman-machine-default (pulled examples are added). */
+  /** bootc images on podman-machine-default (pulled examples are added). Fedora / CentOS Stream first: no Red Hat account needed for the basic flow. */
   bootc = $state<BootcImage[]>([
-    { name: 'quay.io/acme/orders-os', tag: 'v3', base: 'RHEL', version: '10.2', size: '1.9 GB', lint: 'pass', created: '2 hours ago' },
-    { name: 'quay.io/acme/edge-kiosk', tag: '2.1', base: 'CentOS Stream', version: '10', size: '1.7 GB', lint: 'warn', created: '6 days ago' },
     { name: 'quay.io/fedora/fedora-bootc', tag: '42', base: 'Fedora', version: '42', size: '1.6 GB', lint: 'pass', created: '3 days ago' },
+    { name: 'quay.io/centos-bootc/centos-bootc', tag: 'stream10', base: 'CentOS Stream', version: '10', size: '1.5 GB', lint: 'pass', created: '4 days ago' },
+    { name: 'quay.io/acme/orders-os', tag: 'v3', base: 'Fedora', version: '42', size: '1.9 GB', lint: 'pass', created: '2 hours ago' },
+    { name: 'quay.io/acme/edge-kiosk', tag: '2.1', base: 'CentOS Stream', version: '10', size: '1.7 GB', lint: 'warn', created: '6 days ago' },
     { name: 'registry.redhat.io/rhel10/rhel-bootc', tag: '10.2', base: 'RHEL', version: '10.2', size: '1.8 GB', lint: 'pass', created: '2 weeks ago' },
     { name: 'quay.io/acme/microshift-edge', tag: '4.20', base: 'RHEL', version: '9.8', size: '2.6 GB', lint: 'fail', created: '3 weeks ago' },
   ]);

@@ -11,8 +11,9 @@ P13 (`#/`). What each one gets you, in one line:
    with one click.
 4. **Image supply chain**: an image is rebased on Hummingbird, scanned, signed,
    pushed to Quay and deployed to OpenShift, with its provenance on its Summary.
-5. **bootc end to end**: a bootable container becomes a disk image, then a running
-   local VM (macadam) or an OpenShift Virtualization VM.
+5. **bootc end to end**: a bootable container (Fedora / CentOS Stream by default,
+   RHEL with a Red Hat account) becomes a disk image, then a local VM (macadam)
+   registered as a new Podman engine, or an OpenShift Virtualization VM.
 6. **AI chain**: a local model is served with vLLM, packaged as a ModelCar, pushed
    to Quay and served by OpenShift AI, then compared in the playground.
 7. **Local OpenShift**: a local cluster gets the OpenShift console and operators.
@@ -117,14 +118,24 @@ alternative exists, Scan, Push to Quay, Deploy to…), `⋯` and right-click
 Click path: Podman › EXTENSIONS › **Bootable containers** → Images → **Build
 disk image** (row action, header primary or image `⋯`) → modal (image, types
 qcow2 / raw / anaconda-iso / ami / vmdk / vhd, arch, filesystem, output folder,
-user + SSH key; RHEL bases need the Red Hat account) → task
+user + SSH key) → task
 (`bootc-image-builder`) → row in **Disk Images** (Building → Success).
 
+Product-neutral by default: Images and Examples start with open-source bases
+(`quay.io/fedora/fedora-bootc:42`, `quay.io/centos-bootc/centos-bootc:stream10`,
+builder `quay.io/centos-bootc/bootc-image-builder`); no Red Hat account is needed
+for the basic flow. RHEL (`registry.redhat.io/rhel10/rhel-bootc`, RHEL builder)
+is listed alongside and requires the Red Hat account.
+
 Then on a qcow2 / raw disk image:
-- **Run in a VM** → modal (name, CPUs, memory) → task (`macadam init/start`)
-  (local VM provider) → new **VM** connection in the switcher (Other), made current, and its
-  serial console session in the panel;
-- **Run on OpenShift Virtualization** → modal (OpenShift Local or minc) → task
+- **Run in a VM** → modal (name, CPUs, memory) → task (`macadam init/start`,
+  libkrun / applehv / WSL per platform, `podman system connection add`). A bootc
+  OS ships Podman, so the booted VM registers a **Podman connection** in the
+  switcher under **ENGINES** (product "Podman (bootc VM)", Podman engine caps:
+  Containers, Pods, Images, Volumes, Networks, Quadlets, bootc), made current,
+  with its own containers / pods / images, and an **ssh** session into the VM in
+  the panel;
+- **Run on OpenShift Virtualization…** (in `⋯`) → modal (OpenShift Local or minc) → task
   (`virtctl image-upload`, VirtualMachine, `virtctl start`) → VirtualMachine
   under the cluster's EXTENSIONS ▸ **Virtualization**, `virtctl console` in the
   panel.
