@@ -35,13 +35,13 @@ import { findNode, OVERVIEW_ICON } from "./r3/trees.ts";
 
 export type RailMode = "icons" | "labels" | "expanded";
 export type ScreenWidth = 1440 | 1280 | 1024;
-/** v3 chrome style: JetBrains-like floating "islands" (default) or the v2 flat look. */
+/** v3 chrome style: v2 flat look (default) or JetBrains-like floating "islands". */
 export type ChromeStyle = "islands" | "classic";
 
 class LabState {
   theme = $state<"dark" | "light">("dark");
-  /** Islands (default) or Classic chrome (`style=` param). */
-  style = $state<ChromeStyle>("islands");
+  /** Classic (default) or Islands chrome (`style=` param). */
+  style = $state<ChromeStyle>("classic");
   /** Islands option "Different tool window background" (`twbg=on`). */
   toolBg = $state(false);
   rail = $state<RailMode>("expanded");
@@ -57,13 +57,13 @@ class LabState {
   /** Capture helper: initial single-connection context for round-2 proposals. */
   ctx = $state<string | undefined>(undefined);
   /** Dataset size for P12–P14: every connection, or only podman-machine-default. */
-  conns = $state<"one" | "many">("many");
+  conns = $state<"one" | "many">("one");
   /** P13: what is installed on top of the vanilla app (built-ins only, or every extension). */
-  install = $state<"vanilla" | "all">("all");
+  install = $state<"vanilla" | "all">("vanilla");
   /** P13: extensions installed from a promotion card / the catalog while in Vanilla. */
   installed = $state<string[]>([]);
   /** P13: list rendering (PD card rows, modern full-bleed rows, dense grid). */
-  table = $state<"classic" | "modern" | "grid">("modern");
+  table = $state<"classic" | "modern" | "grid">("classic");
   /** Session queued for the bottom panel (picked up by BottomPanel). */
   pending = $state<PanelSession | undefined>(undefined);
   /** Show the pending session side by side with the current pane (split). */
@@ -91,11 +91,11 @@ class LabState {
     this.color = params.get("color") === "on";
     this.openKey = params.get("open") === "on";
     this.ctx = params.get("ctx") ?? undefined;
-    this.conns = params.get("conns") === "one" ? "one" : "many";
-    this.install = params.get("install") === "vanilla" ? "vanilla" : "all";
+    this.conns = params.get("conns") === "many" ? "many" : "one";
+    this.install = params.get("install") === "all" ? "all" : "vanilla";
     const table = params.get("table");
-    this.table = table === "classic" || table === "grid" ? table : "modern";
-    this.style = params.get("style") === "classic" ? "classic" : "islands";
+    this.table = table === "modern" || table === "grid" ? table : "classic";
+    this.style = params.get("style") === "islands" ? "islands" : "classic";
     this.toolBg = params.get("twbg") === "on";
     this.applyTheme();
   }
@@ -123,8 +123,8 @@ class LabState {
     q.set("panel", this.panel ? "on" : "off");
     q.set("screen", String(this.screen));
     if (this.color) q.set("color", "on");
-    if (this.conns === "one") q.set("conns", "one");
-    if (this.install === "vanilla") q.set("install", "vanilla");
+    q.set("conns", this.conns);
+    q.set("install", this.install);
     q.set("table", this.table);
     return q.toString();
   }

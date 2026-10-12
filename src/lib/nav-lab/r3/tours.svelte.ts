@@ -9,7 +9,7 @@
  * installed, tab open), so a tour can't get stuck.
  */
 import type { LabTarget } from '../data.ts';
-import { RESOURCES } from '../data.ts';
+import { PANEL_SESSIONS, RESOURCES } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import { AI_CONN, aiState, aiTarget } from './ai.ts';
 import { installExt } from './exts.ts';
@@ -182,6 +182,10 @@ export const TOURS: Tour[] = [
     ensure: (): void => {
       install('rhel', 'lightspeed');
       lab.panel = true;
+      // Vanilla / one connection: the rhel-10 terminal is not among the initial sessions.
+      const tabs = Array.from(document.querySelectorAll('[data-testid="panel-tab"]'));
+      const rhelSession = PANEL_SESSIONS.find(s => s.connId === 'rhel-10' && s.kind === 'terminal');
+      if (rhelSession && !lab.pending && !tabs.some(e => e.textContent?.includes('rhel-10'))) lab.addSession(rhelSession);
     },
     steps: [
       { title: 'Open the rhel-10 terminal', why: 'A dnf install just failed: the system is not registered.', target: '[data-testid="panel-tab"]', text: 'rhel-10', done: () => has('[data-testid="ask-lightspeed-failed"]') || has('[data-testid="lightspeed-chat"]') },
@@ -342,6 +346,8 @@ export function findTour(id: string | undefined): Tour | undefined {
 export function startTour(id: string, showme = false): void {
   const t = findTour(id);
   if (!t) return;
+  // Tours span several connections (rhel-10, minc, kind-dev…): show them all.
+  lab.conns = 'many';
   t.start?.();
   tour.id = id;
   tour.i = 0;

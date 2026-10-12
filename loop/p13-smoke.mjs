@@ -6,7 +6,8 @@
 import { chromium } from '@playwright/test';
 
 const base = process.argv[2] ?? 'http://localhost:5173/';
-const url = q => `${base.replace(/\/?$/, '/')}#/?${q}`;
+const DEFAULTS = 'conns=many&install=all&table=modern&style=islands';
+const url = q => `${base.replace(/\/?$/, '/')}#/?${q ? `${q}&${DEFAULTS}` : DEFAULTS}`;
 
 const browser = await chromium.launch({ headless: true });
 const results = [];
