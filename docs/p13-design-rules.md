@@ -170,24 +170,28 @@ Trees (`TreeProvider.cap`, `treesFor()`), sections, menus, actions, promotions,
 
 ## Views (GitHub-style queries)
 
-A view is a saved query over every reachable connection, opened as a tab (`kind: 'view'`). The Views section sits below the tree, outside it, because the tree only covers the selected connection.
+A view is a saved query over every reachable connection, opened as a tab (`kind: 'view'`). Views are listed in the tree, below the extensions, with a `+` on their sub-header.
 
 | Qualifier | Values | Notes |
 |---|---|---|
-| `is:` | type (`container`, `pod`, `image`…), state (`running`, `stopped`, `degraded`, `unused`) | Types OR together, states OR together, the two groups AND |
+| `is:` | `container`, `pod`, `image`, `volume`, `network`, `compose`, `deployment`, `service`… | Resource types only |
+| `status:` | `running`, `stopped`, `degraded`, `unused` | |
 | `env:` | connection name, `@current` | `@current` follows the switcher: one view is both per-environment and cross-environment |
 | `engine:` | `podman`, `docker`, `kubernetes`, `openshift`… | `kubernetes` covers every cluster |
 | `label:` | `key`, `key=value` | Asked-for keys become columns (two at most) |
 | `has:` | `label`, `port`, `namespace`, `group` | |
 | `ns:`, `project:` | namespace, compose project or pod | |
-| `sort:`, `group:` | `name` `age` `status` `env`; `none` `kind` `env` `app` | Display only, never filter |
+| `group:` | `none`, `kind`, `env`, `app` | Display only, never filters |
 
 Rules:
 - `-` negates any filter. Different qualifiers AND. Repeated `label:` and `has:` AND; other repeats OR, because a resource has only one value.
 - Unknown qualifiers are underlined and ignored. A resource on a stopped connection is not searched, and the summary says how many environments were skipped.
 - Picking from the dropdown never needs typing: qualifier, then key, then value. Value counts are computed against the rest of the query.
+- Sorting is not in the query. Column headers sort all results, and a saved view remembers its sort without becoming unsaved.
+- The results table is virtualized (`r3/VirtualTable.svelte`, `@tanstack/virtual-core`): only the rows on screen exist, and they are built on demand.
 - Labels have one source, `r3/query/labels.ts`, read by queries and details pages alike. `part-of` groups an application across environments: the namespace on Kubernetes, the project stem on engines.
-- Unsaved edits live in the views store and survive tab switches. The tab shows a dot, Save is the header's primary action (Ctrl+S), and closing the tab discards them.
+- Unsaved query edits live in the views store and survive tab switches. The tab shows a dot, Save is the header's primary action (Ctrl+S), and closing the tab discards them.
+- A new view asks for its name, icon and icon colour on Save (`r3/modals/ViewModal.svelte`). Rename and Change icon are actions in the sidebar, tab and header menus, and apply at once. The title is never an input.
+- Icon colours are `--pd-*` tokens (`r3/view-style.ts`).
 - On a view tab, the switcher only changes `@current`; it does not open the connection.
 - Saved views persist per published version (`storageKey('views')`).
-
