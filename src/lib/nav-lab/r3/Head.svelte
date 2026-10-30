@@ -26,6 +26,8 @@ interface Props {
   sub?: string;
   /** Contributing extension, shown as the title icon tooltip. */
   provenance?: string;
+  /** Replaces the title (inline rename of a view). */
+  titleEditor?: Snippet;
   /** Extra inline content after the title (short id, tag…). */
   extra?: Snippet;
   /** Inline filter (lists): bound value; undefined = no filter field. */
@@ -40,14 +42,14 @@ interface Props {
   filters?: Snippet;
 }
 
-let { icon, title, status, connId, onconn, sub, provenance, extra, search = $bindable(), placeholder, views = [], view, onview, actions, filters }: Props = $props();
+let { icon, title, status, connId, onconn, sub, provenance, titleEditor, extra, search = $bindable(), placeholder, views = [], view, onview, actions, filters }: Props = $props();
 const c = $derived(findConn(connId));
 </script>
 
 <div class="shrink-0 bg-[var(--pd-content-bg)] border-b border-[var(--pd-content-divider)]">
   <div data-testid="tab-head" class="flex items-center gap-2 h-12 px-4">
     <span class="flex shrink-0 text-[var(--pd-content-header-icon)]" title={provenance ? `Provided by ${provenance}` : undefined} data-testid="head-icon"><LabIcon {icon} size={16} /></span>
-    <h1 class="text-[16px] font-semibold text-[var(--pd-content-header)] truncate min-w-0 max-w-[40%]" {title}>{title}</h1>
+    {#if titleEditor}{@render titleEditor()}{:else}<h1 class="text-[16px] font-semibold text-[var(--pd-content-header)] truncate min-w-0 max-w-[40%]" {title}>{title}</h1>{/if}
     {#if extra}{@render extra()}{/if}
     {#if status}
       <span data-testid="head-status" class="flex items-center gap-1 h-5 px-2 rounded-full bg-[var(--pd-label-bg)] text-[var(--pd-label-text)] text-[11px] shrink-0"

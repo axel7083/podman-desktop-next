@@ -14,10 +14,11 @@ import { lab } from '../lab.svelte.ts';
 import Btn from './Btn.svelte';
 import type { LabRow } from './cells/types.ts';
 import Head from './Head.svelte';
-import { KIND, KUBE_COLS, kindOf, kubeActs, kubeMenu, liveCols, namespaced, rowStatus } from './kube-details.svelte.ts';
+import { KIND, KUBE_COLS, kindOf, liveCols, namespaced } from './kube-details.svelte.ts';
 import { inNs, multiNs, nsLabel, setNs } from './kube-ns.svelte.ts';
 import { live, resStatus } from './live.svelte.ts';
 import NsSelect from './NsSelect.svelte';
+import { kubeRow } from './rows.ts';
 import RowsTable from './RowsTable.svelte';
 import SegFilter from './SegFilter.svelte';
 
@@ -68,27 +69,9 @@ const visible = $derived.by(() => {
   return all.filter(r => (!t || r.name.toLowerCase().includes(t) || r.sub.toLowerCase().includes(t) || (r.ns ?? '').includes(t)) && matches(r));
 });
 
-function openRes(r: LabResource, preview = true): void {
-  onopen({ kind: 'resource', connId: r.connId, sectionId: r.sectionId, resId: r.id }, { preview });
-}
-
 const rows = $derived.by((): LabRow[] => {
   void live.status;
-  return visible.map(r => ({
-    name: r.id,
-    r,
-    status: rowStatus(resStatus(r)),
-    icon: s.icon,
-    title: r.name,
-    sub: [],
-    cols: { ...liveCols(r), ns: r.ns ?? '', age: r.age },
-    open: (): void => openRes(r),
-    pin: (): void => openRes(r, false),
-    buttons: kubeActs(r, onopen)
-      .filter(a => a.row)
-      .map(a => ({ title: a.label, icon: a.icon, run: a.run, danger: a.danger, enabled: !a.disabled })),
-    menu: () => kubeMenu(r, onopen),
-  }));
+  return visible.map(r => kubeRow(r, s.icon, onopen));
 });
 
 const cols = $derived<[string, string, string, boolean?][]>([

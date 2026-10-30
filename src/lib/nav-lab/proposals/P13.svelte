@@ -15,7 +15,7 @@
  * "Install: Vanilla | All extensions" switches what is installed.
  * Design rules: docs/p13-design-rules.md (audit: docs/p13-audit.md).
  */
-import { faArrowCircleDown, faChevronDown, faChevronRight, faEllipsisVertical, faFolder, faFolderOpen, faHammer, faMagnifyingGlass, faPlay, faStop } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faChevronDown, faChevronRight, faClone, faEllipsisVertical, faFilter, faFolder, faFolderOpen, faHammer, faMagnifyingGlass, faPen, faPlay, faPlus, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { untrack } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -64,6 +64,10 @@ import KomposeView from '../r3/KomposeView.svelte';
 import { kompose } from '../r3/kompose.svelte.ts';
 import KubePlayView from '../r3/KubePlayView.svelte';
 import ListView from '../r3/ListView.svelte';
+import { matchResources } from '../r3/query/match.ts';
+import { parseQuery } from '../r3/query/parse.ts';
+import ViewPage from '../r3/ViewPage.svelte';
+import { createDraft, discardDraft, duplicate, remove, viewName, viewQuery, views } from '../r3/views.svelte.ts';
 import LayersView from '../r3/LayersView.svelte';
 import ScanView from '../r3/ScanView.svelte';
 import SettingsView from '../r3/SettingsView.svelte';
@@ -93,8 +97,19 @@ function targetVisible(t: LabTarget): boolean {
 $effect.pre(() => {
   const mode = lab.tabs;
   void lab.install;
-  untrack(() => wb.reset((mode === 'many' ? MANY_TABS : FEW_TABS).filter(targetVisible)));
+  untrack(() => {
+    // Open views survive a lab toggle: they are the user's, not the preset's.
+    const viewTabs = wb.tabs.filter(t => t.target.kind === 'view');
+    const activeView = viewTabs.find(t => t.key === wb.active)?.key;
+    wb.reset((mode === 'many' ? MANY_TABS : FEW_TABS).filter(targetVisible));
+    wb.tabs.push(...viewTabs);
+    if (activeView) wb.active = activeView;
+  });
 });
+
+wb.onclose = (t): void => {
+  if (t.target.viewId) discardDraft(t.target.viewId);
+};
 
 $effect(() => {
   live.ondelete = (resId: string): void => {
@@ -211,9 +226,49 @@ function open(t: LabTarget, opts: { preview?: boolean } = {}): void {
   wb.open(t, opts);
 }
 
+function newView(): void {
+  open({ kind: 'view', viewId: createDraft() });
+}
+
+function openView(viewId: string, opts: { preview?: boolean } = {}): void {
+  open({ kind: 'view', viewId }, opts);
+}
+
+function viewMenu(viewId: string): MenuItem[] {
+  return [
+    { label: 'Open', run: (): void => openView(viewId) },
+    {
+      label: 'Rename',
+      icon: faPen,
+      sep: true,
+      run: (): void => {
+        openView(viewId);
+        views.renaming = viewId;
+      },
+    },
+    { label: 'Duplicate', icon: faClone, run: (): void => openView(duplicate(viewId)) },
+    {
+      label: 'Delete',
+      icon: faTrash,
+      danger: true,
+      sep: true,
+      run: (): void => {
+        wb.close(targetKey({ kind: 'view', viewId }));
+        remove(viewId);
+      },
+    },
+  ];
+}
+
+function viewCount(viewId: string): number {
+  return matchResources(parseQuery(viewQuery(viewId)), { currentConnId: c?.id }).length;
+}
+
 function select(id: string): void {
   sel = id;
   filter = '';
+  // On a view the switcher only changes what `env:@current` means: stay on the results.
+  if (wb.activeTarget?.kind === 'view') return;
   open({ kind: 'connection', connId: id }, { preview: true });
 }
 
@@ -256,6 +311,7 @@ function nodeMenu(n: TreeNode): MenuItem[] {
 }
 
 function rowMenu(t: LabTarget): MenuItem[] | undefined {
+  if (t.kind === 'view' && t.viewId) return viewMenu(t.viewId);
   if (t.kind === 'resource') {
     const r = resource(t.resId);
     if (r && c?.group === 'Kubernetes' && KUBE_KINDS.includes(r.sectionId)) return kubeMenu(r, open);
@@ -426,6 +482,20 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
           {/each}
         {/if}
       </div>
+      <div data-testid="views-section" class="flex flex-col shrink-0 max-h-[35%] border-t border-[var(--pd-global-nav-bg-border)] text-base">
+        <div class="flex items-center shrink-0 h-7 pl-3 pr-1">
+          <span class="text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Views</span>
+          <span class="flex-1"></span>
+          <button type="button" data-testid="views-add" aria-label="Create view" title="Create view" class="flex w-5 h-5 items-center justify-center rounded text-[11px] text-[var(--pd-secondary-nav-text)] hover:bg-[var(--pd-content-card-hover-inset-bg)]" onclick={newView}><AppIcon icon={faPlus} /></button>
+        </div>
+        <div role="tree" aria-label="Saved views" class="min-h-0 overflow-auto pb-1">
+          {#each views.saved as v (v.id)}
+            {@render row(0, viewName(v.id), { target: { kind: 'view', viewId: v.id }, icon: faFilter, count: viewCount(v.id) })}
+          {:else}
+            <div class="px-3 pb-1 text-[11px] text-[var(--pd-table-body-text)]">No saved views yet.</div>
+          {/each}
+        </div>
+      </div>
     </aside>
     <div
       role="separator"
@@ -474,6 +544,8 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
           <ExtensionsView />
         {:else if t?.kind === 'accounts'}
           <AccountsView onopen={open} />
+        {:else if t?.kind === 'view' && t.viewId}
+          <ViewPage viewId={t.viewId} currentConnId={c?.id} onopen={open} onedit={(): void => wb.pin(wb.active ?? '')} />
         {:else if t?.kind === 'tool' && t.toolId}
           <ToolView toolId={t.toolId} onopen={open} />
         {:else}
@@ -485,7 +557,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
     <BottomPanel {sessions} onopen={open} />
   </div>
 </Frame>
-<Palette bind:open={palette} onselect={select} />
+<Palette bind:open={palette} onselect={select} onview={(id): void => openView(id)} oncreateview={newView} />
 <TourOverlay />
 
 <style>

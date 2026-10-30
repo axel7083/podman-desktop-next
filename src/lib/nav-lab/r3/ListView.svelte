@@ -24,7 +24,7 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { type LabConnection, type LabResource, type LabSection, type LabTarget, resourcesOf, section as findSection } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import type { LabRow } from './cells/types.ts';
-import { containerInfo, hash, imageInfo, usedByCount } from './details.ts';
+import { usedByCount } from './details.ts';
 import { dismiss, isDismissed } from './dismiss.svelte.ts';
 import ActBtn from './ActBtn.svelte';
 import Btn from './Btn.svelte';
@@ -32,7 +32,8 @@ import { ext, installExt, isInstalled } from './exts.ts';
 import { altFor, HB_CONN, hbNodeId } from './hb-data.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import Head from './Head.svelte';
-import { can, deleteRes, imageMenu, isUp, live, type MenuItem, openMenu, resActions, resStatus, showGroupLogs, startRes, stopRes } from './live.svelte.ts';
+import { deleteRes, isUp, live, type MenuItem, openMenu, resStatus, showGroupLogs, startRes, stopRes } from './live.svelte.ts';
+import { engineRow } from './rows.ts';
 import RowsTable from './RowsTable.svelte';
 import { komposeTarget } from './kompose.svelte.ts';
 import SegFilter from './SegFilter.svelte';
@@ -66,12 +67,6 @@ function used(r: LabResource): boolean {
   return usedByCount(r) > 0;
 }
 
-/** Leading dot only for images / volumes in use (rule B7), with its tooltip. */
-function usedDot(r: LabResource): { status: string; dotTitle?: string } {
-  const n = usedByCount(r);
-  return n ? { status: 'RUNNING', dotTitle: `In use by ${n} container${n > 1 ? 's' : ''}` } : { status: '' };
-}
-
 const visible = $derived(
   all.filter(r => {
     const t = search.toLowerCase();
@@ -84,68 +79,8 @@ const visible = $derived(
   }),
 );
 
-function openRes(r: LabResource, preview = true): void {
-  onopen({ kind: 'resource', connId: r.connId, sectionId: r.sectionId, resId: r.id }, { preview });
-}
-
-function upper(st: string): string {
-  return st === 'ready' ? 'RUNNING' : st === 'error' ? 'DEGRADED' : st.toUpperCase();
-}
-
 function toRow(r: LabResource): LabRow {
-  const st = resStatus(r);
-  const up = isUp(st);
-  const startStop = can.start(s.id)
-    ? [up ? { title: 'Stop', icon: faStop, run: (): void => stopRes(r) } : { title: 'Start', icon: faPlay, run: (): void => startRes(r) }]
-    : [];
-  const del = { title: 'Delete', icon: faTrash, danger: true, run: (): void => deleteRes(r) };
-  if (s.id === 'images') {
-    const im = imageInfo(r);
-    const [repo, tag] = r.name.split(/:(?=[^:/]+$)/);
-    return {
-      name: r.id,
-      r,
-      ...usedDot(r),
-      icon,
-      title: repo,
-      shortId: (hash(r.name) * 2654435761).toString(16).slice(0, 12).padEnd(12, '0'),
-      sub: [tag ?? 'latest'],
-      cols: { age: r.age, size: im.size, arch: im.arch },
-      open: (): void => openRes(r),
-      pin: (): void => openRes(r, false),
-      buttons: [{ title: 'Run Image', icon: faPlay, run: (): void => lab.openCreate(`Run ${r.name}`) }, del],
-      menu: () => imageMenu(r, onopen),
-    };
-  }
-  if (s.id === 'containers') {
-    const ci = containerInfo(r);
-    return {
-      name: r.id,
-      r,
-      status: upper(st),
-      icon,
-      title: r.name,
-      sub: [st.toUpperCase(), ci.ports.length ? `PORT${ci.ports.length > 1 ? 'S' : ''} ${ci.ports.join(', ')}` : ''].filter(Boolean),
-      cols: { image: ci.image, uptime: up ? r.age : '' },
-      open: (): void => openRes(r),
-      pin: (): void => openRes(r, false),
-      buttons: [...startStop, del],
-      menu: () => resActions(r, onopen),
-    };
-  }
-  return {
-    name: r.id,
-    r,
-    ...(s.id === 'volumes' ? usedDot(r) : { status: upper(st) }),
-    icon,
-    title: r.name,
-    sub: [r.sub],
-    cols: { age: r.age },
-    open: (): void => openRes(r),
-      pin: (): void => openRes(r, false),
-    buttons: [...startStop, del],
-    menu: () => resActions(r, onopen),
-  };
+  return engineRow(r, icon, onopen);
 }
 
 const rows = $derived.by((): LabRow[] => {

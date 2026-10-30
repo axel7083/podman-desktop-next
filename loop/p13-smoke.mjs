@@ -651,6 +651,91 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   }
 }
 
+/* ---------------------------------------------------------------- V Views (GitHub-style queries) */
+{
+  const page = await session('');
+  const q = page.getByTestId('view-query');
+  const summary = async () => (await page.getByTestId('view-summary').innerText()).replace(/\s+/g, ' ');
+  const pick = id => page.locator(`[data-testid="view-suggestion"][data-id="${id}"]`).click();
+  const sidebar = () => page.getByTestId('views-section').getByRole('treeitem');
+
+  await step('V create a view with dropdown clicks only', async () => {
+    await page.getByTestId('views-add').click();
+    await page.getByTestId('view-suggestions').waitFor();
+    await pick('label');
+    expect((await q.inputValue()) === 'label:', `after qualifier: ${await q.inputValue()}`);
+    await pick('label:part-of');
+    expect((await q.inputValue()) === 'label:part-of=', `after key: ${await q.inputValue()}`);
+    await pick('label=orders');
+    expect((await q.inputValue()) === 'label:part-of=orders ', `after value: ${await q.inputValue()}`);
+    const t = await summary();
+    expect(/^\d+ resources across [2-9] environments/.test(t), `not cross-environment: ${t}`);
+    expect((await page.getByTestId('tab-dirty').count()) === 1, 'no unsaved dot');
+  });
+  await step('V keyboard: Enter accepts the highlighted value', async () => {
+    await page.keyboard.type('group:env');
+    await page.keyboard.press('Enter');
+    expect((await q.inputValue()) === 'label:part-of=orders group:env ', `query: ${await q.inputValue()}`);
+    await page.keyboard.press('Escape');
+    await page.getByTestId('view-suggestions').waitFor({ state: 'detached' });
+  });
+  await step('V save, then reload keeps the view', async () => {
+    await page.getByTestId('view-name').fill('Orders everywhere');
+    await page.getByTestId('view-name').press('Enter');
+    await page.getByTestId('view-save').click();
+    expect((await page.getByTestId('tab-dirty').count()) === 0, 'dot after save');
+    await page.reload();
+    await page.waitForSelector('[data-testid="p13-tree"]');
+    await sidebar().filter({ hasText: 'Orders everywhere' }).click();
+    expect((await q.inputValue()).startsWith('label:part-of=orders group:env'), 'query lost');
+  });
+  await step('V env:@current follows the switcher', async () => {
+    await page.getByTestId('views-add').click();
+    await q.fill('env:@current is:container');
+    const on = await summary();
+    await useConn(page, 'podman-machine-dev');
+    const after = await summary();
+    expect(on !== after, `unchanged: ${on}`);
+  });
+  await step('V stopping a container drops it from is:running', async () => {
+    await useConn(page, 'podman-machine-default');
+    await page.getByTestId('view-query-clear').click();
+    await q.fill('is:container is:running env:podman-machine-default');
+    await page.keyboard.press('Escape');
+    const n = parseInt(await summary());
+    await page.getByRole('button', { name: 'Stop', exact: true }).first().click();
+    await page.waitForFunction(m => parseInt(document.querySelector('[data-testid="view-summary"]').innerText) === m, n - 1);
+  });
+  await step('V negation, unknown qualifier, empty state', async () => {
+    await q.fill('is:container');
+    const all = parseInt(await summary());
+    await q.fill('is:container -is:running');
+    expect(parseInt(await summary()) < all, 'negation did not narrow');
+    await q.fill('nope:x is:container');
+    expect(parseInt(await summary()) === all, 'unknown qualifier should be ignored');
+    await page.locator('.q-bad').waitFor();
+    await q.fill('zzzzzzz');
+    expect((await summary()).startsWith('0 resources'), 'expected no result');
+  });
+  await step('V sidebar menu: duplicate and delete', async () => {
+    const before = await sidebar().count();
+    await sidebar().filter({ hasText: 'Failing' }).click({ button: 'right' });
+    await page.getByTestId('nav-lab-context-menu').getByText('Duplicate').click();
+    expect((await sidebar().count()) === before + 1, 'no copy');
+    await sidebar().filter({ hasText: 'Failing copy' }).click({ button: 'right' });
+    await page.getByTestId('nav-lab-context-menu').getByText('Delete').click();
+    expect((await sidebar().count()) === before, 'not deleted');
+  });
+  await step('V palette lists views and opens one', async () => {
+    await page.keyboard.press('Control+k');
+    await page.getByTestId('p13-palette').getByTestId('palette-group').filter({ hasText: 'Views' }).waitFor();
+    await page.getByTestId('palette-input').fill('Orders app');
+    await page.keyboard.press('Enter');
+    expect((await q.inputValue()).startsWith('label:part-of=orders'), 'view not opened');
+  });
+  await page.context().close();
+}
+
 await browser.close();
 for (const r of results) console.log(r.join('  '));
 console.log(`${results.filter(r => r[0] === 'ok').length}/${results.length} steps ok`);

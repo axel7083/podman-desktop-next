@@ -3,7 +3,7 @@
  * P13 command palette (Ctrl/⌘K or the title-bar search): "Workflows" (guided
  * tours of the Red Hat flows, `r3/tours.svelte.ts`) and "Connections".
  */
-import { faMagnifyingGlass, faRoute } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faMagnifyingGlass, faPlus, faRoute } from '@fortawesome/free-solid-svg-icons';
 import { tick } from 'svelte';
 
 import type { IconRef } from '#lib/ext/types.ts';
@@ -11,17 +11,22 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { labConns } from '../r2/simple.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import { startTour, TOURS } from './tours.svelte.ts';
+import { views } from './views.svelte.ts';
 
 interface Props {
   open: boolean;
   onselect: (connId: string) => void;
+  /** Open a saved view. */
+  onview: (viewId: string) => void;
+  /** Open a new, empty view. */
+  oncreateview: () => void;
 }
 
-let { open = $bindable(), onselect }: Props = $props();
+let { open = $bindable(), onselect, onview, oncreateview }: Props = $props();
 
 interface Item {
   id: string;
-  group: 'Workflows' | 'Connections';
+  group: 'Workflows' | 'Views' | 'Connections';
   label: string;
   detail?: string;
   icon?: IconRef;
@@ -34,13 +39,15 @@ let input = $state<HTMLInputElement>();
 
 const items = $derived<Item[]>([
   ...TOURS.map(t => ({ id: `tour:${t.id}`, group: 'Workflows' as const, label: `Tour: ${t.title}`, detail: t.outcome, icon: faRoute, run: (): void => startTour(t.id) })),
+  { id: 'view:new', group: 'Views' as const, label: 'Create view', detail: 'Query resources across environments', icon: faPlus, run: oncreateview },
+  ...views.saved.map(v => ({ id: `view:${v.id}`, group: 'Views' as const, label: v.name, detail: v.query, icon: faFilter, run: (): void => onview(v.id) })),
   ...labConns().map(c => ({ id: `conn:${c.id}`, group: 'Connections' as const, label: c.name, detail: c.group, icon: c.icon, run: (): void => onselect(c.id) })),
 ]);
 const filtered = $derived.by(() => {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   return items.filter(i => terms.every(x => `${i.label} ${i.detail ?? ''}`.toLowerCase().includes(x)));
 });
-const groups = $derived((['Workflows', 'Connections'] as const).map(g => ({ g, list: filtered.filter(i => i.group === g) })).filter(x => x.list.length));
+const groups = $derived((['Workflows', 'Views', 'Connections'] as const).map(g => ({ g, list: filtered.filter(i => i.group === g) })).filter(x => x.list.length));
 
 $effect(() => {
   if (!open) return;
@@ -91,7 +98,7 @@ function onkey(e: KeyboardEvent): void {
         oninput={(): void => void (sel = 0)}
         data-testid="palette-input"
         aria-label="Command palette input"
-        placeholder="Search workflows and connections…"
+        placeholder="Search workflows, views and connections…"
         class="flex-1 h-full bg-transparent outline-hidden text-[var(--pd-input-field-focused-text)] placeholder:text-[var(--pd-input-field-placeholder-text)]" />
     </div>
     <ul class="max-h-[60vh] overflow-y-auto pt-1" aria-label="Results">
