@@ -25,6 +25,7 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { type LabResource, type LabTarget, resourcesOf } from '../data.ts';
 import { addResource, runTask } from './flows.svelte.ts';
 import { CLUSTER_SCOPED, kubeFlavour, kubeIp, kubeNets, kubeSuffix } from './kube-data.ts';
+import { labelsOf } from './query/labels.ts';
 import { deleteRes, isUp, live, type MenuItem, openTerminal, resStatus, restartRes, showLogs, sourceOf } from './live.svelte.ts';
 
 type Open = (t: LabTarget, o: { preview?: boolean }) => void;
@@ -467,7 +468,7 @@ export function manifest(r: LabResource): string[] {
     ...(r.ns ? [`  namespace: ${r.ns}`] : []),
     `  uid: ${uid(r.id)}`,
     `  creationTimestamp: "${created(r.age)}"`,
-    ...(namespaced(r.sectionId) && r.sectionId !== 'portforwards' ? ['  labels:', `    app: ${app}`] : []),
+    ...(namespaced(r.sectionId) && r.sectionId !== 'portforwards' ? ['  labels:', ...Object.entries(labelsOf(r)).map(([lk, lv]) => `    ${lk}: ${lv}`)] : []),
     ...(c.owner ? ['  ownerReferences:', `  - apiVersion: ${c.owner.startsWith('Job') ? 'batch/v1' : 'apps/v1'}`, `    kind: ${c.owner.split('/')[0]}`, `    name: ${c.owner.split('/')[1]}`, '    controller: true'] : []),
   ];
   const container = (indent: string): string[] => [

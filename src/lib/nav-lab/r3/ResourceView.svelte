@@ -58,6 +58,7 @@ import {
   stopRes,
 } from './live.svelte.ts';
 import ModernTable from './ModernTable.svelte';
+import { labelsOf } from './query/labels.ts';
 import Section from './Section.svelte';
 import LabIcon from '../ui/LabIcon.svelte';
 
@@ -424,7 +425,7 @@ function kubeYaml(): string[] {
                 ...(s.id === 'kpods' ? [{ k: 'Node', v: res.sub.split('node ')[1] }, { k: 'Pod IP', v: `10.128.${h % 9}.${h % 250}` }, { k: 'Restarts', v: st === 'degraded' ? 7 : 0 }] : []),
                 ...(s.id === 'services' ? [{ k: 'Type', v: 'ClusterIP' }, { k: 'Cluster IP', v: res.sub.split(' ')[1] }, { k: 'Ports', v: '8080/TCP' }] : []),
                 { k: 'Created', v: `${res.age} ago` },
-                { k: 'Labels', v: `app=${res.name.split('-')[0]}` },
+                ...(Object.keys(labelsOf(res)).length ? [{ k: 'Labels', v: Object.entries(labelsOf(res)).map(([lk, lv]) => `${lk}=${lv}`).join(', ') }] : []),
                 { k: 'Cluster', v: c.name, onclick: (): void => onopen({ kind: 'connection', connId: c.id }, {}) },
                 ...(s.ext ? [{ k: 'Provided by', v: s.ext.name }] : []),
               ]} />

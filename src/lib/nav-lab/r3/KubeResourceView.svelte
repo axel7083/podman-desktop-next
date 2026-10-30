@@ -21,6 +21,7 @@ import { conditionsOf, eventsOf, KUBE_COLS, kindOf, kubeActs, kubeMenu, liveCols
 import { setNs } from './kube-ns.svelte.ts';
 import KV, { type KvRow } from './KV.svelte';
 import { live, openMenu, resStatus } from './live.svelte.ts';
+import { labelsOf } from './query/labels.ts';
 import ModernTable from './ModernTable.svelte';
 import Section from './Section.svelte';
 
@@ -90,7 +91,7 @@ const details = $derived.by((): KvRow[] => {
     { k: 'Kind', v: kind },
     ...(res.ns ? [ref('Namespace', 'namespaces', res.ns)] : []),
     { k: 'Created', v: `${res.age} ago` },
-    ...(res.ns && res.sectionId !== 'portforwards' ? [{ k: 'Labels', v: `app=${cols.app ?? res.name}` }] : []),
+    ...(Object.keys(labelsOf(res)).length ? [{ k: 'Labels', v: Object.entries(labelsOf(res)).map(([lk, lv]) => `${lk}=${lv}`).join(', ') }] : []),
     ...(ownerName ? [{ ...ref('Controlled by', OWNER_SECTION[ownerKind] ?? '', ownerName, ownerKind === 'Node' ? undefined : res.ns), v: `${ownerKind} ${ownerName}` }] : []),
     { k: 'Cluster', v: `${c.name} · ${c.product}`, onclick: (): void => onopen({ kind: 'connection', connId: c.id }, {}) },
   ];

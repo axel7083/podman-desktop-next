@@ -1,11 +1,8 @@
 /** P13: deterministic fake details for the compact Summary / Inspect views. */
 import { type LabResource, resourcesOf } from '../data.ts';
+import { hash, labelsOf } from './query/labels.ts';
 
-export function hash(s: string): number {
-  let h = 7;
-  for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return h;
-}
+export { hash };
 
 export const KUBE = ['kpods', 'deployments', 'services', 'routes', 'pvcs', 'config', 'jobs', 'cronjobs', 'nodes', 'pipelines', 'gitops', 'operators', 'helm', 'inference', 'workbenches', 'dspipelines', 'vms', 'servicenet'];
 
@@ -38,13 +35,7 @@ export function containerInfo(r: LabResource): ContainerInfo {
     mounts: [`${r.name}-data:/var/lib/data`, '/home/dev/config:/config:ro', 'tmpfs:/tmp'].slice(0, 1 + (h % 3)),
     networks: r.group ? [`${r.group}_default`] : ['podman'],
     restart: ['no', 'always', 'unless-stopped', 'on-failure'][h % 4],
-    labels: [
-      ['io.podman.compose.project', r.group ?? '—'],
-      ['org.opencontainers.image.source', `https://github.com/acme/${r.name}`],
-      ['org.opencontainers.image.version', `1.${h % 9}.0`],
-      ['maintainer', 'platform@acme.com'],
-      ['io.k8s.display-name', r.name],
-    ],
+    labels: Object.entries(labelsOf(r)),
     cpu: Array.from({ length: 24 }, (_, i) => 6 + ((h >>> (i % 16)) % 40)),
     mem: 40 + (h % 900),
   };
