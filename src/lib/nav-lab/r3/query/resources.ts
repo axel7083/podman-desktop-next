@@ -30,7 +30,19 @@ export interface ResourceKind {
   icon: IconRef;
 }
 
+const kinds = new Map<string, ResourceKind>();
+
 export function kindOf(r: LabResource): ResourceKind {
+  const key = `${r.connId}/${r.sectionId}`;
+  let kind = kinds.get(key);
+  if (!kind) {
+    kind = computeKind(r);
+    kinds.set(key, kind);
+  }
+  return kind;
+}
+
+function computeKind(r: LabResource): ResourceKind {
   const s = section(conn(r.connId), r.sectionId);
   const icon = s?.ext?.icon ?? s?.icon ?? faBorderAll;
   const known = TYPE_BY_SECTION[r.sectionId];

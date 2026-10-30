@@ -22,13 +22,11 @@ interface Props {
   /** Text columns: [title, key in `row.cols`, width, numeric sort?]. */
   cols: [string, string, string, boolean?][];
   actionsWidth?: string;
-  /** Column sorted first (defaults to Name). */
-  defaultSort?: string;
   /** Extra bulk-bar actions (modern / grid tables). */
   bulkActions?: { label: string; icon?: IconRef; run: (rows: LabRow[]) => void }[];
 }
 
-let { kind, rows, cols, actionsWidth = '120px', defaultSort = 'Name', bulkActions }: Props = $props();
+let { kind, rows, cols, actionsWidth = '120px', bulkActions }: Props = $props();
 
 function num(v: string): number {
   const m = /([\d.]+)\s*(GB|MB|kB|B|minute|hour|day|week)?/.exec(v);
@@ -60,7 +58,7 @@ const row = new TableRow<LabRow, LabRow>({ selectable: (): boolean => true, chil
 {:else}
 <div data-testid="rows-table" class="flex min-w-full grow">
   {#key columns}
-    <Table {kind} data={rows} {columns} {row} defaultSortColumn={defaultSort} enableLayoutConfiguration key={(r): string => r.name} label={(r): string => r.title} />
+    <Table {kind} data={rows} {columns} {row} defaultSortColumn="Name" enableLayoutConfiguration key={(r): string => r.name} label={(r): string => r.title} />
   {/key}
 </div>
 {/if}

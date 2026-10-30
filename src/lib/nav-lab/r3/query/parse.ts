@@ -1,6 +1,6 @@
 /** P13 Views: tolerant tokenizer for GitHub-style queries. Pure, no Svelte or DOM. */
 
-export const QUALIFIERS = ['is', 'env', 'engine', 'label', 'has', 'ns', 'project', 'sort', 'group'] as const;
+export const QUALIFIERS = ['is', 'status', 'env', 'engine', 'label', 'has', 'ns', 'project', 'group'] as const;
 export type Qualifier = (typeof QUALIFIERS)[number];
 
 export interface QueryTerm {

@@ -61,7 +61,19 @@ function kubeLabels(r: LabResource): Record<string, string> {
   };
 }
 
+const cache = new Map<string, Record<string, string>>();
+
+/** Labels never change for a given resource, and queries read them constantly. */
 export function labelsOf(r: LabResource): Record<string, string> {
+  let labels = cache.get(r.id);
+  if (!labels) {
+    labels = computeLabels(r);
+    cache.set(r.id, labels);
+  }
+  return labels;
+}
+
+function computeLabels(r: LabResource): Record<string, string> {
   switch (r.sectionId) {
     case 'containers':
       return containerLabels(r);

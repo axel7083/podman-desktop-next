@@ -1,9 +1,9 @@
 /** P13 Views: autocomplete at the caret. Qualifiers first, then their values, counted live. */
 import {
-  faArrowDownWideShort,
   faCircleDot,
   faCubes,
   faFolderTree,
+  faGears,
   faLayerGroup,
   faServer,
   faTag,
@@ -16,7 +16,7 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { conn, type LabResource } from '../../data.ts';
 import { labConns } from '../../r2/simple.ts';
 import { labelsOf } from './labels.ts';
-import { engineMatches, envMatches, GROUPS, HAS_VALUES, matchResources, type QueryContext, SORTS, STATES } from './match.ts';
+import { engineMatches, envMatches, GROUPS, HAS_VALUES, matchResources, type QueryContext, stateMatches, STATES } from './match.ts';
 import { parseQuery, type QueryTerm, termAt } from './parse.ts';
 import { CORE_TYPES, kindOf } from './resources.ts';
 
@@ -33,14 +33,14 @@ export interface Suggestion {
 }
 
 const QUALIFIER_MENU: { key: string; label: string; detail: string; icon: IconRef }[] = [
-  { key: 'is', label: 'Is', detail: 'Type or state', icon: faCircleDot },
+  { key: 'is', label: 'Is', detail: 'Container, image, pod…', icon: faCubes },
+  { key: 'status', label: 'Status', detail: 'Running, stopped…', icon: faCircleDot },
   { key: 'env', label: 'Environment', detail: 'A connection', icon: faServer },
-  { key: 'engine', label: 'Engine', detail: 'Podman, Docker, Kubernetes…', icon: faCubes },
+  { key: 'engine', label: 'Engine', detail: 'Podman, Docker, Kubernetes…', icon: faGears },
   { key: 'label', label: 'Label', detail: 'Key, then value', icon: faTag },
   { key: 'has', label: 'Has', detail: 'A label, a port, a namespace…', icon: faCheck },
   { key: 'ns', label: 'Namespace', detail: 'Kubernetes namespace', icon: faFolderTree },
   { key: 'project', label: 'Project', detail: 'Compose project or pod', icon: faLayerGroup },
-  { key: 'sort', label: 'Sort', detail: 'Order of the results', icon: faArrowDownWideShort },
   { key: 'group', label: 'Group', detail: 'Group the results', icon: faTableList },
 ];
 
@@ -67,16 +67,13 @@ function isValues(prefix: string, base: LabResource[], typed: string): Suggestio
   const counts = countBy(base, r => [kindOf(r).id]);
   const core = CORE_TYPES.filter(id => counts.has(id));
   const rest = [...counts.keys()].filter(id => !CORE_TYPES.includes(id)).sort((a, b) => a.localeCompare(b));
-  const types: Suggestion[] = [...core, ...rest].map(id => ({
-    id: `type:${id}`,
-    label: id,
-    insert: `${prefix}is:${id} `,
-    icon: kinds.get(id)?.icon,
-    count: counts.get(id),
-    group: 'Type',
-  }));
-  const states: Suggestion[] = STATES.map(id => ({ id: `state:${id}`, label: id, insert: `${prefix}is:${id} `, group: 'State' }));
-  return [...states, ...types].filter(s => s.label.includes(typed));
+  return [...core, ...rest]
+    .filter(id => id.includes(typed))
+    .map(id => ({ id: `is:${id}`, label: id, insert: `${prefix}is:${id} `, icon: kinds.get(id)?.icon, count: counts.get(id) }));
+}
+
+function statusValues(prefix: string, base: LabResource[], typed: string): Suggestion[] {
+  return STATES.filter(v => v.includes(typed)).map(v => ({ id: `status:${v}`, label: v, insert: `${prefix}status:${v} `, count: base.filter(r => stateMatches(r, v)).length }));
 }
 
 function envValues(prefix: string, base: LabResource[], typed: string, ctx: QueryContext): Suggestion[] {
@@ -150,6 +147,8 @@ function valuesFor(active: QueryTerm, prefix: string, base: LabResource[], ctx: 
   switch (active.key) {
     case 'is':
       return isValues(prefix, base, typed.toLowerCase());
+    case 'status':
+      return statusValues(prefix, base, typed.toLowerCase());
     case 'env':
       return envValues(prefix, base, typed.toLowerCase(), ctx);
     case 'engine':
@@ -162,8 +161,6 @@ function valuesFor(active: QueryTerm, prefix: string, base: LabResource[], ctx: 
       return countedValues(prefix, 'ns', base, typed.toLowerCase(), r => r.ns);
     case 'project':
       return countedValues(prefix, 'project', base, typed.toLowerCase(), r => r.group ?? (r.sectionId === 'compose' ? r.name : undefined));
-    case 'sort':
-      return fixedValues(prefix, 'sort', SORTS, typed.toLowerCase());
     case 'group':
       return fixedValues(prefix, 'group', GROUPS, typed.toLowerCase());
     default:

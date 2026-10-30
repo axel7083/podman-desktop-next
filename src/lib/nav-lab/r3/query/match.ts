@@ -8,9 +8,7 @@ import { allResources, kindOf, searchedConns } from './resources.ts';
 
 export const STATES = ['running', 'stopped', 'degraded', 'unused'];
 export const HAS_VALUES = ['label', 'port', 'namespace', 'group'];
-export const SORTS = ['name', 'age', 'status', 'env'] as const;
 export const GROUPS = ['none', 'kind', 'env', 'app'] as const;
-export type SortBy = (typeof SORTS)[number];
 export type GroupBy = (typeof GROUPS)[number];
 
 export interface QueryContext {
@@ -21,14 +19,13 @@ export interface QueryContext {
 export interface QueryResult {
   rows: LabResource[];
   groupBy: GroupBy;
-  sort?: SortBy;
   /** Environments with at least one result. */
   envCount: number;
   /** Stopped connections, which a query cannot reach. */
   unreachable: string[];
 }
 
-function stateMatches(r: LabResource, state: string): boolean {
+export function stateMatches(r: LabResource, state: string): boolean {
   const st = resStatus(r);
   switch (state) {
     case 'running':
@@ -93,7 +90,9 @@ function testOf(t: QueryTerm, ctx: QueryContext): (r: LabResource) => boolean {
     case undefined:
       return r => textMatches(r, t.value);
     case 'is':
-      return STATES.includes(t.value) ? r => stateMatches(r, t.value) : r => kindOf(r).id === t.value.toLowerCase();
+      return r => kindOf(r).id === t.value.toLowerCase();
+    case 'status':
+      return r => stateMatches(r, t.value.toLowerCase());
     case 'env':
       return r => envMatches(r, t.value, ctx);
     case 'engine':
@@ -113,13 +112,12 @@ function testOf(t: QueryTerm, ctx: QueryContext): (r: LabResource) => boolean {
 
 /** Terms ORed together: a resource has only one type, state, environment… `label:` and `has:` stay ANDed. */
 function orGroup(t: QueryTerm): string | undefined {
-  if (t.key === 'is') return STATES.includes(t.value) ? 'is:state' : 'is:type';
-  return t.key && ['env', 'engine', 'ns', 'project'].includes(t.key) ? t.key : undefined;
+  return t.key && ['is', 'status', 'env', 'engine', 'ns', 'project'].includes(t.key) ? t.key : undefined;
 }
 
-/** Keep the terms that filter (known qualifier with a value, not `sort:` / `group:`). */
+/** Keep the terms that filter (known qualifier with a value, not `group:`). */
 function filterTerms(terms: QueryTerm[]): QueryTerm[] {
-  return terms.filter(t => t.valid && t.value !== '' && t.key !== 'sort' && t.key !== 'group');
+  return terms.filter(t => t.valid && t.value !== '' && t.key !== 'group');
 }
 
 export function matchResources(terms: QueryTerm[], ctx: QueryContext): LabResource[] {
@@ -144,7 +142,6 @@ export function runQuery(terms: QueryTerm[], ctx: QueryContext): QueryResult {
   return {
     rows,
     groupBy: lastValue(terms, 'group', GROUPS) ?? 'none',
-    sort: lastValue(terms, 'sort', SORTS),
     envCount: new Set(rows.map(r => r.connId)).size,
     unreachable: searchedConns().unreachable.map(c => c.name),
   };
