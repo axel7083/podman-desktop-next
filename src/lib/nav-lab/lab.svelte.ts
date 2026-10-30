@@ -4,7 +4,6 @@
  */
 import {
   faBorderAll,
-  faFilter,
   faFolderTree,
   faPuzzlePiece,
   faToolbox,
@@ -33,7 +32,7 @@ import {
   WORKFLOWS,
 } from "./data.ts";
 import { findNode, OVERVIEW_ICON } from "./r3/trees.ts";
-import { viewName } from "./r3/views.svelte.ts";
+import { viewColor, viewIcon, viewName } from "./r3/views.svelte.ts";
 
 export type RailMode = "icons" | "labels" | "expanded";
 export type ScreenWidth = 1440 | 1280 | 1024;
@@ -250,6 +249,8 @@ export class Workbench {
 export interface TargetInfo {
   title: string;
   icon: IconRef;
+  /** Icon colour (views pick theirs). */
+  iconColor?: string;
   /** Connection the target belongs to (provider badge). */
   connId?: string;
   crumb: string[];
@@ -304,7 +305,7 @@ export function describe(t: LabTarget): TargetInfo {
         crumb: [c?.name ?? ""],
       };
     case "view":
-      return { title: viewName(t.viewId), icon: faFilter, crumb: ["Views"] };
+      return { title: viewName(t.viewId), icon: viewIcon(t.viewId), iconColor: viewColor(t.viewId), crumb: ["Views"] };
     case "list":
       return {
         title: s?.label ?? "?",

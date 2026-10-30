@@ -10,14 +10,15 @@ interface Props {
   connId?: string;
   /** 16 in P13; other proposals keep their own sizes. */
   size?: number;
+  color?: string;
 }
 
-let { icon, connId, size = 16 }: Props = $props();
+let { icon, connId, size = 16, color }: Props = $props();
 const c = $derived(findConn(connId));
 </script>
 
 <span class="relative inline-flex shrink-0">
-  <LabIcon {icon} {size} />
+  <LabIcon {icon} {size} {color} />
   {#if c}
     <span data-badge class="absolute -bottom-0.5 -right-1 flex rounded-[2px] bg-[var(--pd-secondary-nav-bg)] p-px" title={c.name}>
       <LabIcon icon={c.icon} size={Math.max(8, Math.round(size / 2))} />

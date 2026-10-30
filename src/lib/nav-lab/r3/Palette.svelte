@@ -3,7 +3,7 @@
  * P13 command palette (Ctrl/⌘K or the title-bar search): "Workflows" (guided
  * tours of the Red Hat flows, `r3/tours.svelte.ts`) and "Connections".
  */
-import { faFilter, faMagnifyingGlass, faPlus, faRoute } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faPlus, faRoute } from '@fortawesome/free-solid-svg-icons';
 import { tick } from 'svelte';
 
 import type { IconRef } from '#lib/ext/types.ts';
@@ -11,7 +11,7 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { labConns } from '../r2/simple.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import { startTour, TOURS } from './tours.svelte.ts';
-import { views } from './views.svelte.ts';
+import { viewColor, viewIcon, views } from './views.svelte.ts';
 
 interface Props {
   open: boolean;
@@ -30,6 +30,7 @@ interface Item {
   label: string;
   detail?: string;
   icon?: IconRef;
+  iconColor?: string;
   run: () => void;
 }
 
@@ -40,7 +41,7 @@ let input = $state<HTMLInputElement>();
 const items = $derived<Item[]>([
   ...TOURS.map(t => ({ id: `tour:${t.id}`, group: 'Workflows' as const, label: `Tour: ${t.title}`, detail: t.outcome, icon: faRoute, run: (): void => startTour(t.id) })),
   { id: 'view:new', group: 'Views' as const, label: 'Create view', detail: 'Query resources across environments', icon: faPlus, run: oncreateview },
-  ...views.saved.map(v => ({ id: `view:${v.id}`, group: 'Views' as const, label: v.name, detail: v.query, icon: faFilter, run: (): void => onview(v.id) })),
+  ...views.saved.map(v => ({ id: `view:${v.id}`, group: 'Views' as const, label: v.name, detail: v.query, icon: viewIcon(v.id), iconColor: viewColor(v.id), run: (): void => onview(v.id) })),
   ...labConns().map(c => ({ id: `conn:${c.id}`, group: 'Connections' as const, label: c.name, detail: c.group, icon: c.icon, run: (): void => onselect(c.id) })),
 ]);
 const filtered = $derived.by(() => {
@@ -114,7 +115,7 @@ function onkey(e: KeyboardEvent): void {
               class="w-full flex items-center gap-2 h-7 px-2 rounded text-left text-[var(--pd-content-header)] {i === sel ? 'bg-[var(--pd-modal-dropdown-highlight)]' : 'hover:bg-[var(--pd-dropdown-item-hover-bg)]'}"
               onmouseenter={(): void => void (sel = i)}
               onclick={(): void => run(it)}>
-              <LabIcon icon={it.icon} size={14} />
+              <LabIcon icon={it.icon} size={14} color={it.iconColor} />
               <span class="truncate">{it.label}</span>
               {#if it.detail}<span class="truncate text-[11px] text-[var(--pd-table-body-text)]">{it.detail}</span>{/if}
             </button>

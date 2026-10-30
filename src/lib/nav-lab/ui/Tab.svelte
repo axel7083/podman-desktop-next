@@ -18,6 +18,7 @@ import TabIcon from './TabIcon.svelte';
 interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   icon: IconRef;
   connId?: string;
+  iconColor?: string;
   title: string;
   tooltip?: string;
   /** Shown in the content area (accent bar). */
@@ -37,7 +38,7 @@ interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   menu?: () => MenuItem[];
 }
 
-let { icon, connId, title, tooltip, selected, dim = false, preview = false, dirty = false, closable = true, color, testid = 'tab', onselect, onclose, onpin, menu, ...rest }: Props = $props();
+let { icon, connId, iconColor, title, tooltip, selected, dim = false, preview = false, dirty = false, closable = true, color, testid = 'tab', onselect, onclose, onpin, menu, ...rest }: Props = $props();
 </script>
 
 <div
@@ -63,7 +64,7 @@ let { icon, connId, title, tooltip, selected, dim = false, preview = false, dirt
     if (e.key === 'Enter') onselect();
   }}>
   {#if selected}<span class="bar" style:background={color}></span>{/if}
-  <TabIcon {icon} {connId} />
+  <TabIcon {icon} {connId} color={iconColor} />
   <span class="truncate" class:italic={preview}>{title}</span>
   {#if dirty}<span class="dot" data-testid="tab-dirty" title="Unsaved changes"></span>{/if}
   {#if closable}

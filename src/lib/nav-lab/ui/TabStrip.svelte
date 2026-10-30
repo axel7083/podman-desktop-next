@@ -24,9 +24,11 @@ interface Props {
   actions?: Snippet;
   /** Label of the leading home tab. */
   homeLabel?: string;
+  /** Actions of a tab, before the close actions. */
+  tabActions?: (tab: LabTab) => MenuItem[];
 }
 
-let { wb, groupByConn = false, actions, homeLabel }: Props = $props();
+let { wb, groupByConn = false, actions, homeLabel, tabActions }: Props = $props();
 
 let width = $state(0);
 let menuOpen = $state(false);
@@ -91,12 +93,14 @@ function homeTarget(): LabTarget | undefined {
   return wb.home;
 }
 
-function tabMenu(key: string): MenuItem[] {
-  return tabCloseMenu(
+function tabMenu(tab: LabTab): MenuItem[] {
+  const own = tabActions?.(tab) ?? [];
+  const close = tabCloseMenu(
     wb.tabs.map(t => t.key),
-    key,
+    tab.key,
     k => wb.close(k),
   );
+  return own.length ? [...own, { ...close[0], sep: true }, ...close.slice(1)] : close;
 }
 </script>
 
@@ -106,6 +110,7 @@ function tabMenu(key: string): MenuItem[] {
   <Tab
     icon={d.icon}
     connId={d.connId}
+    iconColor={d.iconColor}
     title={d.title}
     tooltip="{d.crumb.filter(Boolean).join(' › ')}{d.crumb.length ? ' › ' : ''}{d.title}"
     selected={tab.key === wb.active}
@@ -115,7 +120,7 @@ function tabMenu(key: string): MenuItem[] {
     onselect={(): void => select(tab.key)}
     onpin={(): void => wb.pin(tab.key)}
     onclose={(): void => wb.close(tab.key)}
-    menu={(): MenuItem[] => tabMenu(tab.key)} />
+    menu={(): MenuItem[] => tabMenu(tab)} />
 {/snippet}
 
 <div
@@ -159,7 +164,7 @@ function tabMenu(key: string): MenuItem[] {
               role="menuitem"
               class="w-full flex items-center gap-2 px-3 py-1.5 text-left text-[var(--pd-dropdown-item-text)] hover:bg-[var(--pd-dropdown-item-hover-bg)]"
               onclick={(): void => select(t.key)}>
-              <TabIcon icon={d.icon} connId={d.connId} />
+              <TabIcon icon={d.icon} connId={d.connId} color={d.iconColor} />
               <span class="truncate flex-1" class:italic={t.preview}>{d.title}</span>
               <span class="text-[11px] text-[var(--pd-table-body-text)] truncate max-w-28">{findConn(d.connId)?.name ?? d.crumb[0] ?? ''}</span>
             </button>

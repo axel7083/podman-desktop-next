@@ -679,15 +679,64 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await page.keyboard.press('Escape');
     await page.getByTestId('view-suggestions').waitFor({ state: 'detached' });
   });
-  await step('V save, then reload keeps the view', async () => {
-    await page.getByTestId('view-name').fill('Orders everywhere');
-    await page.getByTestId('view-name').press('Enter');
+  await step('V save asks for a name, icon and colour, and survives a reload', async () => {
     await page.getByTestId('view-save').click();
+    await page.getByTestId('view-modal').waitFor();
+    expect(await page.getByTestId('modal-primary').isDisabled(), 'saved without a name');
+    await page.getByTestId('view-modal-name').fill('Orders everywhere');
+    await page.getByTestId('view-icon-rocket').click();
+    await page.getByTestId('view-color-sky').click();
+    await page.getByTestId('modal-primary').click();
     expect((await page.getByTestId('tab-dirty').count()) === 0, 'dot after save');
+    expect((await page.getByTestId('head-icon').locator('[data-icon]').getAttribute('style')).includes('--pd-badge-sky'), 'colour not applied');
     await page.reload();
     await page.waitForSelector('[data-testid="p13-tree"]');
     await sidebar().filter({ hasText: 'Orders everywhere' }).click();
     expect((await q.inputValue()).startsWith('label:part-of=orders group:env'), 'query lost');
+  });
+  await step('V views sit in the tree, below the extensions', async () => {
+    const ext = await tree(page).getByTestId('tree-extensions').boundingBox();
+    const views = await tree(page).getByTestId('views-section').boundingBox();
+    expect(views && ext && views.y > ext.y, 'views not below extensions');
+  });
+  await step('V the title is not an input; Rename is an action', async () => {
+    expect((await page.getByTestId('head-icon').locator('xpath=..').locator('input').count()) === 0, 'title is still an input');
+    await page.getByTestId('view-actions').click();
+    await page.getByTestId('nav-lab-context-menu').getByText('Rename').click();
+    await page.getByTestId('view-modal-name').fill('Orders renamed');
+    await page.getByTestId('modal-primary').click();
+    await sidebar().filter({ hasText: 'Orders renamed' }).waitFor();
+    expect((await page.getByTestId('tab-dirty').count()) === 0, 'renaming a saved view left it dirty');
+  });
+  await step('V is: is for types, status: for states', async () => {
+    await q.fill('is:');
+    const types = await page.getByTestId('view-suggestions').innerText();
+    expect(/container/.test(types) && !/running|stopped/.test(types), `is: offers: ${types.slice(0, 80)}`);
+    await q.fill('status:');
+    const states = await page.getByTestId('view-suggestions').innerText();
+    expect(/running/.test(states) && !/container/.test(states), `status: offers: ${states.slice(0, 80)}`);
+    await q.fill('');
+    expect(!/Sort/.test(await page.getByTestId('view-suggestions').innerText()), 'sort is still a qualifier');
+  });
+  await step('V a large result only renders the rows on screen, and sorts all of it', async () => {
+    await q.fill('');
+    await page.keyboard.press('Escape');
+    const total = parseInt(await summary());
+    expect(total > 500, `only ${total} resources`);
+    const n = await page.getByTestId('view-row').count();
+    expect(n > 0 && n < 60, `${n} rows in the DOM for ${total} results`);
+    const firstName = () => page.getByTestId('view-row').first().getByTestId('row-name').locator('span').first().innerText();
+    const asc = await firstName();
+    await page.getByTestId('view-sort-name').click();
+    await page.waitForFunction(n => document.querySelector('[data-testid="view-row"] [data-testid="row-name"] span').innerText !== n, asc);
+    const desc = await firstName();
+    expect(desc.localeCompare(asc) > 0, `descending ${desc} is not after ascending ${asc}`);
+    await page.getByTestId('view-sort-name').click();
+    await page.getByTestId('view-table').evaluate(el => el.scrollTo(0, el.scrollHeight));
+    await page.waitForFunction(() => document.querySelector('[data-testid="view-table"]').scrollTop > 0);
+    const tail = await page.getByTestId('view-row').last().getByTestId('row-name').locator('span').first().innerText();
+    expect(tail === desc, `last row is ${tail}, expected ${desc}`);
+    await page.getByTestId('view-table').evaluate(el => el.scrollTo(0, 0));
   });
   await step('V env:@current follows the switcher', async () => {
     await page.getByTestId('views-add').click();
@@ -697,10 +746,10 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     const after = await summary();
     expect(on !== after, `unchanged: ${on}`);
   });
-  await step('V stopping a container drops it from is:running', async () => {
+  await step('V stopping a container drops it from status:running', async () => {
     await useConn(page, 'podman-machine-default');
     await page.getByTestId('view-query-clear').click();
-    await q.fill('is:container is:running env:podman-machine-default');
+    await q.fill('is:container status:running env:podman-machine-default');
     await page.keyboard.press('Escape');
     const n = parseInt(await summary());
     await page.getByRole('button', { name: 'Stop', exact: true }).first().click();
@@ -709,7 +758,7 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   await step('V negation, unknown qualifier, empty state', async () => {
     await q.fill('is:container');
     const all = parseInt(await summary());
-    await q.fill('is:container -is:running');
+    await q.fill('is:container -status:running');
     expect(parseInt(await summary()) < all, 'negation did not narrow');
     await q.fill('nope:x is:container');
     expect(parseInt(await summary()) === all, 'unknown qualifier should be ignored');

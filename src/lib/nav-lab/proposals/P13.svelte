@@ -15,7 +15,7 @@
  * "Install: Vanilla | All extensions" switches what is installed.
  * Design rules: docs/p13-design-rules.md (audit: docs/p13-audit.md).
  */
-import { faArrowCircleDown, faChevronDown, faChevronRight, faClone, faEllipsisVertical, faFilter, faFolder, faFolderOpen, faHammer, faMagnifyingGlass, faPen, faPlay, faPlus, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowCircleDown, faChevronDown, faChevronRight, faClone, faEllipsisVertical, faFolder, faFolderOpen, faHammer, faMagnifyingGlass, faPalette, faPen, faPlay, faPlus, faStop, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { untrack } from 'svelte';
 
 import AppIcon from '#lib/components/AppIcon.svelte';
@@ -48,7 +48,7 @@ import ConnView from '../r3/ConnView.svelte';
 import ExtensionsView from '../r3/ExtensionsView.svelte';
 import FilterInput from '../r3/FilterInput.svelte';
 import { connVisible, isInstalled, sectionVisible, toolVisible } from '../r3/exts.ts';
-import { flows } from '../r3/flows.svelte.ts';
+import { flows, openModal } from '../r3/flows.svelte.ts';
 import HomeDashboard from '../r3/HomeDashboard.svelte';
 import KubeListView from '../r3/KubeListView.svelte';
 import { inNs } from '../r3/kube-ns.svelte.ts';
@@ -67,7 +67,7 @@ import ListView from '../r3/ListView.svelte';
 import { matchResources } from '../r3/query/match.ts';
 import { parseQuery } from '../r3/query/parse.ts';
 import ViewPage from '../r3/ViewPage.svelte';
-import { createDraft, discardDraft, duplicate, remove, viewName, viewQuery, views } from '../r3/views.svelte.ts';
+import { createDraft, discardDraft, duplicate, isSaved, remove, viewColor, viewIcon, viewName, viewQuery, views } from '../r3/views.svelte.ts';
 import LayersView from '../r3/LayersView.svelte';
 import ScanView from '../r3/ScanView.svelte';
 import SettingsView from '../r3/SettingsView.svelte';
@@ -234,29 +234,26 @@ function openView(viewId: string, opts: { preview?: boolean } = {}): void {
   open({ kind: 'view', viewId }, opts);
 }
 
-function viewMenu(viewId: string): MenuItem[] {
+/** Actions of a view, shared by the sidebar, its tab and its page header. */
+function viewActions(viewId: string): MenuItem[] {
   return [
-    { label: 'Open', run: (): void => openView(viewId) },
-    {
-      label: 'Rename',
-      icon: faPen,
-      sep: true,
-      run: (): void => {
-        openView(viewId);
-        views.renaming = viewId;
-      },
-    },
-    { label: 'Duplicate', icon: faClone, run: (): void => openView(duplicate(viewId)) },
-    {
-      label: 'Delete',
-      icon: faTrash,
-      danger: true,
-      sep: true,
-      run: (): void => {
-        wb.close(targetKey({ kind: 'view', viewId }));
-        remove(viewId);
-      },
-    },
+    { label: 'Rename', icon: faPen, run: (): void => openModal('view', { id: viewId }) },
+    { label: 'Change icon', icon: faPalette, run: (): void => openModal('view', { id: viewId, focus: 'icon' }) },
+    ...(isSaved(viewId)
+      ? [
+          { label: 'Duplicate', icon: faClone, run: (): void => openView(duplicate(viewId)) },
+          {
+            label: 'Delete',
+            icon: faTrash,
+            danger: true,
+            sep: true,
+            run: (): void => {
+              wb.close(targetKey({ kind: 'view', viewId }));
+              remove(viewId);
+            },
+          },
+        ]
+      : []),
   ];
 }
 
@@ -311,7 +308,7 @@ function nodeMenu(n: TreeNode): MenuItem[] {
 }
 
 function rowMenu(t: LabTarget): MenuItem[] | undefined {
-  if (t.kind === 'view' && t.viewId) return viewMenu(t.viewId);
+  if (t.kind === 'view' && t.viewId) return [{ label: 'Open', run: (): void => openView(t.viewId as string) }, ...viewActions(t.viewId).map((m, i) => (i === 0 ? { ...m, sep: true } : m))];
   if (t.kind === 'resource') {
     const r = resource(t.resId);
     if (r && c?.group === 'Kubernetes' && KUBE_KINDS.includes(r.sectionId)) return kubeMenu(r, open);
@@ -326,7 +323,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
 }
 </script>
 
-{#snippet row(depth: number, label: string, o: { key?: string; chevron?: boolean; open?: boolean; target: LabTarget; icon?: IconRef; status?: string; count?: number | string; dim?: string })}
+{#snippet row(depth: number, label: string, o: { key?: string; chevron?: boolean; open?: boolean; target: LabTarget; icon?: IconRef; iconColor?: string; status?: string; count?: number | string; dim?: string })}
   {@const on = wb.active === targetKey(o.target)}
   {@const menu = rowMenu(o.target)}
   <div
@@ -362,7 +359,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
     {#if o.status}
       <span class="flex w-4 h-4 items-center justify-center shrink-0"><span class="w-2 h-2 rounded-full {STATUS_DOT[o.status] ?? STATUS_DOT.running}" data-status={o.status}></span></span>
     {:else if o.icon}
-      <LabIcon icon={o.icon} size={16} />
+      <LabIcon icon={o.icon} size={16} color={o.iconColor} />
     {/if}
     <span class="truncate">{label}</span>
     {#if o.dim}<span class="truncate text-[11px] text-[var(--pd-table-body-text)]">{o.dim}</span>{/if}
@@ -481,18 +478,16 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
             {@render row(0, t.name, { target: { kind: 'tool', toolId: t.id }, icon: t.icon })}
           {/each}
         {/if}
-      </div>
-      <div data-testid="views-section" class="flex flex-col shrink-0 max-h-[35%] border-t border-[var(--pd-global-nav-bg-border)] text-base">
-        <div class="flex items-center shrink-0 h-7 pl-3 pr-1">
-          <span class="text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Views</span>
-          <span class="flex-1"></span>
-          <button type="button" data-testid="views-add" aria-label="Create view" title="Create view" class="flex w-5 h-5 items-center justify-center rounded text-[11px] text-[var(--pd-secondary-nav-text)] hover:bg-[var(--pd-content-card-hover-inset-bg)]" onclick={newView}><AppIcon icon={faPlus} /></button>
-        </div>
-        <div role="tree" aria-label="Saved views" class="min-h-0 overflow-auto pb-1">
-          {#each views.saved as v (v.id)}
-            {@render row(0, viewName(v.id), { target: { kind: 'view', viewId: v.id }, icon: faFilter, count: viewCount(v.id) })}
+        <div data-testid="views-section" role="group" aria-label="Views">
+          <div class="group/views flex items-center pl-3 pr-1 pt-3 pb-1">
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Views</span>
+            <span class="flex-1"></span>
+            <button type="button" data-testid="views-add" aria-label="Create view" title="Create view" class="flex w-5 h-5 items-center justify-center rounded text-[11px] text-[var(--pd-secondary-nav-text)] hover:bg-[var(--pd-content-card-hover-inset-bg)]" onclick={newView}><AppIcon icon={faPlus} /></button>
+          </div>
+          {#each views.saved.filter(v => !f || v.name.toLowerCase().includes(f)) as v (v.id)}
+            {@render row(0, v.name, { target: { kind: 'view', viewId: v.id }, icon: viewIcon(v.id), iconColor: viewColor(v.id), count: viewCount(v.id) })}
           {:else}
-            <div class="px-3 pb-1 text-[11px] text-[var(--pd-table-body-text)]">No saved views yet.</div>
+            {#if !f}<div class="px-3 pb-1 text-[11px] text-[var(--pd-table-body-text)]">No saved views yet.</div>{/if}
           {/each}
         </div>
       </div>
@@ -507,7 +502,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
   {/if}
   <div class="flex flex-col flex-1 min-w-0 h-full">
     <div data-island="editor" tabindex="-1" class="flex flex-col flex-1 min-h-0 min-w-0">
-    <TabStrip {wb} />
+    <TabStrip {wb} tabActions={(tab): MenuItem[] => (tab.target.viewId ? viewActions(tab.target.viewId) : [])} />
     <div class="flex-1 min-h-0 overflow-hidden">
       {#key wb.active}
         {@const t = wb.activeTarget}
@@ -545,7 +540,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
         {:else if t?.kind === 'accounts'}
           <AccountsView onopen={open} />
         {:else if t?.kind === 'view' && t.viewId}
-          <ViewPage viewId={t.viewId} currentConnId={c?.id} onopen={open} onedit={(): void => wb.pin(wb.active ?? '')} />
+          <ViewPage viewId={t.viewId} currentConnId={c?.id} onopen={open} actions={(): MenuItem[] => viewActions(t.viewId as string)} onedit={(): void => wb.pin(wb.active ?? '')} />
         {:else if t?.kind === 'tool' && t.toolId}
           <ToolView toolId={t.toolId} onopen={open} />
         {:else}

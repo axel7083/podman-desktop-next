@@ -14,9 +14,11 @@ interface Props {
   size?: number;
   class?: string;
   title?: string;
+  /** CSS colour for glyphs; images ignore it. */
+  color?: string;
 }
 
-let { icon, size = 16, class: cls = '', title }: Props = $props();
+let { icon, size = 16, class: cls = '', title, color }: Props = $props();
 </script>
 
 <span
@@ -25,4 +27,5 @@ let { icon, size = 16, class: cls = '', title }: Props = $props();
   style:width="{size}px"
   style:height="{size}px"
   style:font-size="{size}px"
+  style:color={color}
   {title}><AppIcon {icon} size="{size}px" /></span>

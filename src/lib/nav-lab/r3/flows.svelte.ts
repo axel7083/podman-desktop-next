@@ -13,6 +13,7 @@ import { lab } from '../lab.svelte.ts';
 import { live } from './live.svelte.ts';
 
 export type ModalKind =
+  | 'view'
   | 'rh-signin'
   | 'add-connection'
   | 'rhel-machine'

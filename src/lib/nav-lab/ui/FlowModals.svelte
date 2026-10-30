@@ -12,6 +12,7 @@ import RhelMachineModal from '../r3/modals/RhelMachineModal.svelte';
 import RhSignInModal from '../r3/modals/RhSignInModal.svelte';
 import RunVirtModal from '../r3/modals/RunVirtModal.svelte';
 import ServeVllmModal from '../r3/modals/ServeVllmModal.svelte';
+import ViewModal from '../r3/modals/ViewModal.svelte';
 
 const MODALS = {
   'rh-signin': RhSignInModal,
@@ -25,6 +26,7 @@ const MODALS = {
   'serve-vllm': ServeVllmModal,
   modelcar: ModelCarModal,
   'deploy-rhoai': DeployRhoaiModal,
+  view: ViewModal,
 };
 
 const M = $derived(flows.modal ? MODALS[flows.modal.kind] : undefined);
