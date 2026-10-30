@@ -12,11 +12,13 @@ interface Props {
   class?: string;
   /** Use dropdown tokens (default) or the modal surface. */
   surface?: 'dropdown' | 'modal';
+  /** Panel role; `presentation` when the content brings its own (a listbox). */
+  role?: 'menu' | 'presentation';
   onclose: () => void;
   children: Snippet;
 }
 
-let { open, anchor, placement = 'bottom-end', class: className = '', surface = 'dropdown', onclose, children }: Props =
+let { open, anchor, placement = 'bottom-end', class: className = '', surface = 'dropdown', role = 'menu', onclose, children }: Props =
   $props();
 
 let panel: HTMLDivElement | undefined = $state();
@@ -65,7 +67,7 @@ function onKeydown(e: KeyboardEvent): void {
 {#if open}
   <div
     bind:this={panel}
-    role="menu"
+    {role}
     tabindex="-1"
     class="fixed z-50 rounded-md shadow-lg max-h-[calc(100vh-80px)] overflow-y-auto {surface === 'dropdown'
       ? 'bg-[var(--pd-dropdown-bg)] ring-2 ring-[var(--pd-dropdown-ring)]'
