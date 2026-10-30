@@ -34,6 +34,13 @@ Versioned publishing: README "Versions & publishing".
 Imports use the `#lib/*` subpath alias (SvelteKit 3 replaced `$lib`), with the
 file extension: `import { world } from '#lib/world.svelte.ts'`.
 
+## The two apps
+
+`#/` is the current product mockup, **P13**, in `src/lib/nav-lab/`: its own static
+dataset (`data.ts`), no `world`, registry or `?scenario=`. Rules:
+`docs/p13-design-rules.md`, smoke test: `node loop/p13-smoke.mjs`. The sections below
+describe the original v1 shell, still reachable at `#/c/<conn>/…`.
+
 ## Layout
 
 | Path | What |

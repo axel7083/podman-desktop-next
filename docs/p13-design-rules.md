@@ -167,3 +167,27 @@ Trees (`TreeProvider.cap`, `treesFor()`), sections, menus, actions, promotions,
     never on kind, OpenShift Local, OpenShift clusters, Sandbox or OpenShift AI.
 38. **Kompose / Deploy targets**: any Kubernetes (`kube`); "Convert to Kubernetes" from
     pods only exists where pods exist (rule 35).
+
+## Views (GitHub-style queries)
+
+A view is a saved query over every reachable connection, opened as a tab (`kind: 'view'`). The Views section sits below the tree, outside it, because the tree only covers the selected connection.
+
+| Qualifier | Values | Notes |
+|---|---|---|
+| `is:` | type (`container`, `pod`, `image`…), state (`running`, `stopped`, `degraded`, `unused`) | Types OR together, states OR together, the two groups AND |
+| `env:` | connection name, `@current` | `@current` follows the switcher: one view is both per-environment and cross-environment |
+| `engine:` | `podman`, `docker`, `kubernetes`, `openshift`… | `kubernetes` covers every cluster |
+| `label:` | `key`, `key=value` | Asked-for keys become columns (two at most) |
+| `has:` | `label`, `port`, `namespace`, `group` | |
+| `ns:`, `project:` | namespace, compose project or pod | |
+| `sort:`, `group:` | `name` `age` `status` `env`; `none` `kind` `env` `app` | Display only, never filter |
+
+Rules:
+- `-` negates any filter. Different qualifiers AND. Repeated `label:` and `has:` AND; other repeats OR, because a resource has only one value.
+- Unknown qualifiers are underlined and ignored. A resource on a stopped connection is not searched, and the summary says how many environments were skipped.
+- Picking from the dropdown never needs typing: qualifier, then key, then value. Value counts are computed against the rest of the query.
+- Labels have one source, `r3/query/labels.ts`, read by queries and details pages alike. `part-of` groups an application across environments: the namespace on Kubernetes, the project stem on engines.
+- Unsaved edits live in the views store and survive tab switches. The tab shows a dot, Save is the header's primary action (Ctrl+S), and closing the tab discards them.
+- On a view tab, the switcher only changes `@current`; it does not open the connection.
+- Saved views persist per published version (`storageKey('views')`).
+
