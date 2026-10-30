@@ -198,4 +198,5 @@ Rules:
 - Every result row shows its resource icon, because a view mixes types.
 - On a view tab, the switcher only changes `@current`; it does not open the connection.
 - An application view is a short list: the Shop app starter is `label:part-of=shop is:workload group:label:environment`, a Postgres, a Redis and a web server for each of `dev` (containers on Podman) and `prod` (workloads on `ocp-prod`).
+- `group:env` headers say what a connection is and where it runs: product and Local or Remote chips, then its details. Local connections come first.
 - Saved views persist per published version (`storageKey('views')`).

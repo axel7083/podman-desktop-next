@@ -513,6 +513,13 @@ export const CONNECTIONS: LabConnection[] = RAW_CONNECTIONS.map(c => {
 
 export const CONN_GROUPS: ConnGroup[] = ['Engines', 'Kubernetes', 'VMs & services'];
 
+/** Connections reached over the network; everything else runs on this machine. */
+const REMOTE_CONNS = ['ocp-dev', 'ocp-prod', 'rhoai-dev', 'sandbox', 'acme-kafka', 'acme-keycloak', 'aap-acme-prod'];
+
+export function isRemote(c: LabConnection): boolean {
+  return REMOTE_CONNS.includes(c.id);
+}
+
 export function conn(id: string | undefined): LabConnection | undefined {
   return CONNECTIONS.find(c => c.id === id);
 }

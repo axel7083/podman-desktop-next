@@ -5,14 +5,14 @@
  * the header's primary action (Ctrl+S): a new view asks for its name and icon.
  * Rename and icon are actions (⋮, the sidebar, the tab), the title is not an input.
  */
-import { faEllipsisVertical, faFloppyDisk, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
+import { faCloud, faEllipsisVertical, faFloppyDisk, faLaptop, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 import { FilteredEmptyScreen } from '@podman-desktop/ui-svelte';
 import { goto } from '$app/navigation';
 
 import { href } from '#lib/nav.ts';
 import type { IconRef } from '#lib/ext/types.ts';
 
-import { conn, type LabResource, type LabTarget } from '../data.ts';
+import { conn, isRemote, type LabResource, type LabTarget } from '../data.ts';
 import { lab } from '../lab.svelte.ts';
 import ActBtn from './ActBtn.svelte';
 import Btn from './Btn.svelte';
@@ -101,23 +101,42 @@ const sorted = $derived.by((): LabResource[] => {
 /** Key of the bucket for resources without a value: always the last group. */
 const NO_GROUP = '~';
 
-function groupOf(r: LabResource): { key: string; title: string; icon: IconRef; chip: string } {
+interface ResultGroup {
+  key: string;
+  title: string;
+  icon: IconRef;
+  chips: { label: string; icon?: IconRef }[];
+  detail?: string;
+  /** Lower ranks come first (local connections before remote ones). */
+  rank?: number;
+}
+
+function groupOf(r: LabResource): ResultGroup {
   switch (groupBy) {
     case 'env': {
       const c = conn(r.connId);
-      return { key: r.connId, title: c?.name ?? r.connId, icon: c?.icon ?? faLayerGroup, chip: c?.group === 'Kubernetes' ? 'Cluster' : 'Engine' };
+      const remote = !!c && isRemote(c);
+      // What it is (OpenShift, Podman…) and where it runs: the two things a name does not say.
+      return {
+        key: r.connId,
+        title: c?.name ?? r.connId,
+        icon: c?.icon ?? faLayerGroup,
+        chips: [...(c ? [{ label: c.product }] : []), remote ? { label: 'Remote', icon: faCloud } : { label: 'Local', icon: faLaptop }],
+        detail: c?.detail,
+        rank: remote ? 1 : 0,
+      };
     }
     case 'kind': {
       const k = kindOf(r);
-      return { key: k.id, title: k.label, icon: k.icon, chip: 'Type' };
+      return { key: k.id, title: k.label, icon: k.icon, chips: [{ label: 'Type' }] };
     }
     case 'label': {
       const value = labelsOf(r)[groupLabel ?? ''];
-      return { key: value ?? NO_GROUP, title: value ?? `No ${groupLabel}`, icon: faLayerGroup, chip: groupLabel ?? 'Label' };
+      return { key: value ?? NO_GROUP, title: value ?? `No ${groupLabel}`, icon: faLayerGroup, chips: [{ label: groupLabel ?? 'Label' }] };
     }
     default: {
       const app = labelsOf(r)['part-of'];
-      return { key: app ?? NO_GROUP, title: app ?? 'No application', icon: faLayerGroup, chip: 'App' };
+      return { key: app ?? NO_GROUP, title: app ?? 'No application', icon: faLayerGroup, chips: [{ label: 'App' }] };
     }
   }
 }
@@ -127,7 +146,7 @@ let collapsed = $state<string[]>([]);
 
 const items = $derived.by((): ViewItem[] => {
   if (groupBy === 'none') return sorted.map(r => ({ kind: 'row', key: r.id, r }));
-  const groups = new Map<string, { g: ReturnType<typeof groupOf>; rows: LabResource[] }>();
+  const groups = new Map<string, { g: ResultGroup; rows: LabResource[] }>();
   for (const r of sorted) {
     const g = groupOf(r);
     const entry = groups.get(g.key);
@@ -135,10 +154,10 @@ const items = $derived.by((): ViewItem[] => {
     else groups.set(g.key, { g, rows: [r] });
   }
   const out: ViewItem[] = [];
-  const ordered = [...groups.values()].sort((a, b) => Number(a.g.key === NO_GROUP) - Number(b.g.key === NO_GROUP) || collator.compare(a.g.key, b.g.key));
+  const ordered = [...groups.values()].sort((a, b) => Number(a.g.key === NO_GROUP) - Number(b.g.key === NO_GROUP) || (a.g.rank ?? 0) - (b.g.rank ?? 0) || collator.compare(a.g.key, b.g.key));
   for (const { g, rows } of ordered) {
     const open = !collapsed.includes(g.key);
-    out.push({ kind: 'group', key: `g:${g.key}`, title: g.title, icon: g.icon, chip: g.chip, count: rows.length, open });
+    out.push({ kind: 'group', key: `g:${g.key}`, title: g.title, icon: g.icon, chips: g.chips, detail: g.detail, count: rows.length, open });
     if (open) out.push(...rows.map((r): ViewItem => ({ kind: 'row', key: r.id, r })));
   }
   return out;

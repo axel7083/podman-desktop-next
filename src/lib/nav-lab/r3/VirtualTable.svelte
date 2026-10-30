@@ -4,7 +4,7 @@ import type { IconRef } from '#lib/ext/types.ts';
 import type { LabResource } from '../data.ts';
 
 export type ViewItem =
-  | { kind: 'group'; key: string; title: string; icon: IconRef; chip: string; count: number; open: boolean }
+  | { kind: 'group'; key: string; title: string; icon: IconRef; chips: { label: string; icon?: IconRef }[]; detail?: string; count: number; open: boolean }
   | { kind: 'row'; key: string; r: LabResource };
 
 export interface ViewColumn {
@@ -146,8 +146,11 @@ function ariaSort(col: string): 'ascending' | 'descending' | 'none' {
             <span class="flex w-3 justify-center text-[11px] text-[var(--pd-table-body-text)]"><AppIcon icon={item.open ? faCaretDown : faCaretRight} /></span>
             <LabIcon icon={item.icon} size={16} />
             <span class="truncate font-semibold text-[13px] text-[var(--pd-table-body-text-highlight)]">{item.title}</span>
-            <span class="shrink-0 rounded-sm px-1.5 leading-4 text-xs bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]">{item.chip}</span>
-            <span class="text-[12px] text-[var(--pd-table-body-text)]">{item.count}</span>
+            {#each item.chips as chip (chip.label)}
+              <span data-testid="view-group-chip" class="flex shrink-0 items-center gap-1 rounded-sm px-1.5 leading-4 text-xs bg-[var(--pd-label-bg)] text-[var(--pd-label-text)]">{#if chip.icon}<LabIcon icon={chip.icon} size={10} />{/if}{chip.label}</span>
+            {/each}
+            <span class="shrink-0 text-[12px] text-[var(--pd-table-body-text)]">{item.count}</span>
+            {#if item.detail}<span class="truncate text-[12px] text-[var(--pd-table-body-text)]">· {item.detail}</span>{/if}
           </button>
         {:else}
           {@const row = rowOf(item.r)}

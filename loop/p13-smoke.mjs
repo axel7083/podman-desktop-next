@@ -766,6 +766,15 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     expect((await page.getByTestId('view-row').count()) === 6, `${names.length} rows: ${names.join(', ')}`);
     expect(unique.join() === 'shop-postgres,shop-redis,shop-webserver', `apps: ${unique.join()}`);
   });
+  await step('V group:env shows the connection type and location', async () => {
+    await page.getByTestId('views-add').click();
+    await q.fill('label:part-of=shop is:workload group:env');
+    await page.keyboard.press('Escape');
+    const groups = (await page.getByTestId('view-group').allInnerTexts()).map(t => t.replace(/\s+/g, ' '));
+    expect(groups.length === 2, `groups: ${groups.join(' / ')}`);
+    expect(/^podman-machine-default Podman Local/.test(groups[0]), `first group: ${groups[0]}`);
+    expect(/^ocp-prod OpenShift Remote/.test(groups[1]), `second group: ${groups[1]}`);
+  });
   await step('V the automatic icon follows the query', async () => {
     await page.getByTestId('views-add').click();
     const icon = () => page.getByTestId('head-icon').innerHTML();
