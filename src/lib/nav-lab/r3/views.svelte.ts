@@ -33,18 +33,18 @@ export interface ViewDraft extends Partial<ViewStyle> {
   sort?: ViewSort;
 }
 
-const KEY = storageKey('views.v3');
+const KEY = storageKey('views.v4');
 /** Earlier formats, newest first. */
-const OLD_KEYS = [storageKey('views.v2'), storageKey('views')];
+const OLD_KEYS = [storageKey('views.v3'), storageKey('views.v2'), storageKey('views')];
 
 const STARTER: SavedView[] = [
-  { id: 'shop-app', name: 'Shop app', icon: 'folder', query: 'label:part-of=shop is:workload group:label:environment' },
+  { id: 'shop-app', name: 'Shop app', icon: 'folder', query: 'label:part-of=shop is:workload group:env' },
   { id: 'running-containers', name: 'Running containers', query: 'is:container status:running' },
   { id: 'needs-attention', name: 'Needs attention', icon: 'bell', color: 'amber', query: 'status:degraded status:stopped' },
 ];
 
 /** Starter views of earlier formats, replaced by `STARTER`; views made by the user carry over. */
-const OLD_STARTERS = ['this-engine', 'failing', 'orders-app', 'running-containers', 'needs-attention'];
+const OLD_STARTERS = ['this-engine', 'failing', 'orders-app', 'shop-app', 'running-containers', 'needs-attention'];
 
 /** Views saved before `status:` existed and while `sort:` was a qualifier. */
 function migrate(v: SavedView): SavedView {

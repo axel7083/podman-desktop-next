@@ -197,6 +197,6 @@ Rules:
 - View icons are outline, to sit with the tree (`r3/view-style.ts`). The default, Automatic, follows the query: one `is:` type shows that type's icon, anything else a bookmark. Colours are `--pd-*` tokens; starter views stay monochrome, with one accent for what needs attention.
 - Every result row shows its resource icon, because a view mixes types.
 - On a view tab, the switcher only changes `@current`; it does not open the connection.
-- An application view is a short list: the Shop app starter is `label:part-of=shop is:workload group:label:environment`, a Postgres, a Redis and a web server for each of `dev` (containers on Podman) and `prod` (workloads on `ocp-prod`).
+- An application view is a short list: the Shop app starter is `label:part-of=shop is:workload group:env`, a Postgres, a Redis and a web server on each of `podman-machine-default` (containers) and `ocp-prod` (workloads). `group:label:environment` splits the same list into `dev` and `prod`.
 - `group:env` headers say what a connection is and where it runs: product and Local or Remote chips, then its details. Local connections come first.
 - Saved views persist per published version (`storageKey('views')`).

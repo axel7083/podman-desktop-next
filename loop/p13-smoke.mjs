@@ -757,14 +757,22 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await page.getByTestId('view-row').last().getByTestId('row-name').getByText(desc, { exact: true }).first().waitFor();
     await page.getByTestId('view-table').evaluate(el => el.scrollTo(0, 0));
   });
-  await step('V the Shop app is short and grouped by dev and prod', async () => {
+  await step('V the Shop app is short and grouped by connection', async () => {
     await sidebar().filter({ hasText: 'Shop app' }).click();
-    const groups = await page.getByTestId('view-group').allInnerTexts();
-    expect(groups.length === 2 && /^dev/.test(groups[0]) && /^prod/.test(groups[1]), `groups: ${groups.join(' / ')}`);
+    expect((await q.inputValue()) === 'label:part-of=shop is:workload group:env', `query: ${await q.inputValue()}`);
+    const groups = (await page.getByTestId('view-group').allInnerTexts()).map(t => t.replace(/\s+/g, ' '));
+    expect(groups.length === 2 && /^podman-machine-default Podman Local/.test(groups[0]) && /^ocp-prod OpenShift Remote/.test(groups[1]), `groups: ${groups.join(' / ')}`);
     const names = await page.getByTestId('view-row').getByTestId('row-name').locator('span').allInnerTexts();
     const unique = [...new Set(names.filter(n => n.startsWith('shop-')))].sort();
     expect((await page.getByTestId('view-row').count()) === 6, `${names.length} rows: ${names.join(', ')}`);
     expect(unique.join() === 'shop-postgres,shop-redis,shop-webserver', `apps: ${unique.join()}`);
+  });
+  await step('V group:label:environment still splits it into dev and prod', async () => {
+    await page.getByTestId('views-add').click();
+    await q.fill('label:part-of=shop is:workload group:label:environment');
+    await page.keyboard.press('Escape');
+    const groups = await page.getByTestId('view-group').allInnerTexts();
+    expect(groups.length === 2 && /^dev/.test(groups[0]) && /^prod/.test(groups[1]), `groups: ${groups.join(' / ')}`);
   });
   await step('V group:env shows the connection type and location', async () => {
     await page.getByTestId('views-add').click();
