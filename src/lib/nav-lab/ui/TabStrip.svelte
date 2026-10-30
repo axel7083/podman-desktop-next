@@ -13,6 +13,7 @@ import { conn as findConn, type LabTarget } from '../data.ts';
 import { describe, HOME, lab, type LabTab, type Workbench } from '../lab.svelte.ts';
 import { ctxColor } from '../r2/ctx.ts';
 import { type MenuItem } from '../r3/live.svelte.ts';
+import { isDirty } from '../r3/views.svelte.ts';
 import Tab from './Tab.svelte';
 import { tabCloseMenu } from './tab-menu.ts';
 import TabIcon from './TabIcon.svelte';
@@ -109,6 +110,7 @@ function tabMenu(key: string): MenuItem[] {
     tooltip="{d.crumb.filter(Boolean).join(' › ')}{d.crumb.length ? ' › ' : ''}{d.title}"
     selected={tab.key === wb.active}
     preview={tab.preview}
+    dirty={!!tab.target.viewId && isDirty(tab.target.viewId)}
     color={gc}
     onselect={(): void => select(tab.key)}
     onpin={(): void => wb.pin(tab.key)}

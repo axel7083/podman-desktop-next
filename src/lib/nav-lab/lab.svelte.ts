@@ -4,6 +4,7 @@
  */
 import {
   faBorderAll,
+  faFilter,
   faFolderTree,
   faPuzzlePiece,
   faToolbox,
@@ -32,6 +33,7 @@ import {
   WORKFLOWS,
 } from "./data.ts";
 import { findNode, OVERVIEW_ICON } from "./r3/trees.ts";
+import { viewName } from "./r3/views.svelte.ts";
 
 export type RailMode = "icons" | "labels" | "expanded";
 export type ScreenWidth = 1440 | 1280 | 1024;
@@ -150,6 +152,8 @@ export class Workbench {
   active = $state<string | undefined>(undefined);
   /** Optional non-closable leading tab mirroring the current list (P2/P4). */
   home = $state<LabTarget | undefined>(undefined);
+  /** Called when a tab is closed (drops the unsaved edits of a view). */
+  onclose: ((tab: LabTab) => void) | undefined;
 
   constructor(initial: LabTarget[] = []) {
     this.reset(initial);
@@ -230,6 +234,7 @@ export class Workbench {
   close(key: string): void {
     const idx = this.tabs.findIndex((t) => t.key === key);
     if (idx < 0) return;
+    this.onclose?.(this.tabs[idx]);
     this.tabs.splice(idx, 1);
     if (this.active === key)
       this.active =
@@ -298,6 +303,8 @@ export function describe(t: LabTarget): TargetInfo {
         connId: c?.id,
         crumb: [c?.name ?? ""],
       };
+    case "view":
+      return { title: viewName(t.viewId), icon: faFilter, crumb: ["Views"] };
     case "list":
       return {
         title: s?.label ?? "?",

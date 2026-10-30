@@ -25,6 +25,8 @@ interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   /** Shown but not focused (split panes): half-strength bar. */
   dim?: boolean;
   preview?: boolean;
+  /** Unsaved edits: a dot in place of the ✕ until hover. */
+  dirty?: boolean;
   closable?: boolean;
   /** Override for the accent bar colour (lab colour overlay). */
   color?: string;
@@ -35,7 +37,7 @@ interface Props extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   menu?: () => MenuItem[];
 }
 
-let { icon, connId, title, tooltip, selected, dim = false, preview = false, closable = true, color, testid = 'tab', onselect, onclose, onpin, menu, ...rest }: Props = $props();
+let { icon, connId, title, tooltip, selected, dim = false, preview = false, dirty = false, closable = true, color, testid = 'tab', onselect, onclose, onpin, menu, ...rest }: Props = $props();
 </script>
 
 <div
@@ -48,6 +50,7 @@ let { icon, connId, title, tooltip, selected, dim = false, preview = false, clos
   class="ltab group/tab"
   class:sel={selected}
   class:dim
+  class:dirty
   onclick={onselect}
   ondblclick={onpin}
   onauxclick={(e): void => {
@@ -62,6 +65,7 @@ let { icon, connId, title, tooltip, selected, dim = false, preview = false, clos
   {#if selected}<span class="bar" style:background={color}></span>{/if}
   <TabIcon {icon} {connId} />
   <span class="truncate" class:italic={preview}>{title}</span>
+  {#if dirty}<span class="dot" data-testid="tab-dirty" title="Unsaved changes"></span>{/if}
   {#if closable}
     <button
       type="button"
@@ -123,6 +127,21 @@ let { icon, connId, title, tooltip, selected, dim = false, preview = false, clos
 .ltab:hover .x,
 .ltab.sel .x {
   visibility: visible;
+}
+.dot {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle, var(--pd-tab-text-highlight) 3px, transparent 3.5px);
+}
+.ltab.dirty .x {
+  display: none;
+}
+.ltab.dirty:hover .x {
+  display: inline-flex;
+}
+.ltab.dirty:hover .dot {
+  display: none;
 }
 .x:hover {
   background: var(--pd-content-card-hover-inset-bg);

@@ -810,7 +810,7 @@ export const WORKFLOWS = [
 /* Tabs                                                                */
 /* ------------------------------------------------------------------ */
 
-export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node' | 'scan' | 'layers' | 'kubeplay' | 'kompose';
+export type TargetKind = 'list' | 'resource' | 'tool' | 'settings' | 'dashboard' | 'extensions' | 'accounts' | 'connection' | 'kind' | 'tools' | 'workflow' | 'node' | 'scan' | 'layers' | 'kubeplay' | 'kompose' | 'view';
 
 export interface LabTarget {
   kind: TargetKind;
@@ -822,10 +822,12 @@ export interface LabTarget {
   workflowId?: string;
   /** Extension tree-provider node (P13). */
   nodeId?: string;
+  /** Saved or draft view (P13 Views). */
+  viewId?: string;
 }
 
 export function targetKey(t: LabTarget): string {
-  return [t.kind, t.connId, t.sectionId, t.resId, t.toolId, t.kindId, t.workflowId, t.nodeId].filter(Boolean).join('|');
+  return [t.kind, t.connId, t.sectionId, t.resId, t.toolId, t.kindId, t.workflowId, t.nodeId, t.viewId].filter(Boolean).join('|');
 }
 
 /** Resource target by name, or by index in its list. */
