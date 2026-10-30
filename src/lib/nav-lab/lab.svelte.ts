@@ -59,6 +59,8 @@ class LabState {
   ctx = $state<string | undefined>(undefined);
   /** Dataset size for P12–P14: every connection, or only podman-machine-default. */
   conns = $state<"one" | "many">("one");
+  /** Experimental: the Views section (saved queries across connections). Off by default. */
+  views = $state(false);
   /** P13: what is installed on top of the vanilla app (built-ins only, or every extension). */
   install = $state<"vanilla" | "all">("vanilla");
   /** P13: extensions installed from a promotion card / the catalog while in Vanilla. */
@@ -93,6 +95,7 @@ class LabState {
     this.openKey = params.get("open") === "on";
     this.ctx = params.get("ctx") ?? undefined;
     this.conns = params.get("conns") === "many" ? "many" : "one";
+    this.views = params.get("views") === "on";
     this.install = params.get("install") === "all" ? "all" : "vanilla";
     const table = params.get("table");
     this.table = table === "modern" || table === "grid" ? table : "classic";
@@ -127,6 +130,7 @@ class LabState {
     q.set("conns", this.conns);
     q.set("install", this.install);
     q.set("table", this.table);
+    if (this.views) q.set("views", "on");
     return q.toString();
   }
 }

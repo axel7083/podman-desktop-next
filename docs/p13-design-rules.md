@@ -170,6 +170,8 @@ Trees (`TreeProvider.cap`, `treesFor()`), sections, menus, actions, promotions,
 
 ## Views (GitHub-style queries)
 
+Experimental: off by default, enabled by **Experimental: Views** in the Mockup bar (`views=on`).
+
 A view is a saved query over every reachable connection, opened as a tab (`kind: 'view'`). Views are listed in the tree, below the extensions, with a `+` on their sub-header.
 
 | Qualifier | Values | Notes |

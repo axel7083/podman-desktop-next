@@ -651,9 +651,29 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   }
 }
 
-/* ---------------------------------------------------------------- V Views (GitHub-style queries) */
+/* ---------------------------------------------------------------- V Views (GitHub-style queries), experimental */
 {
   const page = await session('');
+  await step('V experimental: off by default, the top bar toggles it', async () => {
+    expect((await page.getByTestId('views-section').count()) === 0, 'Views shown by default');
+    await page.keyboard.press('Control+k');
+    await page.getByTestId('p13-palette').waitFor();
+    expect((await page.getByTestId('palette-group').filter({ hasText: 'Views' }).count()) === 0, 'Views in the palette by default');
+    await page.keyboard.press('Escape');
+    await page.getByTestId('lab-views').check();
+    await page.getByTestId('views-section').waitFor();
+    await page.waitForFunction(() => location.hash.includes('views=on'));
+    await page.getByTestId('views-add').click();
+    await page.getByTestId('view-page').waitFor();
+    await page.keyboard.press('Escape');
+    await page.getByTestId('lab-views').uncheck();
+    await page.getByTestId('views-section').waitFor({ state: 'detached' });
+    await page.getByTestId('view-page').waitFor({ state: 'detached' });
+  });
+  await page.context().close();
+}
+{
+  const page = await session('views=on');
   const q = page.getByTestId('view-query');
   const summary = async () => (await page.getByTestId('view-summary').innerText()).replace(/\s+/g, ' ');
   const pick = id => page.locator(`[data-testid="view-suggestion"][data-id="${id}"]`).click();

@@ -11,7 +11,7 @@ function sync(): void {
   goto(href(`/?${lab.query()}`), { replaceState: true }).catch(() => undefined);
 }
 
-function set<K extends 'theme' | 'style' | 'toolBg' | 'panel' | 'screen' | 'conns' | 'install' | 'table'>(k: K, v: (typeof lab)[K]): void {
+function set<K extends 'theme' | 'style' | 'toolBg' | 'panel' | 'screen' | 'conns' | 'install' | 'table' | 'views'>(k: K, v: (typeof lab)[K]): void {
   lab[k] = v;
   sync();
 }
@@ -46,4 +46,8 @@ function set<K extends 'theme' | 'style' | 'toolBg' | 'panel' | 'screen' | 'conn
   {@render seg('Table', [['modern', 'Modern'], ['grid', 'Grid'], ['classic', 'Classic']] as ['classic' | 'modern' | 'grid', string][], lab.table, v => set('table', v))}
   {@render seg('Panel `', [[true, 'On'], [false, 'Off']], lab.panel, v => set('panel', v))}
   {@render seg('Screen', [[1440, '1440'], [1280, '1280'], [1024, '1024']] as [ScreenWidth, string][], lab.screen, v => set('screen', v))}
+  <label class="flex items-center gap-1 cursor-pointer" title="Experimental: saved queries across connections, listed in the tree below the extensions">
+    <input type="checkbox" data-testid="lab-views" checked={lab.views} onchange={(e): void => set('views', e.currentTarget.checked)} />
+    Experimental: Views
+  </label>
 </div>

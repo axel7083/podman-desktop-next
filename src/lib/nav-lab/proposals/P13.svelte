@@ -107,6 +107,12 @@ $effect.pre(() => {
   });
 });
 
+// Experimental toggle off: nothing of Views stays on screen.
+$effect(() => {
+  if (lab.views) return;
+  untrack(() => wb.tabs.filter(t => t.target.kind === 'view').forEach(t => wb.close(t.key)));
+});
+
 wb.onclose = (t): void => {
   if (t.target.viewId) discardDraft(t.target.viewId);
 };
@@ -478,6 +484,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
             {@render row(0, t.name, { target: { kind: 'tool', toolId: t.id }, icon: t.icon })}
           {/each}
         {/if}
+        {#if lab.views}
         <div data-testid="views-section" role="group" aria-label="Views">
           <div class="group/views flex items-center pl-3 pr-1 pt-3 pb-1">
             <span class="text-[11px] font-semibold uppercase tracking-wide text-[var(--pd-nav-group-header)]">Views</span>
@@ -490,6 +497,7 @@ function rowMenu(t: LabTarget): MenuItem[] | undefined {
             {#if !f}<div class="px-3 pb-1 text-[11px] text-[var(--pd-table-body-text)]">No saved views yet.</div>{/if}
           {/each}
         </div>
+        {/if}
       </div>
     </aside>
     <div

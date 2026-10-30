@@ -8,6 +8,7 @@ import { tick } from 'svelte';
 
 import type { IconRef } from '#lib/ext/types.ts';
 
+import { lab } from '../lab.svelte.ts';
 import { labConns } from '../r2/simple.ts';
 import LabIcon from '../ui/LabIcon.svelte';
 import { startTour, TOURS } from './tours.svelte.ts';
@@ -40,8 +41,12 @@ let input = $state<HTMLInputElement>();
 
 const items = $derived<Item[]>([
   ...TOURS.map(t => ({ id: `tour:${t.id}`, group: 'Workflows' as const, label: `Tour: ${t.title}`, detail: t.outcome, icon: faRoute, run: (): void => startTour(t.id) })),
-  { id: 'view:new', group: 'Views' as const, label: 'Create view', detail: 'Query resources across environments', icon: faPlus, run: oncreateview },
-  ...views.saved.map(v => ({ id: `view:${v.id}`, group: 'Views' as const, label: v.name, detail: v.query, icon: viewIcon(v.id), iconColor: viewColor(v.id), run: (): void => onview(v.id) })),
+  ...(lab.views
+    ? [
+      { id: 'view:new', group: 'Views' as const, label: 'Create view', detail: 'Query resources across environments', icon: faPlus, run: oncreateview },
+      ...views.saved.map(v => ({ id: `view:${v.id}`, group: 'Views' as const, label: v.name, detail: v.query, icon: viewIcon(v.id), iconColor: viewColor(v.id), run: (): void => onview(v.id) })),
+      ]
+    : []),
   ...labConns().map(c => ({ id: `conn:${c.id}`, group: 'Connections' as const, label: c.name, detail: c.group, icon: c.icon, run: (): void => onselect(c.id) })),
 ]);
 const filtered = $derived.by(() => {
@@ -99,7 +104,7 @@ function onkey(e: KeyboardEvent): void {
         oninput={(): void => void (sel = 0)}
         data-testid="palette-input"
         aria-label="Command palette input"
-        placeholder="Search workflows, views and connections…"
+        placeholder={lab.views ? 'Search workflows, views and connections…' : 'Search workflows and connections…'}
         class="flex-1 h-full bg-transparent outline-hidden text-[var(--pd-input-field-focused-text)] placeholder:text-[var(--pd-input-field-placeholder-text)]" />
     </div>
     <ul class="max-h-[60vh] overflow-y-auto pt-1" aria-label="Results">
