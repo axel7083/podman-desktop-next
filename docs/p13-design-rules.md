@@ -192,6 +192,7 @@ Rules:
 - Labels have one source, `r3/query/labels.ts`, read by queries and details pages alike. `part-of` groups an application across environments: the namespace on Kubernetes, the project stem on engines.
 - Unsaved query edits live in the views store and survive tab switches. The tab shows a dot, Save is the header's primary action (Ctrl+S), and closing the tab discards them.
 - A new view asks for its name, icon and icon colour on Save (`r3/modals/ViewModal.svelte`). Rename and Change icon are actions in the sidebar, tab and header menus, and apply at once. The title is never an input.
-- Icon colours are `--pd-*` tokens (`r3/view-style.ts`).
+- View icons are outline, to sit with the tree (`r3/view-style.ts`). The default, Automatic, follows the query: one `is:` type shows that type's icon, anything else a bookmark. Colours are `--pd-*` tokens; starter views stay monochrome, with one accent for what needs attention.
+- Every result row shows its resource icon, because a view mixes types.
 - On a view tab, the switcher only changes `@current`; it does not open the connection.
 - Saved views persist per published version (`storageKey('views')`).

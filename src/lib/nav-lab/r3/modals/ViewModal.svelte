@@ -3,12 +3,14 @@
  * P13 Views: name, icon and icon colour of a view. Opens when saving a new view
  * (`mode: save`), and from Rename / Change icon on an existing one.
  */
-import { faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
+import { faFloppyDisk, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+
+import type { IconRef } from '#lib/ext/types.ts';
 
 import LabIcon from '../../ui/LabIcon.svelte';
 import { closeModal, flows } from '../flows.svelte.ts';
-import { colorOf, DEFAULT_ICON, iconOf, VIEW_COLORS, VIEW_ICONS } from '../view-style.ts';
-import { customize, isSaved, save, viewColorKey, viewIconKey, viewName } from '../views.svelte.ts';
+import { AUTO_ICON, colorOf, GENERAL_ICONS, iconOf, RESOURCE_ICONS, VIEW_COLORS } from '../view-style.ts';
+import { customize, isSaved, save, viewColorKey, viewIconKey, viewName, viewQuery } from '../views.svelte.ts';
 import Field from './Field.svelte';
 import { INPUT } from './form.ts';
 import Modal from './Modal.svelte';
@@ -16,9 +18,10 @@ import Modal from './Modal.svelte';
 const data = flows.modal?.data ?? {};
 const id = data.id ?? '';
 const saving = data.mode === 'save';
+const query = viewQuery(id);
 
 let name = $state(isSaved(id) ? viewName(id) : '');
-let icon = $state(viewIconKey(id) ?? DEFAULT_ICON);
+let icon = $state(viewIconKey(id) ?? AUTO_ICON);
 let color = $state(viewColorKey(id) ?? 'default');
 let nameInput = $state<HTMLInputElement>();
 
@@ -38,7 +41,21 @@ $effect(() => {
 });
 </script>
 
-<Modal title={saving ? 'Save view' : 'Customize view'} icon={iconOf(icon)} primary={saving ? 'Save view' : 'Apply'} primaryIcon={saving ? faFloppyDisk : undefined} disabled={!valid} width="26rem" testid="view-modal" onprimary={submit}>
+{#snippet iconChoice(key: string, def: IconRef, label: string)}
+  <button
+    type="button"
+    role="radio"
+    aria-checked={icon === key}
+    aria-label={label}
+    title={label}
+    data-testid="view-icon-{key}"
+    class="flex items-center justify-center h-8 rounded-md border {icon === key ? 'border-[var(--pd-tab-highlight)] bg-[var(--pd-action-button-details-bg)]' : 'border-transparent hover:bg-[var(--pd-action-button-details-bg)]'}"
+    onclick={(): void => void (icon = key)}>
+    <LabIcon icon={def} size={16} color={colorOf(color)} />
+  </button>
+{/snippet}
+
+<Modal title={saving ? 'Save view' : 'Customize view'} icon={iconOf(icon, query)} primary={saving ? 'Save view' : 'Apply'} primaryIcon={saving ? faFloppyDisk : undefined} disabled={!valid} width="26rem" testid="view-modal" onprimary={submit}>
   <Field label="Name">
     <input
       bind:this={nameInput}
@@ -51,21 +68,11 @@ $effect(() => {
         if (e.key === 'Enter') submit();
       }} />
   </Field>
-  <Field label="Icon">
+  <Field label="Icon" hint="Automatic follows the query: a view of one resource type shows that type's icon.">
     <div role="radiogroup" aria-label="Icon" class="grid grid-cols-9 gap-1">
-      {#each Object.entries(VIEW_ICONS) as [key, def] (key)}
-        <button
-          type="button"
-          role="radio"
-          aria-checked={icon === key}
-          aria-label={key}
-          title={key}
-          data-testid="view-icon-{key}"
-          class="flex items-center justify-center h-8 rounded-md border {icon === key ? 'border-[var(--pd-tab-highlight)] bg-[var(--pd-action-button-details-bg)]' : 'border-transparent hover:bg-[var(--pd-action-button-details-bg)]'}"
-          onclick={(): void => void (icon = key)}>
-          <LabIcon icon={def} size={14} color={colorOf(color)} />
-        </button>
-      {/each}
+      {@render iconChoice(AUTO_ICON, faWandMagicSparkles, 'Automatic')}
+      {#each Object.entries(RESOURCE_ICONS) as [key, def] (key)}{@render iconChoice(key, def, key)}{/each}
+      {#each Object.entries(GENERAL_ICONS) as [key, def] (key)}{@render iconChoice(key, def, key)}{/each}
     </div>
   </Field>
   <Field label="Icon color">

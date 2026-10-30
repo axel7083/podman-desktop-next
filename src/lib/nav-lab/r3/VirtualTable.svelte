@@ -106,6 +106,10 @@ const total = $derived.by(() => {
   return virtualizer.getTotalSize() - HEADER;
 });
 
+function isGlyph(icon: IconRef): boolean {
+  return typeof icon === 'object' && 'iconName' in icon;
+}
+
 function sortIcon(col: string): typeof faSort {
   if (sort.col !== col) return faSort;
   return sort.asc ? faSortUp : faSortDown;
@@ -162,10 +166,18 @@ function ariaSort(col: string): 'ascending' | 'descending' | 'none' {
               {#if compact}
                 {#if row.status}<span class="w-2 h-2 rounded-full {STATUS_DOT[row.status.toLowerCase()] ?? STATUS_DOT.stopped}" title={row.dotTitle ?? row.status}></span>{/if}
               {:else}
-                <StatusCell object={row} />
+                {#if isGlyph(row.icon)}
+                  <!-- ui-svelte's StatusIcon renders no FontAwesome glyph at its numeric size: same tile, with the glyph. -->
+                  <span class="tile" class:running={row.status === 'RUNNING'} class:degraded={row.status === 'DEGRADED'} role="status" title={row.dotTitle ?? row.status}><LabIcon icon={row.icon} size={14} /></span>
+                {:else}
+                  <StatusCell object={row} />
+                {/if}
               {/if}
             </div>
-            <div role="cell" class="min-w-0"><NameCell object={row} /></div>
+            <div role="cell" class="flex items-center gap-2 min-w-0">
+              {#if compact}<span class="flex shrink-0 text-[var(--pd-table-body-text)]"><LabIcon icon={row.icon} size={16} /></span>{/if}
+              <span class="min-w-0"><NameCell object={row} /></span>
+            </div>
             {#each columns as c (c.key)}
               <div role="cell" class="min-w-0"><TextCell object={row.cols[c.key] ?? ''} /></div>
             {/each}
@@ -190,6 +202,26 @@ function ariaSort(col: string): 'ascending' | 'descending' | 'none' {
 }
 .row:hover {
   background: var(--pd-content-card-hover-bg);
+}
+.tile {
+  display: inline-grid;
+  place-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  border: 2px solid var(--pd-status-not-running);
+  color: var(--pd-status-not-running);
+}
+.tile.running,
+.tile.degraded {
+  border: 0;
+  color: var(--pd-status-contrast);
+}
+.tile.running {
+  background: var(--pd-status-running);
+}
+.tile.degraded {
+  background: var(--pd-status-degraded);
 }
 .compact .row {
   height: 34px;

@@ -684,7 +684,7 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await page.getByTestId('view-modal').waitFor();
     expect(await page.getByTestId('modal-primary').isDisabled(), 'saved without a name');
     await page.getByTestId('view-modal-name').fill('Orders everywhere');
-    await page.getByTestId('view-icon-rocket').click();
+    await page.getByTestId('view-icon-star').click();
     await page.getByTestId('view-color-sky').click();
     await page.getByTestId('modal-primary').click();
     expect((await page.getByTestId('tab-dirty').count()) === 0, 'dot after save');
@@ -737,6 +737,16 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await page.getByTestId('view-row').last().getByTestId('row-name').getByText(desc, { exact: true }).first().waitFor();
     await page.getByTestId('view-table').evaluate(el => el.scrollTo(0, 0));
   });
+  await step('V the automatic icon follows the query', async () => {
+    await page.getByTestId('views-add').click();
+    const icon = () => page.getByTestId('head-icon').innerHTML();
+    const mixed = await icon();
+    await q.fill('is:image');
+    const image = await icon();
+    expect(image !== mixed, 'icon did not follow is:image');
+    await q.fill('is:image is:pod');
+    expect((await icon()) === mixed, 'two types should use the mixed icon');
+  });
   await step('V env:@current follows the switcher', async () => {
     await page.getByTestId('views-add').click();
     await q.fill('env:@current is:container');
@@ -767,10 +777,10 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   });
   await step('V sidebar menu: duplicate and delete', async () => {
     const before = await sidebar().count();
-    await sidebar().filter({ hasText: 'Failing' }).click({ button: 'right' });
+    await sidebar().filter({ hasText: 'Needs attention' }).click({ button: 'right' });
     await page.getByTestId('nav-lab-context-menu').getByText('Duplicate').click();
     expect((await sidebar().count()) === before + 1, 'no copy');
-    await sidebar().filter({ hasText: 'Failing copy' }).click({ button: 'right' });
+    await sidebar().filter({ hasText: 'Needs attention copy' }).click({ button: 'right' });
     await page.getByTestId('nav-lab-context-menu').getByText('Delete').click();
     expect((await sidebar().count()) === before, 'not deleted');
   });

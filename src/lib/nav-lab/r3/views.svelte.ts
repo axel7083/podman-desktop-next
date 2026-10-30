@@ -2,6 +2,7 @@
  * P13 Views: saved queries and their unsaved edits. Drafts live here, not in
  * the page, because `{#key wb.active}` remounts the page on every tab switch.
  */
+import type { IconRef } from '#lib/ext/types.ts';
 import { storageKey } from '#lib/version.ts';
 
 import { colorOf, iconOf } from './view-style.ts';
@@ -14,7 +15,7 @@ export interface ViewSort {
 
 export interface ViewStyle {
   name: string;
-  /** Key in `VIEW_ICONS`. */
+  /** Key in `RESOURCE_ICONS` or `GENERAL_ICONS`, or `auto`. */
   icon?: string;
   /** Key in `VIEW_COLORS`. */
   color?: string;
@@ -32,13 +33,17 @@ export interface ViewDraft extends Partial<ViewStyle> {
   sort?: ViewSort;
 }
 
-const KEY = storageKey('views');
+const KEY = storageKey('views.v2');
+const OLD_KEY = storageKey('views');
 
 const STARTER: SavedView[] = [
-  { id: 'this-engine', name: 'This engine', icon: 'server', query: 'env:@current' },
-  { id: 'failing', name: 'Failing', icon: 'fire', color: 'red', query: 'status:degraded status:stopped' },
-  { id: 'orders-app', name: 'Orders app', icon: 'layer-group', color: 'purple', query: 'label:part-of=orders group:env' },
+  { id: 'running-containers', name: 'Running containers', query: 'is:container status:running' },
+  { id: 'needs-attention', name: 'Needs attention', icon: 'bell', color: 'amber', query: 'status:degraded status:stopped' },
+  { id: 'orders-app', name: 'Orders app', icon: 'folder', query: 'label:part-of=orders group:env' },
 ];
+
+/** The first starter views, replaced by `STARTER`; views made by the user carry over. */
+const OLD_STARTERS = ['this-engine', 'failing', 'orders-app'];
 
 /** Views saved before `status:` existed and while `sort:` was a qualifier. */
 function migrate(v: SavedView): SavedView {
@@ -48,7 +53,9 @@ function migrate(v: SavedView): SavedView {
 function load(): SavedView[] {
   try {
     const raw = globalThis.localStorage?.getItem(KEY);
-    return raw ? (JSON.parse(raw) as SavedView[]).map(migrate) : STARTER;
+    if (raw) return JSON.parse(raw) as SavedView[];
+    const old = JSON.parse(globalThis.localStorage?.getItem(OLD_KEY) ?? '[]') as SavedView[];
+    return [...STARTER, ...old.filter(v => !OLD_STARTERS.includes(v.id)).map(migrate)];
   } catch {
     return STARTER;
   }
@@ -86,7 +93,7 @@ export function viewName(id: string | undefined): string {
   return savedView(id)?.name ?? views.drafts[id]?.name ?? 'New view';
 }
 
-/** Key in `VIEW_ICONS`. */
+/** Key in `RESOURCE_ICONS` or `GENERAL_ICONS`, or `auto`. */
 export function viewIconKey(id: string | undefined): string | undefined {
   return id ? (savedView(id)?.icon ?? views.drafts[id]?.icon) : undefined;
 }
@@ -96,8 +103,8 @@ export function viewColorKey(id: string | undefined): string | undefined {
   return id ? (savedView(id)?.color ?? views.drafts[id]?.color) : undefined;
 }
 
-export function viewIcon(id: string | undefined): ReturnType<typeof iconOf> {
-  return iconOf(viewIconKey(id));
+export function viewIcon(id: string | undefined): IconRef {
+  return iconOf(viewIconKey(id), viewQuery(id));
 }
 
 /** CSS colour of the icon; undefined keeps the surrounding colour. */
