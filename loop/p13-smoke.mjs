@@ -733,9 +733,8 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     expect(desc.localeCompare(asc) > 0, `descending ${desc} is not after ascending ${asc}`);
     await page.getByTestId('view-sort-name').click();
     await page.getByTestId('view-table').evaluate(el => el.scrollTo(0, el.scrollHeight));
-    await page.waitForFunction(() => document.querySelector('[data-testid="view-table"]').scrollTop > 0);
-    const tail = await page.getByTestId('view-row').last().getByTestId('row-name').locator('span').first().innerText();
-    expect(tail === desc, `last row is ${tail}, expected ${desc}`);
+    // The virtualizer renders the new window on the next frame: wait for the expected last row.
+    await page.getByTestId('view-row').last().getByTestId('row-name').getByText(desc, { exact: true }).first().waitFor();
     await page.getByTestId('view-table').evaluate(el => el.scrollTo(0, 0));
   });
   await step('V env:@current follows the switcher', async () => {
