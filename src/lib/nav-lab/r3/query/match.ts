@@ -9,7 +9,9 @@ import { allResources, kindOf, searchedConns } from './resources.ts';
 export const STATES = ['running', 'stopped', 'degraded', 'unused'];
 export const HAS_VALUES = ['label', 'port', 'namespace', 'group'];
 export const GROUPS = ['none', 'kind', 'env', 'app'] as const;
-export type GroupBy = (typeof GROUPS)[number];
+export type GroupBy = (typeof GROUPS)[number] | 'label';
+/** `is:workload`: what runs an application, without the objects its controllers create. */
+export const WORKLOADS = ['container', 'deployment', 'statefulset', 'daemonset'];
 
 export interface QueryContext {
   /** Connection selected in the switcher: what `env:@current` follows. */
@@ -19,6 +21,8 @@ export interface QueryContext {
 export interface QueryResult {
   rows: LabResource[];
   groupBy: GroupBy;
+  /** Label key when `groupBy` is `label` (`group:label:environment`). */
+  groupLabel?: string;
   /** Environments with at least one result. */
   envCount: number;
   /** Stopped connections, which a query cannot reach. */
@@ -90,7 +94,7 @@ function testOf(t: QueryTerm, ctx: QueryContext): (r: LabResource) => boolean {
     case undefined:
       return r => textMatches(r, t.value);
     case 'is':
-      return r => kindOf(r).id === t.value.toLowerCase();
+      return t.value.toLowerCase() === 'workload' ? r => WORKLOADS.includes(kindOf(r).id) : r => kindOf(r).id === t.value.toLowerCase();
     case 'status':
       return r => stateMatches(r, t.value.toLowerCase());
     case 'env':
@@ -132,8 +136,10 @@ export function matchResources(terms: QueryTerm[], ctx: QueryContext): LabResour
   return allResources().filter(r => anded.every(a => a.test(r) !== a.negated) && groups.every(tests => tests.some(test => test(r))));
 }
 
-function lastValue<T extends string>(terms: QueryTerm[], key: string, allowed: readonly T[]): T | undefined {
-  return terms.findLast((t): boolean => t.key === key && allowed.includes(t.value as T))?.value as T | undefined;
+function grouping(terms: QueryTerm[]): Pick<QueryResult, 'groupBy' | 'groupLabel'> {
+  const value = terms.findLast(t => t.key === 'group' && (t.value.startsWith('label:') ? t.value.length > 6 : (GROUPS as readonly string[]).includes(t.value)))?.value;
+  if (value?.startsWith('label:')) return { groupBy: 'label', groupLabel: value.slice(6) };
+  return { groupBy: (value as GroupBy | undefined) ?? 'none' };
 }
 
 /** Applies the Views rules against the visible, non-deleted resources. */
@@ -141,7 +147,7 @@ export function runQuery(terms: QueryTerm[], ctx: QueryContext): QueryResult {
   const rows = matchResources(terms, ctx);
   return {
     rows,
-    groupBy: lastValue(terms, 'group', GROUPS) ?? 'none',
+    ...grouping(terms),
     envCount: new Set(rows.map(r => r.connId)).size,
     unreachable: searchedConns().unreachable.map(c => c.name),
   };

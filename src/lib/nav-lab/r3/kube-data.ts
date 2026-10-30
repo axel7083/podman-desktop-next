@@ -465,6 +465,7 @@ const SPECS: Record<string, Spec> = {
     clusterAccess: true,
     nodes: awsNodes(40, 6, 3, true).map((n, i) => (i === 10 ? { ...n, cordoned: true } : n)),
     namespaces: [
+      'shop',
       'checkout',
       'payments',
       'catalog',
@@ -485,6 +486,9 @@ const SPECS: Record<string, Spec> = {
     ],
     apps: [
       ...openshiftSystem(true, 'v4.19'),
+      D('shop', 'shop-webserver', 'quay.io/acme/shop-webserver:1.4', 3, { port: 8080, expose: true, config: true, age: '12 days' }),
+      STS('shop', 'shop-postgres', 'registry.redhat.io/rhel9/postgresql-16:1-48', 3, { port: 5432, storage: '20Gi', db: true, age: '40 days' }),
+      STS('shop', 'shop-redis', 'registry.redhat.io/rhel9/redis-7:1-35', 3, { port: 6379, storage: '8Gi', age: '40 days' }),
       D('checkout', 'checkout', 'quay.io/acme/checkout:2.7.3', 6, { port: 8080, expose: true, config: true, age: '4 days' }),
       D('checkout', 'checkout-ui', 'quay.io/acme/checkout-ui:2.7.3', 4, { port: 8080, expose: true, age: '4 days' }),
       STS('checkout', 'redis', 'registry.redhat.io/rhel9/redis-7:1-35', 3, { port: 6379, storage: '8Gi', age: '96 days' }),

@@ -33,17 +33,18 @@ export interface ViewDraft extends Partial<ViewStyle> {
   sort?: ViewSort;
 }
 
-const KEY = storageKey('views.v2');
-const OLD_KEY = storageKey('views');
+const KEY = storageKey('views.v3');
+/** Earlier formats, newest first. */
+const OLD_KEYS = [storageKey('views.v2'), storageKey('views')];
 
 const STARTER: SavedView[] = [
+  { id: 'shop-app', name: 'Shop app', icon: 'folder', query: 'label:part-of=shop is:workload group:label:environment' },
   { id: 'running-containers', name: 'Running containers', query: 'is:container status:running' },
   { id: 'needs-attention', name: 'Needs attention', icon: 'bell', color: 'amber', query: 'status:degraded status:stopped' },
-  { id: 'orders-app', name: 'Orders app', icon: 'folder', query: 'label:part-of=orders group:env' },
 ];
 
-/** The first starter views, replaced by `STARTER`; views made by the user carry over. */
-const OLD_STARTERS = ['this-engine', 'failing', 'orders-app'];
+/** Starter views of earlier formats, replaced by `STARTER`; views made by the user carry over. */
+const OLD_STARTERS = ['this-engine', 'failing', 'orders-app', 'running-containers', 'needs-attention'];
 
 /** Views saved before `status:` existed and while `sort:` was a qualifier. */
 function migrate(v: SavedView): SavedView {
@@ -54,7 +55,8 @@ function load(): SavedView[] {
   try {
     const raw = globalThis.localStorage?.getItem(KEY);
     if (raw) return JSON.parse(raw) as SavedView[];
-    const old = JSON.parse(globalThis.localStorage?.getItem(OLD_KEY) ?? '[]') as SavedView[];
+    const previous = OLD_KEYS.map(k => globalThis.localStorage?.getItem(k)).find(Boolean);
+    const old = JSON.parse(previous ?? '[]') as SavedView[];
     return [...STARTER, ...old.filter(v => !OLD_STARTERS.includes(v.id)).map(migrate)];
   } catch {
     return STARTER;

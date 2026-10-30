@@ -176,14 +176,14 @@ A view is a saved query over every reachable connection, opened as a tab (`kind:
 
 | Qualifier | Values | Notes |
 |---|---|---|
-| `is:` | `container`, `pod`, `image`, `volume`, `network`, `compose`, `deployment`, `service`… | Resource types only |
+| `is:` | `workload`, `container`, `pod`, `image`, `volume`, `network`, `compose`, `deployment`, `service`… | Resource types only. `workload` is containers, deployments, stateful sets and daemon sets: what runs an application, without the objects controllers create |
 | `status:` | `running`, `stopped`, `degraded`, `unused` | |
 | `env:` | connection name, `@current` | `@current` follows the switcher: one view is both per-environment and cross-environment |
 | `engine:` | `podman`, `docker`, `kubernetes`, `openshift`… | `kubernetes` covers every cluster |
-| `label:` | `key`, `key=value` | Asked-for keys become columns (two at most) |
+| `label:` | `key`, `key=value` | `label:key` becomes a column (two at most) |
 | `has:` | `label`, `port`, `namespace`, `group` | |
 | `ns:`, `project:` | namespace, compose project or pod | |
-| `group:` | `none`, `kind`, `env`, `app` | Display only, never filters |
+| `group:` | `none`, `kind`, `env`, `app`, `label:<key>` | Display only, never filters |
 
 Rules:
 - `-` negates any filter. Different qualifiers AND. Repeated `label:` and `has:` AND; other repeats OR, because a resource has only one value.
@@ -197,4 +197,5 @@ Rules:
 - View icons are outline, to sit with the tree (`r3/view-style.ts`). The default, Automatic, follows the query: one `is:` type shows that type's icon, anything else a bookmark. Colours are `--pd-*` tokens; starter views stay monochrome, with one accent for what needs attention.
 - Every result row shows its resource icon, because a view mixes types.
 - On a view tab, the switcher only changes `@current`; it does not open the connection.
+- An application view is a short list: the Shop app starter is `label:part-of=shop is:workload group:label:environment`, a Postgres, a Redis and a web server for each of `dev` (containers on Podman) and `prod` (workloads on `ocp-prod`).
 - Saved views persist per published version (`storageKey('views')`).

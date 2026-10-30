@@ -757,6 +757,15 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
     await page.getByTestId('view-row').last().getByTestId('row-name').getByText(desc, { exact: true }).first().waitFor();
     await page.getByTestId('view-table').evaluate(el => el.scrollTo(0, 0));
   });
+  await step('V the Shop app is short and grouped by dev and prod', async () => {
+    await sidebar().filter({ hasText: 'Shop app' }).click();
+    const groups = await page.getByTestId('view-group').allInnerTexts();
+    expect(groups.length === 2 && /^dev/.test(groups[0]) && /^prod/.test(groups[1]), `groups: ${groups.join(' / ')}`);
+    const names = await page.getByTestId('view-row').getByTestId('row-name').locator('span').allInnerTexts();
+    const unique = [...new Set(names.filter(n => n.startsWith('shop-')))].sort();
+    expect((await page.getByTestId('view-row').count()) === 6, `${names.length} rows: ${names.join(', ')}`);
+    expect(unique.join() === 'shop-postgres,shop-redis,shop-webserver', `apps: ${unique.join()}`);
+  });
   await step('V the automatic icon follows the query', async () => {
     await page.getByTestId('views-add').click();
     const icon = () => page.getByTestId('head-icon').innerHTML();
@@ -807,9 +816,9 @@ const panelText = (page, text, timeout = 15000) => page.getByTestId('nav-lab-pan
   await step('V palette lists views and opens one', async () => {
     await page.keyboard.press('Control+k');
     await page.getByTestId('p13-palette').getByTestId('palette-group').filter({ hasText: 'Views' }).waitFor();
-    await page.getByTestId('palette-input').fill('Orders app');
+    await page.getByTestId('palette-input').fill('Shop app');
     await page.keyboard.press('Enter');
-    expect((await q.inputValue()).startsWith('label:part-of=orders'), 'view not opened');
+    expect((await q.inputValue()).startsWith('label:part-of=shop'), 'view not opened');
   });
   await page.context().close();
 }

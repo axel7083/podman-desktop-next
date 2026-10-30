@@ -254,8 +254,8 @@ const RAW_CONNECTIONS: Omit<LabConnection, 'caps'>[] = [
     status: 'running',
     color: '#8b5cf6',
     initials: 'PM',
-    sections: engineSections(30, 22, 3, [
-      S('compose', 'Compose', faLayerGroup, 2, EXT.compose),
+    sections: engineSections(33, 23, 3, [
+      S('compose', 'Compose', faLayerGroup, 3, EXT.compose),
       S('quadlets', 'Quadlets', faListCheck, 5, EXT.quadlet),
       S('bootc', 'Bootable images', faServer, 2, EXT.bootc),
     ]),
@@ -618,6 +618,9 @@ const PODMAN_CONTAINERS: [string, string, string, string?][] = [
   ['buildah-worker', 'quay.io/buildah/stable:latest', 'exited'],
   ['trivy-scan', 'docker.io/aquasec/trivy:0.67', 'exited'],
   ['skopeo-sync', 'quay.io/skopeo/stable:latest', 'paused'],
+  ['shop-postgres', 'registry.redhat.io/rhel10/postgresql-16', 'running', 'shop-stack'],
+  ['shop-redis', 'docker.io/library/redis:8', 'running', 'shop-stack'],
+  ['shop-webserver', 'quay.io/acme/shop-webserver:1.4', 'running', 'shop-stack'],
 ];
 
 const PODMAN_IMAGES = [
@@ -643,6 +646,7 @@ const PODMAN_IMAGES = [
   'docker.io/grafana/grafana:12.2',
   'quay.io/prometheus/prometheus:3.6',
   'quay.io/konveyor/kantra:7.3',
+  'quay.io/acme/shop-webserver:1.4',
 ];
 
 const NAMES = [
@@ -671,7 +675,7 @@ const NAMES = [
 ];
 
 const SPECIFIC: Record<string, string[]> = {
-  compose: ['orders-stack', 'auth-stack'],
+  compose: ['orders-stack', 'auth-stack', 'shop-stack'],
   topics: ['orders.created', 'orders.paid', 'orders.shipped', 'payments.authorized', 'payments.failed', 'inventory.reserved', 'inventory.released', 'customers.cdc', 'audit.log', 'notifications.email', 'dlq.orders', 'connect-offsets'],
   groups: ['orders-worker', 'payments-svc', 'inventory-svc', 'audit-sink', 'debezium-connect'],
   kusers: ['orders-app', 'payments-app', 'admin'],

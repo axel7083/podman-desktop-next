@@ -16,7 +16,7 @@ import type { IconRef } from '#lib/ext/types.ts';
 import { conn, type LabResource } from '../../data.ts';
 import { labConns } from '../../r2/simple.ts';
 import { labelsOf } from './labels.ts';
-import { engineMatches, envMatches, GROUPS, HAS_VALUES, matchResources, type QueryContext, stateMatches, STATES } from './match.ts';
+import { engineMatches, envMatches, GROUPS, HAS_VALUES, matchResources, type QueryContext, stateMatches, STATES, WORKLOADS } from './match.ts';
 import { parseQuery, type QueryTerm, termAt } from './parse.ts';
 import { CORE_TYPES, kindOf } from './resources.ts';
 
@@ -67,9 +67,11 @@ function isValues(prefix: string, base: LabResource[], typed: string): Suggestio
   const counts = countBy(base, r => [kindOf(r).id]);
   const core = CORE_TYPES.filter(id => counts.has(id));
   const rest = [...counts.keys()].filter(id => !CORE_TYPES.includes(id)).sort((a, b) => a.localeCompare(b));
-  return [...core, ...rest]
-    .filter(id => id.includes(typed))
-    .map(id => ({ id: `is:${id}`, label: id, insert: `${prefix}is:${id} `, icon: kinds.get(id)?.icon, count: counts.get(id) }));
+  const workload: Suggestion = { id: 'is:workload', label: 'workload', detail: 'Containers, deployments, stateful sets…', insert: `${prefix}is:workload `, count: base.filter(r => WORKLOADS.includes(kindOf(r).id)).length };
+  return [
+    workload,
+    ...[...core, ...rest].map(id => ({ id: `is:${id}`, label: id, insert: `${prefix}is:${id} `, icon: kinds.get(id)?.icon, count: counts.get(id) })),
+  ].filter(s => s.label.includes(typed));
 }
 
 function statusValues(prefix: string, base: LabResource[], typed: string): Suggestion[] {
@@ -142,6 +144,17 @@ function fixedValues(prefix: string, key: string, values: readonly string[], typ
   return values.filter(v => v.includes(typed)).map(v => ({ id: `${key}:${v}`, label: v, insert: `${prefix}${key}:${v} ` }));
 }
 
+/** Built-in groupings, then every label key: `group:label:environment`. */
+function groupValues(prefix: string, base: LabResource[], typed: string): Suggestion[] {
+  const key = typed.replace(/^label:/, '');
+  const labels = [...countBy(base, r => Object.keys(labelsOf(r)))]
+    .filter(([k]) => k.toLowerCase().includes(key))
+    .sort(byCount)
+    .map(([k]) => ({ id: `group:label:${k}`, label: k, insert: `${prefix}group:label:${quote(k)} `, group: 'By label' }));
+  const fixed = typed.startsWith('label:') ? [] : fixedValues(prefix, 'group', GROUPS, typed).map(s => ({ ...s, group: 'Group by' }));
+  return [...fixed, ...labels];
+}
+
 function valuesFor(active: QueryTerm, prefix: string, base: LabResource[], ctx: QueryContext): Suggestion[] {
   const typed = active.value;
   switch (active.key) {
@@ -162,7 +175,7 @@ function valuesFor(active: QueryTerm, prefix: string, base: LabResource[], ctx: 
     case 'project':
       return countedValues(prefix, 'project', base, typed.toLowerCase(), r => r.group ?? (r.sectionId === 'compose' ? r.name : undefined));
     case 'group':
-      return fixedValues(prefix, 'group', GROUPS, typed.toLowerCase());
+      return groupValues(prefix, base, typed.toLowerCase());
     default:
       return [];
   }

@@ -49,15 +49,16 @@ const canSave = $derived(dirty && query.trim() !== '');
 const terms = $derived(parseQuery(query));
 const result = $derived(runQuery(terms, { currentConnId }));
 const groupBy = $derived(result.groupBy);
+const groupLabel = $derived(result.groupLabel);
 
-/** Labels asked for become columns (at most two). */
-const labelCols = $derived([...new Set(terms.filter(t => t.key === 'label' && !t.negated && t.value).map(t => t.value.split('=')[0]))].slice(0, 2));
+/** `label:key` becomes a column (at most two); `label:key=value` would repeat one value on every row. */
+const labelCols = $derived([...new Set(terms.filter(t => t.key === 'label' && !t.negated && t.value && !t.value.includes('=')).map(t => t.value))].slice(0, 2));
 const showNs = $derived(result.rows.some(r => !!r.ns));
 
 const columns = $derived.by((): ViewColumn[] => [
   // The group row already says it.
   ...(groupBy === 'kind' ? [] : [{ key: 'kind', title: 'Type', width: '110px' }]),
-  ...(groupBy === 'env' ? [] : [{ key: 'env', title: 'Environment', width: 'minmax(8rem, 1fr)' }]),
+  ...(groupBy === 'env' ? [] : [{ key: 'env', title: 'Connection', width: 'minmax(8rem, 1fr)' }]),
   ...(showNs ? [{ key: 'ns', title: 'Namespace', width: '130px' }] : []),
   ...labelCols.map(k => ({ key: `label:${k}`, title: k, width: 'minmax(6rem, 1fr)' })),
   { key: 'age', title: 'Age', width: '100px' },
@@ -97,6 +98,9 @@ const sorted = $derived.by((): LabResource[] => {
   return keyed.sort((a, b) => dir * collator.compare(a[0], b[0])).map(x => x[1]);
 });
 
+/** Key of the bucket for resources without a value: always the last group. */
+const NO_GROUP = '~';
+
 function groupOf(r: LabResource): { key: string; title: string; icon: IconRef; chip: string } {
   switch (groupBy) {
     case 'env': {
@@ -107,9 +111,13 @@ function groupOf(r: LabResource): { key: string; title: string; icon: IconRef; c
       const k = kindOf(r);
       return { key: k.id, title: k.label, icon: k.icon, chip: 'Type' };
     }
+    case 'label': {
+      const value = labelsOf(r)[groupLabel ?? ''];
+      return { key: value ?? NO_GROUP, title: value ?? `No ${groupLabel}`, icon: faLayerGroup, chip: groupLabel ?? 'Label' };
+    }
     default: {
       const app = labelsOf(r)['part-of'];
-      return { key: app ?? '~', title: app ?? 'No application', icon: faLayerGroup, chip: 'App' };
+      return { key: app ?? NO_GROUP, title: app ?? 'No application', icon: faLayerGroup, chip: 'App' };
     }
   }
 }
@@ -127,8 +135,8 @@ const items = $derived.by((): ViewItem[] => {
     else groups.set(g.key, { g, rows: [r] });
   }
   const out: ViewItem[] = [];
-  // Alphabetical, the "no application" bucket last.
-  for (const { g, rows } of [...groups.values()].sort((a, b) => collator.compare(a.g.key, b.g.key))) {
+  const ordered = [...groups.values()].sort((a, b) => Number(a.g.key === NO_GROUP) - Number(b.g.key === NO_GROUP) || collator.compare(a.g.key, b.g.key));
+  for (const { g, rows } of ordered) {
     const open = !collapsed.includes(g.key);
     out.push({ kind: 'group', key: `g:${g.key}`, title: g.title, icon: g.icon, chip: g.chip, count: rows.length, open });
     if (open) out.push(...rows.map((r): ViewItem => ({ kind: 'row', key: r.id, r })));

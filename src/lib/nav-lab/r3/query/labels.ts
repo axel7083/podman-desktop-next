@@ -12,6 +12,21 @@ export function hash(s: string): number {
   return h;
 }
 
+/** The stage a connection serves, as a team would label it. */
+const ENVIRONMENT: Record<string, string> = {
+  'podman-machine-default': 'dev',
+  'podman-machine-dev': 'dev',
+  'kind-dev': 'dev',
+  'ocp-dev': 'dev',
+  'rhoai-dev': 'dev',
+  'ocp-prod': 'prod',
+};
+
+function environmentOf(r: LabResource): Record<string, string> {
+  const env = ENVIRONMENT[r.connId];
+  return env ? { environment: env } : {};
+}
+
 /** `orders-stack` / `frontend-pod` → `orders` / `frontend`. */
 function projectStem(group: string): string {
   return group.replace(/-(stack|pod)$/, '');
@@ -28,6 +43,7 @@ function containerLabels(r: LabResource): Record<string, string> {
   return {
     app: r.name,
     ...(partOf ? { 'part-of': partOf } : {}),
+    ...environmentOf(r),
     ...(r.group ? { [r.group.endsWith('-pod') ? 'io.podman.pod.name' : 'io.podman.compose.project']: r.group } : {}),
     'org.opencontainers.image.source': `https://github.com/acme/${r.name}`,
     'org.opencontainers.image.version': `1.${h % 9}.0`,
@@ -57,7 +73,7 @@ function kubeLabels(r: LabResource): Record<string, string> {
   if (!r.ns || r.sectionId === 'portforwards') return {};
   return {
     app: r.cols?.app ?? r.name,
-    ...(r.ns !== 'default' && !isSystemNs(r.ns) ? { 'part-of': r.ns } : {}),
+    ...(r.ns !== 'default' && !isSystemNs(r.ns) ? { 'part-of': r.ns, ...environmentOf(r) } : {}),
   };
 }
 
